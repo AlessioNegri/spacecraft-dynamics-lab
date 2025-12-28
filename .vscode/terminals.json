@@ -1,0 +1,36 @@
+{
+    "autorun": true,
+    "autorunOnStartup": true,
+    "delay": 500,
+    "terminals": [
+        {
+            "name": "client",
+            "icon": "atom-react",
+            "color": "terminal.ansiCyan",
+            "cwd": "${workspaceFolder}\\client",
+            "shellPath": "C:\\Windows\\System32\\cmd.exe"
+        },
+        {
+            "name": "server",
+            "icon": "python",
+            "color": "terminal.ansiYellow",
+            "cwd": "${workspaceFolder}\\server",
+            "shellPath": "C:\\Windows\\System32\\cmd.exe",
+            "commands": [
+                ".venv\\Scripts\\activate"
+                //uvicorn main:app --reload
+            ]
+        },
+        {
+            "name": "fastapi",
+            "icon": "zap",
+            "color": "terminal.ansiGreen",
+            "cwd": "${workspaceFolder}\\server",
+            "shellPath": "C:\\Windows\\System32\\cmd.exe",
+            "commands": [
+                ".venv\\Scripts\\activate"
+                //uvicorn main:app --reload
+            ]
+        }
+    ]
+}
