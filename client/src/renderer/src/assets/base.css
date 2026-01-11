@@ -65,3 +65,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+svg.iconify {
+  overflow: visible !important;
+  /* overflow: visible;
+  display: inline-block;
+  vertical-align: middle; */
+}

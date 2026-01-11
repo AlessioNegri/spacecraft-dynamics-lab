@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "alessio-negri.com",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
@@ -23,12 +23,16 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@iconify-json/mdi": "^1.2.3",
+    "chalk": "^4.1.2",
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@iconify/react": "^6.0.2",
+    "@radix-ui/react-menubar": "^1.1.16",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.19.1",
     "@types/react": "^19.2.7",

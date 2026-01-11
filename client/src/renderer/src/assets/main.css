@@ -1,13 +1,21 @@
 @import './base.css';
 @import "tailwindcss";
 
+html, body, #root {
+  height: 100vh;
+}
+
+.custom-font {
+  font-family: 'Menlo', 'Lucida Console', monospace;
+}
+
 body {
-  display: flex;
+  /* display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: hidden; */
   background-image: url('./wavy-lines.svg');
-  background-size: cover;
+  background-size: fill;
   user-select: none;
 }
 
@@ -27,13 +35,13 @@ code {
   font-size: 85%;
 }
 
-#root {
+/* #root {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   margin-bottom: 80px;
-}
+} */
 
 .logo {
   margin-bottom: 20px;
