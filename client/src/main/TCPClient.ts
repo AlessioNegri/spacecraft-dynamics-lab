@@ -1,31 +1,33 @@
-// ? TCP client based on Web Socket
+import * as electron from 'electron'
 
-import chalk from 'chalk'
+import Logger from './Logger'
+import Singleton from './Singleton'
+import MainWindow from './MainWindow'
 
 /** @class TCP client class */
-class TCPClient
+export default class TCPClient extends Singleton<TCPClient>
 {
-    // * Members
-
-    private static instance: TCPClient
+    // --- MEMBER ---
 
     private ws: WebSocket | null = null
 
-    // * Public Functions
+    private timer: NodeJS.Timeout | null = null
 
-    /**
-     * @summary Retieve the singleton
-     * 
-     * @returns TCP server
-     */
-    public static GetInstance(): TCPClient
+    private delay = 1000 // ? [ms]
+
+    private readonly maxDelay = 15000 // ? [ms]
+
+    private readonly url = "ws://127.0.0.1:8000/ws"
+
+    private isReconnecting = false;
+
+    private isClosing = false;
+
+    // --- PUBLIC ---
+
+    public constructor()
     {
-        if (!TCPClient.instance)
-        {
-            TCPClient.instance = new TCPClient()
-        }
-
-        return TCPClient.instance
+        super()
     }
 
     /**
@@ -33,31 +35,68 @@ class TCPClient
      */
     public start(): void
     {
-        this.ws = new WebSocket("ws://127.0.0.1:8000/ws")
+        this.isClosing = false
+
+        const win: electron.BrowserWindow = MainWindow.GetInstance().window()!
+
+        Logger.info("Connecting to server ...")
+
+        this.ws = new WebSocket(this.url)
 
         this.ws.onopen = (_: Event) =>
-            {
-                console.log(chalk.green("Web Socket opened"))
-            }
+        {
+            Logger.info("Server connected")
+
+            win.webContents.send("tcp:opened", true)
+
+            this.isReconnecting = false
+            this.delay          = 1000
+        }
         
         this.ws.onmessage = (event: MessageEvent<any>) =>
-            {
-                const now = new Date().toISOString();
-    
-                console.log(now, "Received:", event.data)
-            }
+        {
+            Logger.debug("Received: " + event.data)
+        }
 
         this.ws.onerror = (event: Event) =>
-            {
-                const err = event as ErrorEvent;
+        {
+            if (this.isClosing) return
 
-                console.log(chalk.red("Web Socket error:", err.message))
+            const err = event as ErrorEvent;
+
+            Logger.error("Server error: " + err.message)
+
+            // * Prevent infinite loops
+
+            if (this.isReconnecting) return
+
+            this.isReconnecting = true
+
+            // * Force close (safe even if CONNECTING)
+
+            try
+            {
+                this.ws?.close()
             }
+            catch
+            {}
+
+            this.scheduleReconnect()
+        }
 
         this.ws.onclose = (_: Event) =>
+        {
+            Logger.warning("Server disconnected")
+
+            win.webContents.send("tcp:opened", false)
+
+            if (!this.isReconnecting)
             {
-                console.log(chalk.green("Web Socket closed"))
+                this.isReconnecting = true
+
+                this.scheduleReconnect()
             }
+        }
     }
 
     /**
@@ -65,12 +104,41 @@ class TCPClient
      */
     public stop(): void
     {
+        this.isReconnecting = false
+        this.isClosing      = true
+
+        if (this.timer)
+        {
+            clearTimeout(this.timer)
+
+            this.timer = null
+        }
+
         this.ws?.close()
+
+        this.ws = null
     }
 
-    // * Private Functions
+    // --- PRIVATE ---
 
-    private constructor() {}
+    private scheduleReconnect(): void
+    {
+        if (this.timer) return
+
+        Logger.info(`Reconnecting in ${this.delay / 1000}s ...`)
+
+        this.isReconnecting = false
+
+        this.timer = setTimeout(() =>
+        {
+            this.timer = null;
+        
+            this.start();
+
+            // * Increase delay (exponential backoff)
+
+            this.delay = Math.min(this.delay * 2, this.maxDelay)
+
+        }, this.delay)
+    }
 }
-
-export { TCPClient }

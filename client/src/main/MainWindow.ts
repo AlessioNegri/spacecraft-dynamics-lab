@@ -1,35 +1,24 @@
-// ? Main Window for electron
-
 import * as electron from 'electron'
 import * as path from 'node:path'
 import * as utils from '@electron-toolkit/utils'
 
 import icon from '../../resources/icon.jpg?asset'
 
-/** @class Main window class */
-class MainWindow
-{
-    // * Members
+import Singleton from './Singleton'
+import TCPClient from './TCPClient'
 
-    private static instance: MainWindow
+/** @class Main window class */
+export default class MainWindow extends Singleton<MainWindow>
+{
+    // --- MEMBER ---
 
     private win: electron.BrowserWindow | null = null
 
-    // * Public Functions
+    // --- PUBLIC ---
 
-    /**
-     * @summary Retieve the singleton
-     * 
-     * @returns Main window
-     */
-    public static GetInstance(): MainWindow
+    public constructor()
     {
-        if (!MainWindow.instance)
-        {
-            MainWindow.instance = new MainWindow()
-        }
-
-        return MainWindow.instance
+        super()
     }
 
     /**
@@ -50,27 +39,32 @@ class MainWindow
         // * Init window
 
         this.win = new electron.BrowserWindow(
+        {
+            width: 900,
+            height: 670,
+            show: false,
+            autoHideMenuBar: true,
+            frame: false,
+            titleBarStyle: 'hidden', // ? For macOs
+            ...(process.platform === 'linux' ? { icon } : {}),
+            webPreferences:
             {
-                width: 900,
-                height: 670,
-                show: false,
-                autoHideMenuBar: true,
-                ...(process.platform === 'linux' ? { icon } : {}),
-                webPreferences:
-                {
-                    preload: path.join(__dirname, '../preload/index.js'),
-                    sandbox: false
-                }
-            })
+                preload: path.join(__dirname, '../preload/index.js'),
+                sandbox: false
+            }
+        })
 
-        this.win.on('ready-to-show', () => { this.win?.show() })
+        this.win.on('ready-to-show', () =>
+        {
+            this.win?.show()
+        })
 
         this.win.webContents.setWindowOpenHandler((details: Electron.HandlerDetails) =>
-            {
-                electron.shell.openExternal(details.url)
+        {
+            electron.shell.openExternal(details.url)
 
-                return { action: 'deny' }
-            })
+            return { action: 'deny' }
+        })
 
         // * HMR for renderer base on electron-vite cli.
         // * Load the remote URL for development or the local html file for production.
@@ -84,51 +78,17 @@ class MainWindow
             this.win.loadFile(path.join(__dirname, '../renderer/index.html'))
         }
 
-        // * Create menu
+        // * Configuration
 
-        this.createMenu()
+        this.win.setMenuBarVisibility(false);
 
         this.win.maximize()
-    }
 
-    // * Private Functions
+        this.win.webContents.on("did-finish-load", () => 
+        {
+            // * Start TCP client for web socket once the UI finished rendering
 
-    private constructor() {}
-
-    /**
-     * @summary Create the menu of the app
-     */
-    private createMenu(): void
-    {
-        const template: Electron.MenuItemConstructorOptions[] =
-            [
-                {
-                    label: 'File',
-                    submenu:
-                    [
-                        { type: 'separator' },
-                        { label: 'Exit', role: 'quit' }
-                    ]
-                },
-                {
-                    label: "Help",
-                    submenu:
-                    [
-                        {
-                            label: "Learn More",
-                            click: () =>
-                                {
-                                    require("electron").shell.openExternal("https://electronjs.org")
-                                }
-                        }
-                    ]
-                }
-            ]
-    
-        const menu = electron.Menu.buildFromTemplate(template)
-        
-        electron.Menu.setApplicationMenu(menu)
+            TCPClient.GetInstance().start()
+        })
     }
 }
-
-export { MainWindow }

@@ -103,6 +103,48 @@ spacecraft_schema = {
             "bsonType": "number",
             "description": "Mass of the spacecraft in kilograms"
         },
+        "orbital": {
+            "bsonType": "object",
+            "required": [
+                "a",
+                "e",
+                "i",
+                "OMEGA",
+                "omega",
+                "theta"
+            ],
+            "properties": {
+                "a": {
+                    "bsonType": "number",
+                    "description": "Semi-major axis in kilometers"
+                },
+                "e": {
+                    "bsonType": "number",
+                    "description": "Orbital eccentricity"
+                },
+                "i": {
+                    "bsonType": "number",
+                    "description": "Inclination in degrees"
+                },
+                "OMEGA": {
+                    "bsonType": "number",
+                    "description": "Right ascension of ascending node"
+                },
+                "omega": {
+                    "bsonType": "number",
+                    "description": "Argument of periapsis in degrees"
+                },
+                "theta": {
+                    "bsonType": "number",
+                    "description": "True anomaly in degrees"
+                }
+            }
+        },
+        "image_path": {
+            "bsonType": ["string", "null"],
+            "description": "Path to the stored spacecraft image"
+        },
+
         # "inertia_tensor": {
         #     "bsonType": "array",
         #     "items": {
@@ -121,10 +163,46 @@ async def read_root():
 
 
 @app.post("/spacecraft/insert")
-async def insert_spacecraft(payload: NameRequest):
-    print(f"Received payload: {payload}")
+async def insert_spacecraft(name: str = fa.Form(...),
+    mass: float = fa.Form(...),
+
+    a: float = fa.Form(...),
+    e: float = fa.Form(...),
+    i: float = fa.Form(...),
+    OMEGA: float = fa.Form(...),
+    omega: float = fa.Form(...),
+    theta: float = fa.Form(...),
+
+    image: fa.UploadFile = fa.File(None)
+
+                            ):
     
-    result = await app.mongodb["spacecrafts"].insert_one(payload.model_dump())
+    # Save image if provided
+    image_path = None
+    if image:
+        contents = await image.read()
+        image_path = f"uploads/{image.filename}"
+        with open(image_path, "wb") as f:
+            f.write(contents)
+
+    # Build the MongoDB document
+    spacecraft_doc = {
+        "name": name,
+        "mass": mass,
+        "orbital": {
+            "a": a,
+            "e": e,
+            "i": i,
+            "OMEGA": OMEGA,
+            "omega": omega,
+            "theta": theta,
+        },
+        "image_path": image_path,
+    }
+
+
+    
+    result = await app.mongodb["spacecrafts"].insert_one(spacecraft_doc)
     print(f"Inserted document ID: {result.inserted_id}")
     
     return {"response": "Done!"}

@@ -19,6 +19,34 @@ body {
   user-select: none;
 }
 
+.draggable {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1a1a1a; /* dark track */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #555; /* thumb color */
+  border-radius: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #777; /* hover color */
+}
+
+
 code {
   font-weight: 600;
   padding: 3px 5px;
