@@ -22,3 +22,37 @@ interface ISideBarItem
     label: string
     icon: string
 }
+
+interface IDbSpacecraftItem
+{
+    _id?: string
+    name: string
+    mass: number
+    orbit:
+    {
+        sma: number
+        ecc: number
+        inc: number
+        raan: number
+        aop: number
+        tan: number
+    }
+    image: string | null
+}
+
+interface ISpacecraftForm
+{
+    _id?: string
+    name: string
+    mass: number
+    orbit:
+    {
+        sma: number
+        ecc: number
+        inc: number
+        raan: number
+        aop: number
+        tan: number
+    }
+    image: File | null
+}

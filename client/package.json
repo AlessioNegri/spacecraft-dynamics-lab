@@ -31,6 +31,7 @@
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-menubar": "^1.1.16",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.19.1",
     "@types/react": "^19.2.7",

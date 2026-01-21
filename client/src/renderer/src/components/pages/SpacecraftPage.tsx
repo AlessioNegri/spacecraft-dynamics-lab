@@ -1,108 +1,209 @@
-import * as react from 'react'
-import axios, { AxiosRequestConfig } from 'axios'
-import SpacecraftForm from '../dialogs/SpacecraftForm'
-import { Icon } from '@iconify/react'
+import * as react from "react"
+import * as iconify from "@iconify/react"
 
-export function SpacecraftPage(): react.JSX.Element {
-    const [name, setName] = react.useState("")
-    const [mass, setMass] = react.useState(0)
-    const [response, setResponse] = react.useState<string | null>(null)
-    const [open, setOpen] = react.useState(false);
+import api from "@renderer/common/api"
+import checkError from "@renderer/common/error"
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+import Tooltip from "../Tooltip"
+import SpacecraftDialog from "../dialogs/SpacecraftDialog"
+import DeleteSpacecraftDialog from "../dialogs/DeleteSpacecraftDialog"
 
-        let config: AxiosRequestConfig<any> = { headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } };
+/** @function SpacecraftPage */
+export function SpacecraftPage(): react.JSX.Element
+{
+    // --- USE STATE ---
 
-        try {
-            const res = await axios.post("http://127.0.0.1:8000/spacecraft/insert", {
-                name: name,
-                mass: mass
-            }, config)
+    const [open, setOpen] = react.useState<boolean>(false)
 
-            setResponse(JSON.stringify(res.data, null, 2))
-        } catch (err) {
-            console.error(err)
-            setResponse("Error contacting backend")
+    const [openDelete, setOpenDelete] = react.useState<boolean>(false)
+
+    const [edit, setEdit] = react.useState<boolean>(false)
+
+    const [items, setItems] = react.useState<IDbSpacecraftItem[]>([])
+
+    const [selected, setSelected] = react.useState<IDbSpacecraftItem | null>(null)
+
+    // --- USE EFFECT ---
+
+    const getItems = async () =>
+    {
+        try
+        {
+            const res = await api.get<IDbSpacecraftItem[]>("/spacecraft/items")
+
+            setItems(res.data)
+
+            if (res.data.length > 0) setSelected(res.data[0])
+        }
+        catch (err)
+        {
+            const message: string | null = checkError(import.meta.url, err)
+            
+            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
         }
     }
 
+    react.useEffect(() => { getItems() }, [])
+
+    // --- RENDERING ---
+
     return (
-        <>
-            {/* Button to open dialog */}
-            <button
-                onClick={() => setOpen(true)}
-                className="px-4 py-2 bg-stone-600 hover:bg-stone-700 text-white rounded"
-            >
-                Add Spacecraft
-            </button>
+        <div className="flex w-full h-full relative">
+            
+            {/* List */}
+            
+            <div className="w-64 bg-stone-800 text-white overflow-y-auto border-4 border-stone-600 p-2 rounded">
 
-            {/* Overlay */}
-            {open && (
-                <div className="fixed inset-0 bg-stone-700/60 backdrop-blur-sm flex items-center justify-center z-50">
+                <h1 className="text-center border-b-2 mb-2 uppercase">Spacecraft List</h1>
+                
+            {
+                items.map((item: IDbSpacecraftItem) => (
+                    <button
+                        key={item._id}
+                        onClick={() => setSelected(item)}
+                        className={`w-full text-left px-4 py-2 hover:bg-stone-600 transition rounded cursor-pointer
+                            ${selected?._id === item._id ? "bg-orange-300/25" : ""}`}>
 
-                    {/* Dialog container */}
-                    <div className="bg-stone-800 text-white rounded-lg shadow-xl w-full max-w-2xl p-6 relative animate-fadeIn">
+                        {item.name}
 
-                        {/* Close button */}
-                        <Icon icon={"mdi:close-box"} width={30} height={30} className='absolute top-3 right-3 text-gray-400 hover:text-gray-200' onClick={() => setOpen(false)}/>
+                    </button>
+                ))
+            }
 
-                        {/* Title */}
-                        <h2 className="text-2xl font-semibold mb-4">Add Spacecraft</h2>
+            </div>
 
-                        {/* Form */}
-                        <SpacecraftForm />
+            {/* Details */}
 
-                    </div>
-                </div>
+            <div className="flex-1 p-6 overflow-auto">
+
+            {
+                selected
+                ?
+                <SpacecraftDetails item={selected} />
+                :
+                <div className="text-stone-400">Add a spacecraft</div>
+            }
+
+            </div>
+
+            {/* Open dialog */}
+
+            <div className="absolute top-2 right-4 flex">
+
+                <Tooltip title="Add Spacecraft" side="bottom">
+
+                    <iconify.Icon
+                        icon={"mdi:add-box"}
+                        width={40}
+                        onClick={() => { setOpen(true); setEdit(false) }}
+                        className="text-green-300 hover:text-white cursor-pointer" />
+
+                </Tooltip>
+
+            {
+                selected &&
+                (
+                    <>
+
+                        <Tooltip title="Edit Spacecraft" side="bottom">
+                            
+                            <iconify.Icon
+                                icon={"mdi:edit-box"}
+                                width={40}
+                                onClick={() => { setOpen(true); setEdit(true) }}
+                                className="text-blue-300 hover:text-white cursor-pointer" />
+
+                        </Tooltip>
+
+                        <Tooltip title="Delete Spacecraft" side="bottom">
+
+                            <iconify.Icon
+                                icon={"mdi:cancel-box"}
+                                width={40}
+                                onClick={() => setOpenDelete(true)}
+                                className="text-red-300 hover:text-white cursor-pointer" />
+
+                        </Tooltip>
+
+                    </>
+                )
+            }
+
+            </div>
+
+            {/* Dialogs */}
+
+            {
+                open &&
+                <SpacecraftDialog
+                    item={selected}
+                    edit={edit}
+                    onClose={() => { setOpen(false) }}
+                    onOk={() => { getItems() }} />
+            }
+
+            {
+                openDelete &&
+                <DeleteSpacecraftDialog
+                    id={selected!._id!}
+                    name={selected!.name}
+                    onClose={() => { setOpenDelete(false) }}
+                    onOk={() => { getItems() }} />
+            }
+
+        </div>
+    )
+}
+
+/**
+ * @description Fill details of the selected spacecraft
+ * 
+ * @param item Selected spacecraft
+ * @returns JSX
+ */
+function SpacecraftDetails({ item }: Readonly<{ item: IDbSpacecraftItem }>): react.JSX.Element
+{
+    return (
+        <div className="text-stone-300 space-y-4">
+
+            {/* Name */}
+
+            <h1 className="text-3xl font-bold text-orange-300 border-b-2 mb-2">{item.name}</h1>
+
+            {/* General */}
+
+            <h2 className="text-2xl text-center">General</h2>
+
+            <p><strong className="font-bold">Mass:</strong> {item.mass} kg</p>
+
+            <div className="border-b-2 border-stone-300"></div>
+
+            {/* Orbit */}
+
+            <h2 className="text-2xl text-center">Orbit</h2>
+
+            <div className="grid grid-cols-2 gap-4 text-stone-300">
+
+                <div><strong>Semi-Major Axis:</strong> {item.orbit.sma} km</div>
+                <div><strong>Eccentricity:</strong> {item.orbit.ecc}</div>
+                <div><strong>Inclination:</strong> {item.orbit.inc}°</div>
+                <div><strong>Right Ascension Ascending Node:</strong> {item.orbit.raan}°</div>
+                <div><strong>Argument Periapsis:</strong> {item.orbit.aop}°</div>
+                <div><strong>True Anomaly:</strong> {item.orbit.tan}°</div>
+
+            </div>
+
+            <div className="border-b-2 border-stone-300"></div>
+
+            {/* Image */}
+
+            {item.image && (
+                <img
+                    src={item.image ? `data:image/png;base64,${item.image}` : undefined}
+                    alt={item.name}
+                    className="w-64 h-auto rounded border border-stone-700"
+                />
             )}
-        </>
-
-        // <div className='flex flex-col h-full w-full bg-stone-800'>
-
-        //     <div className="max-w-sm mx-auto mt-10 space-y-4">
-        //         <form onSubmit={handleSubmit} className="space-y-4">
-        //             <div>
-        //                 <label className="block text-sm font-medium text-gray-700 mb-1">
-        //                     Name
-        //                 </label>
-        //                 <input
-        //                     type="text"
-        //                     value={name}
-        //                     onChange={(e) => setName(e.target.value)}
-        //                     className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        //                     placeholder="Enter your name"
-        //                 />
-        //             </div>
-
-        //             <div>
-        //                 <label className="block text-sm font-medium text-gray-700 mb-1">
-        //                     Mass
-        //                 </label>
-        //                 <input
-        //                     type="text"
-        //                     value={mass}
-        //                     onChange={(e) => setMass(Number(e.target.value))}
-        //                     className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        //                     placeholder="Enter your mass"
-        //                 />
-        //             </div>
-
-        //             <button
-        //                 type="submit"
-        //                 className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-        //             >
-        //                 Submit
-        //             </button>
-        //         </form>
-
-        //         {response && (
-        //             <pre className="bg-gray-100 p-3 rounded-md text-sm text-red-950">
-        //                 {response}
-        //             </pre>
-        //         )}
-        //     </div>
-
-        // </div>
+        </div>
     )
 }

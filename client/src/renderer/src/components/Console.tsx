@@ -1,6 +1,7 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
 
+import Tooltip from "./Tooltip"
 import LogStore from "./Log"
 
 /** @function Console */
@@ -27,28 +28,35 @@ export default function Console(): react.JSX.Element
 
     return (
         <div className={`${show ? 'flex-1' : 'h-0 hidden'}
-                        p-2 bg-stone-800 font-mono text-sm overflow-auto border-2 border-stone-400 select-text
-                        custom-scrollbar relative`}>
+                        p-2 bg-stone-800 font-mono text-sm border-2 border-stone-400 select-text relative`}>
 
-            <iconify.Icon
-                icon={"mdi:cancel"}
-                width={32}
-                className="absolute top-2 right-2 cursor-pointer hover:text-orange-300"
-                onClick={() => logStore[1]([])} />
+            <Tooltip title="Clear Console" side="left">
+
+                <iconify.Icon
+                    icon={"mdi:cancel"}
+                    width={32}
+                    className="absolute top-2 right-6 cursor-pointer hover:text-orange-300"
+                    onClick={() => logStore[1]([])} />
+
+            </Tooltip>
         
-        {
-            logStore[0].map((log: LogEntry, i: react.Key) => (
-                <div key={i} className={color[log.level]}>
+            <div className="overflow-auto custom-scrollbar h-full">
 
-                    <span className="text-gray-500">{log.timestamp}</span>
+            {
+                logStore[0].map((log: LogEntry, i: react.Key) => (
+                    <div key={i} className={color[log.level]}>
 
-                    <span className="uppercase">{" | " + log.level + " | "}</span>
+                        <span className="text-gray-500">{log.timestamp}</span>
 
-                    <span>{log.message}</span>
+                        <span className="uppercase">{" | " + log.level + " | "}</span>
 
-                </div>
-            ))
-        }
+                        <span>{log.message}</span>
+
+                    </div>
+                ))
+            }
+
+            </div>
 
         </div>
     )

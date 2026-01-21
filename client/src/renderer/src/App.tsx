@@ -1,11 +1,11 @@
 import * as react from 'react'
+import * as Tooltip from "@radix-ui/react-tooltip"
 
-
+import Shortcut from "./components/Shortcut"
 import MenuBar from './components/bars/MenuBar'
 import StatusBar from './components/bars/StatusBar'
 import Sidebar from './components/bars/SideBar'
 import RightPanel from './components/RightPanel'
-import Shortcut from "./components/Shortcut"
 
 /** @function App */
 export default function App(): react.JSX.Element
@@ -23,20 +23,24 @@ export default function App(): react.JSX.Element
     // --- RENDERING ---
     
     return (
-        <div className='flex flex-col w-full h-full'>
+        <Tooltip.Provider>
 
-            <MenuBar />
+            <div className='flex flex-col w-full h-full'>
 
-            <div className='flex-1 overflow-auto flex flex-row'>
+                <MenuBar />
 
-                <Sidebar activePage={activePage} setActivePage={setActivePage} />
+                <div className='flex-1 overflow-auto flex flex-row'>
 
-                <RightPanel activePage={activePage} />
+                    <Sidebar activePage={activePage} setActivePage={setActivePage} />
+
+                    <RightPanel activePage={activePage} />
+
+                </div>
+
+                <StatusBar/>
 
             </div>
-
-            <StatusBar/>
-
-        </div>
+            
+        </Tooltip.Provider>
     )
 }

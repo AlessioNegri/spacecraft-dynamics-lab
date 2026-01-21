@@ -12,8 +12,6 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
 {
     // --- USE STATE ---
 
-    //const [active, setActive] = react.useState<string>("spacecraft")
-
     const [show, setShow] = react.useState<boolean>(true)
 
     // --- USE EFFECT ---
@@ -48,7 +46,7 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
     return (
         <div
             className={`${show ? "w-18" : "w-0 hidden"}
-            h-full bg-stone-900 text-white flex flex-col items-center select-none z-10`}>
+            h-full bg-stone-900 text-white flex flex-col items-center select-none`}>
 
             {/* Top */}
 
@@ -80,7 +78,7 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
                         {/* Tooltip */}
 
                         <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2! whitespace-nowrap
-                                        px-4 py-1 rounded bg-stone-600 text-white text-sm
+                                        px-4 py-1 rounded bg-stone-600 text-white text-sm z-10
                                         opacity-0 group-hover:opacity-100 pointer-events-none transition">
 
                             {item.label}
@@ -112,7 +110,7 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
                     {/* Tooltip */}
 
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2! whitespace-nowrap
-                                    px-4 py-1 rounded bg-stone-600 text-white text-sm
+                                    px-4 py-1 rounded bg-stone-600 text-white text-sm z-10
                                     opacity-0 group-hover:opacity-100 pointer-events-none transition">
 
                         Settings

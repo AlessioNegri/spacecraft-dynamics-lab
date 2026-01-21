@@ -35,8 +35,8 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+  //margin: 0;
+  //font-weight: normal;
 }
 
 ul {
@@ -64,11 +64,4 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-svg.iconify {
-  overflow: visible !important;
-  /* overflow: visible;
-  display: inline-block;
-  vertical-align: middle; */
 }
