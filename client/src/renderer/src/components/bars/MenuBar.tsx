@@ -60,6 +60,8 @@ export default function MenuBar(): react.JSX.Element
                     <Menu label="View" items={view} />
 
                 </div>
+                
+                <p className="text-center">Spacecraft Dynamics Lab</p>
 
                 <div className="flex gap-1 items-center no-drag">
 

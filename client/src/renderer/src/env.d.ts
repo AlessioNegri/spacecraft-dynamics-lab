@@ -23,20 +23,22 @@ interface ISideBarItem
     icon: string
 }
 
+interface IDbOrbit
+{
+    sma: number
+    ecc: number
+    inc: number
+    raan: number
+    aop: number
+    tan: number
+}
+
 interface IDbSpacecraftItem
 {
     _id?: string
     name: string
     mass: number
-    orbit:
-    {
-        sma: number
-        ecc: number
-        inc: number
-        raan: number
-        aop: number
-        tan: number
-    }
+    orbit: IDbOrbit
     image: string | null
 }
 

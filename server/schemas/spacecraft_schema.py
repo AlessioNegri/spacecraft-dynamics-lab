@@ -1,5 +1,14 @@
 import pydantic
 
+# * generic collection
+    
+class ActionModel(pydantic.BaseModel):
+    
+    id: str | None
+    error: str | None
+
+# * "spacecrafts" collection
+
 class OrbitModel(pydantic.BaseModel):
     
     sma: float
@@ -11,13 +20,11 @@ class OrbitModel(pydantic.BaseModel):
 
 class SpacecraftModel(pydantic.BaseModel):
     
-    id: str = pydantic.Field(alias='_id')
     name: str
     mass: float
     orbit: OrbitModel
     image: str | None
     
-class ActionModel(pydantic.BaseModel):
+class SpacecraftModelInfo(SpacecraftModel):
     
-    id: str | None
-    error: str | None
+    id: str = pydantic.Field(alias='_id')

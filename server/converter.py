@@ -155,31 +155,3 @@ def convert_pydantic_to_mongo(schema: dict) -> dict:
     schema = resolve_refs(schema, defs)
     
     return convert(schema)
-
-def convert_pydantic_to_mongo_2(schema: dict) -> dict:
-    """Convert pydantic model into MongoDB format
-
-    Args:
-        schema (dict): Pydantic schema
-
-    Returns:
-        dict: MongoDB format
-    """
-    
-    if "type" in schema:
-        
-        schema["bsonType"] = TYPE_MAP.get(schema["type"], schema["type"])
-        
-        del schema["type"]
-
-    if "properties" in schema:
-        
-        for key, value in schema["properties"].items():
-            
-            schema["properties"][key] = convert_pydantic_to_mongo(value)
-
-    if "items" in schema:
-        
-        schema["items"] = convert_pydantic_to_mongo(schema["items"])
-
-    return schema

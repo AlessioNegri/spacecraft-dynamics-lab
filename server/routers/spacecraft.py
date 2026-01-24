@@ -5,6 +5,7 @@ import json
 import typing
 
 import database
+import routers.utility as utility
 import schemas.spacecraft_schema as schema
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
@@ -28,6 +29,25 @@ def serialize_spacecraft(doc: schema.SpacecraftModel) -> dict:
         "orbit": doc["orbit"],
         "image": base64.b64encode(doc["image"]).decode() if doc.get("image") else None
     }
+    
+def convert_orbit(orbit_data: dict) -> dict:
+    """Convert orbit data in float
+
+    Args:
+        orbit_data (dict): Orbit data
+
+    Returns:
+        dict: Converted orbit data
+    """
+    
+    return {
+        "sma": float(orbit_data["sma"]),
+        "ecc": float(orbit_data["ecc"]),
+        "inc": float(orbit_data["inc"]),
+        "raan": float(orbit_data["raan"]),
+        "aop": float(orbit_data["aop"]),
+        "tan": float(orbit_data["tan"])
+    }
 
 # --- HTTP ---
 
@@ -35,7 +55,7 @@ router:fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft', tags=['Spacec
 
 # >>> GET
 
-@router.get(path='/items', response_model=typing.List[schema.SpacecraftModel])
+@router.get(path='/items', response_model=typing.List[schema.SpacecraftModelInfo])
 async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
     """HTTP GET spacecrafts collection
 
@@ -48,13 +68,13 @@ async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_cl
     
     spacecrafts: AsyncIOMotorCollection = client["spacecraft_dynamics_lab"]["spacecrafts"]
     
-    result: typing.List[SpacecraftModel] = await spacecrafts.find().to_list()
+    result: typing.List[schema.SpacecraftModelInfo] = await spacecrafts.find().to_list()
     
     # * Serialize for frontend
     
     serialized = [serialize_spacecraft(doc) for doc in result]
     
-    return serialized
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=serialized)
 
 # >>> POST
 
@@ -81,23 +101,21 @@ async def post_insert(name: str = fastapi.Form(...),
     
     # * Check existing name
     
-    exist: SpacecraftModel | None = await spacecrafts.find_one({ "name": name })
+    exist: schema.SpacecraftModel | None = await spacecrafts.find_one({ "name": name })
     
     if exist:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-                                              content={ "error": f"{name} already existing" })
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, f"{name} already existing")
     
     # * Parse orbit JSON
     
     try:
         
-        orbit_data = json.loads(orbit)
+        orbit_data = convert_orbit(json.loads(orbit))
         
     except Exception:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-                                              content={ "error": "Invalid orbit JSON" })
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid orbit JSON")
 
     # * Read image if provided
     
@@ -122,13 +140,11 @@ async def post_insert(name: str = fastapi.Form(...),
         
         result = await spacecrafts.insert_one(doc)
         
+        return utility.ok(str(result.inserted_id))
+        
     except Exception as e:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                              content={ "error": f"Database insert failed: {str(e)}" })
-
-    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK,
-                                          content={ "id": str(result.inserted_id) })
+        return utility.error(fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR, f"Database insert failed: {str(e)}")
 
 @router.post("/update/{id}", response_model=schema.ActionModel)
 async def post_update(id: str,
@@ -155,7 +171,7 @@ async def post_update(id: str,
     
     # * Check existing name
     
-    items: typing.List[SpacecraftModel] = await spacecrafts.find({ "name": name }).to_list()
+    items: typing.List[schema.SpacecraftModel] = await spacecrafts.find({ "name": name }).to_list()
     
     if len(items) > 0:
         
@@ -163,26 +179,23 @@ async def post_update(id: str,
         
         if item["_id"] != id:
         
-            return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_403_FORBIDDEN,
-                                              content={ "error": f"{name} already existing" })
+            return utility.error(fastapi.status.HTTP_403_FORBIDDEN, f"{name} already existing")
     
     # * Validate ID
     
     if not bson.ObjectId.is_valid(id):
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-                                             content={ "error": "Invalid ID" })
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid ID")
     
     # * Parse orbit JSON
     
     try:
         
-        orbit_data = json.loads(orbit)
+        orbit_data = convert_orbit(json.loads(orbit))
         
     except Exception:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-                                              content={ "error": "Invalid orbit JSON" })
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid orbit JSON")
 
     # * Build document
     
@@ -209,11 +222,9 @@ async def post_update(id: str,
     
     if result.matched_count == 0:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                              content={ "error": "Spacecraft not found" })
-    
-    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK,
-                                          content={ "id": str(id) })
+        return utility.error(fastapi.status.HTTP_404_NOT_FOUND, "Spacecraft not found")
+
+    return utility.ok(str(id))
 
 # >>> DELETE
 
@@ -236,8 +247,7 @@ async def delete_spacecraft(id: str,
     
     if not bson.ObjectId.is_valid(id):
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
-                                             content={ "error": "Invalid ID" })
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid ID")
 
     # * Attempt deletion
     
@@ -245,8 +255,6 @@ async def delete_spacecraft(id: str,
 
     if result.deleted_count == 0:
         
-        return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_404_NOT_FOUND,
-                                              content={ "error": "Spacecraft not found" })
+        return utility.error(fastapi.status.HTTP_404_NOT_FOUND, "Spacecraft not found")
 
-    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK,
-                                          content={ "id": str(id) })
+    return utility.ok(str(id))

@@ -1,16 +1,22 @@
-import { resolve } from 'path'
-import { defineConfig } from 'electron-vite'
-import react from '@vitejs/plugin-react'
+import * as path from 'node:path'
+import * as vite from 'electron-vite'
 
-export default defineConfig({
-  main: {},
-  preload: {},
-  renderer: {
-    resolve: {
-      alias: {
-        '@renderer': resolve('src/renderer/src')
-      }
-    },
-    plugins: [react()]
-  }
+import react from '@vitejs/plugin-react'
+import cesium from 'vite-plugin-cesium'
+
+export default vite.defineConfig(
+{
+    main: {},
+    preload: {},
+    renderer:
+    {
+        resolve:
+        {
+            alias:
+            {
+                '@renderer': path.resolve('src/renderer/src')
+            }
+        },
+        plugins: [react(), cesium()]
+    }
 })

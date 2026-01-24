@@ -23,7 +23,9 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
-    "electron-updater": "^6.3.9"
+    "cesium": "^1.137.0",
+    "electron-updater": "^6.3.9",
+    "resium": "^1.19.3"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
@@ -52,6 +54,7 @@
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
-    "vite": "^7.2.6"
+    "vite": "^7.2.6",
+    "vite-plugin-cesium": "^1.2.23"
   }
 }

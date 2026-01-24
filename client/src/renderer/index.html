@@ -13,10 +13,22 @@
         <meta
             http-equiv="Content-Security-Policy"
             content="default-src 'self'; 
-                        script-src 'self'; 
+                        script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; 
+                        worker-src 'self' blob:;
                         style-src 'self' 'unsafe-inline'; 
                         img-src 'self' data: blob:; 
-                        connect-src 'self' http://127.0.0.1:8000 https://api.iconify.design;"/>
+                        connect-src 'self' 
+                                            http://127.0.0.1:8000 
+                                            https://api.iconify.design 
+                                            https://api.cesium.com 
+                                            https://assets.ion.cesium.com 
+                                            https://*.cesium.com 
+                                            https://dev.virtualearth.net 
+                                            https://*.virtualearth.net 
+                                            https://tile.openstreetmap.org 
+                                            http://ecn.t*.tiles.virtualearth.net;"/>
+
+                        <!-- wasm-unsafe-eval; -->
 
     </head>
 

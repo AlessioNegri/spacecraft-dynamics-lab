@@ -1,13 +1,13 @@
 import asyncio
 import contextlib
 import fastapi
-import pydantic
 
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import converter
 import database
+
 import schemas.spacecraft_schema as spacecraft_schema
 
 from routers.spacecraft import router as router_spacecraft
@@ -15,7 +15,12 @@ from routers.spacecraft import router as router_spacecraft
 # --- CONTEXT ---
 
 @contextlib.asynccontextmanager
-async def lifespan(app: fastapi.FastAPI):
+async def lifespan(_: fastapi.FastAPI):
+    """Manage application lifespan events
+
+    Args:
+        app (fastapi.FastAPI): Application instance
+    """
     
     # * Startup code
     

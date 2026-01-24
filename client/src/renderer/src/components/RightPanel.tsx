@@ -1,6 +1,7 @@
 import * as react from "react"
 
-import { SpacecraftPage } from "./pages/SpacecraftPage"
+import SpacecraftPage from "./pages/SpacecraftPage"
+import OrbitPage from "./pages/OrbitPage"
 import Console from "./Console"
 
 interface RightPanelProps
@@ -64,7 +65,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
             <div className="flex-1 min-h-1/4 overflow-auto">
 
                 {props.activePage === "spacecraft" && <SpacecraftPage />}
-                {props.activePage === "orbit" && <div className="bg-red-500 h-full w-full border-8" />}
+                {props.activePage === "orbit" && <OrbitPage/>}
                 {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
                 
             </div>

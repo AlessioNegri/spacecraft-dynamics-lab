@@ -9,7 +9,7 @@ import SpacecraftDialog from "../dialogs/SpacecraftDialog"
 import DeleteSpacecraftDialog from "../dialogs/DeleteSpacecraftDialog"
 
 /** @function SpacecraftPage */
-export function SpacecraftPage(): react.JSX.Element
+export default function SpacecraftPage(): react.JSX.Element
 {
     // --- USE STATE ---
 

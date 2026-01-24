@@ -283,7 +283,7 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                 </button>
 
             {
-                axiosError && <p className="text-red-400 text-sm">{axiosError}</p>
+                axiosError && <p className="text-red-400 text-sm select-text">{axiosError}</p>
             }
 
             </form>
