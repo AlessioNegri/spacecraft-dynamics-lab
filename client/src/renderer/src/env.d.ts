@@ -33,13 +33,21 @@ interface IDbOrbit
     tan: number
 }
 
+interface IDbStyle
+{
+    width: number
+    color: string
+}
+
 interface IDbSpacecraftItem
 {
     _id?: string
     name: string
     mass: number
     orbit: IDbOrbit
+    style: IDbStyle
     image: string | null
+    model: string
 }
 
 interface ISpacecraftForm
@@ -56,5 +64,19 @@ interface ISpacecraftForm
         aop: number
         tan: number
     }
+    style:
+    {
+        width: number
+        color: string
+    }
     image: File | null
+    model: string
+}
+
+interface IGlbModel
+{
+    name: string,
+    scale: number,
+    minimumPixelSize: number,
+    maximumScale: number
 }

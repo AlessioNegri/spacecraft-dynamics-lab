@@ -29,7 +29,7 @@ export default function App(): react.JSX.Element
 
                 <MenuBar />
 
-                <div className='flex-1 overflow-auto flex flex-row'>
+                <div className='flex-1 overflow-auto custom-scrollbar flex flex-row'>
 
                     <Sidebar activePage={activePage} setActivePage={setActivePage} />
 

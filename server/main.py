@@ -60,7 +60,29 @@ async def lifespan(_: fastapi.FastAPI):
             
         else:
             
-            await db.command("collMod", collection, validator={"$jsonSchema": mongodb_schema})
+            if collection == "spacecrafts":
+            
+                await db["spacecrafts"].update_many({
+                                                        "$or":
+                                                        [
+                                                            { "style": { "$exists": False } },
+                                                            { "model": { "$exists": False } }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "$set": 
+                                                        {
+                                                            "style.width": 4,
+                                                            "style.color": "#FFFFFF",
+                                                            "model": ""
+                                                        }
+                                                    })
+
+            await db.command("collMod",
+                             collection,
+                             validator={"$jsonSchema": mongodb_schema},
+                             validationLevel="moderate",
+                             validationAction="warn")
             
             print(f"Updated collection: {collection}")
     

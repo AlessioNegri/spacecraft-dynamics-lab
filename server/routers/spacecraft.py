@@ -27,7 +27,9 @@ def serialize_spacecraft(doc: schema.SpacecraftModel) -> dict:
         "name": doc["name"],
         "mass": doc["mass"],
         "orbit": doc["orbit"],
-        "image": base64.b64encode(doc["image"]).decode() if doc.get("image") else None
+        "style": doc["style"],
+        "image": base64.b64encode(doc["image"]).decode() if doc.get("image") else None,
+        "model": doc["model"]
     }
     
 def convert_orbit(orbit_data: dict) -> dict:
@@ -82,7 +84,9 @@ async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_cl
 async def post_insert(name: str = fastapi.Form(...),
                       mass: float = fastapi.Form(...),
                       orbit: str = fastapi.Form(...),
+                      style: str = fastapi.Form(...),
                       image: fastapi.UploadFile | None = fastapi.File(None),
+                      model: str = fastapi.Form(...),
                       client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
     """HTTP POST INSERT spacecrafts collection
 
@@ -90,7 +94,9 @@ async def post_insert(name: str = fastapi.Form(...),
         name (str, optional): Name. Defaults to fastapi.Form(...).
         mass (float, optional): Mass. Defaults to fastapi.Form(...).
         orbit (str, optional): Orbit parameters. Defaults to fastapi.Form(...).
+        style (str, optional): Style parameters. Defaults to fastapi.Form(...).
         image (fastapi.UploadFile | None, optional): Image. Defaults to fastapi.File(None).
+        model (str, optional): 3D model name. Defaults to fastapi.Form(...).
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
@@ -116,7 +122,17 @@ async def post_insert(name: str = fastapi.Form(...),
     except Exception:
         
         return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid orbit JSON")
-
+    
+    # * Parse style JSON
+    
+    try:
+        
+        style_data = json.loads(style)
+        
+    except Exception:
+        
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid style JSON")
+    
     # * Read image if provided
     
     image_bytes: bson.Binary | None = None
@@ -133,7 +149,9 @@ async def post_insert(name: str = fastapi.Form(...),
         "name": name,
         "mass": mass,
         "orbit": orbit_data,
-        "image": image_bytes
+        "style": style_data,
+        "image": image_bytes,
+        "model": model
     }
     
     try:
@@ -151,7 +169,9 @@ async def post_update(id: str,
                       name: str = fastapi.Form(...),
                       mass: float = fastapi.Form(...),
                       orbit: str = fastapi.Form(...),
+                      style: str = fastapi.Form(...),
                       image: fastapi.UploadFile | None = fastapi.File(None),
+                      model: str = fastapi.Form(...),
                       client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
     """HTTP POST UPDATE spacecrafts collection
 
@@ -160,7 +180,9 @@ async def post_update(id: str,
         name (str, optional): Name. Defaults to fastapi.Form(...).
         mass (float, optional): Mass. Defaults to fastapi.Form(...).
         orbit (str, optional): Orbit parameters. Defaults to fastapi.Form(...).
+        style (str, optional): Style parameters. Defaults to fastapi.Form(...).
         image (fastapi.UploadFile | None, optional): Image. Defaults to fastapi.File(None).
+        model (str, optional): 3D model name. Defaults to fastapi.Form(...).
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
@@ -196,6 +218,16 @@ async def post_update(id: str,
     except Exception:
         
         return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid orbit JSON")
+    
+     # * Parse style JSON
+    
+    try:
+        
+        style_data = json.loads(style)
+        
+    except Exception:
+        
+        return utility.error(fastapi.status.HTTP_400_BAD_REQUEST, "Invalid style JSON")
 
     # * Build document
     
@@ -203,7 +235,9 @@ async def post_update(id: str,
     {
         "name": name,
         "mass": mass,
-        "orbit": orbit_data
+        "orbit": orbit_data,
+        "style": style_data,
+        "model": model
     }
     
     # * Read image if provided

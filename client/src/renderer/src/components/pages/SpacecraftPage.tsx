@@ -7,6 +7,7 @@ import checkError from "@renderer/common/error"
 import Tooltip from "../Tooltip"
 import SpacecraftDialog from "../dialogs/SpacecraftDialog"
 import DeleteSpacecraftDialog from "../dialogs/DeleteSpacecraftDialog"
+import GlbViewer from "../common/GlbViewer"
 
 /** @function SpacecraftPage */
 export default function SpacecraftPage(): react.JSX.Element
@@ -18,6 +19,8 @@ export default function SpacecraftPage(): react.JSX.Element
     const [openDelete, setOpenDelete] = react.useState<boolean>(false)
 
     const [edit, setEdit] = react.useState<boolean>(false)
+
+    const [models, setModels] = react.useState<IGlbModel[]>([])
 
     const [items, setItems] = react.useState<IDbSpacecraftItem[]>([])
 
@@ -43,7 +46,16 @@ export default function SpacecraftPage(): react.JSX.Element
         }
     }
 
-    react.useEffect(() => { getItems() }, [])
+    react.useEffect(() =>
+    {
+        // * Retrieve GLB models
+
+        fetch("/models/models.json").then(res => res.json()).then(setModels)
+
+        // * Retrieve spacecraft items
+        
+        getItems()
+    }, [])
 
     // --- RENDERING ---
 
@@ -52,7 +64,8 @@ export default function SpacecraftPage(): react.JSX.Element
             
             {/* List */}
             
-            <div className="w-64 bg-stone-800 text-white overflow-y-auto border-4 border-stone-600 p-2 rounded">
+            <div className="w-64 bg-stone-800 text-white overflow-y-auto border-4 border-stone-600 p-2 rounded
+                            overflow-auto custom-scrollbar">
 
                 <h1 className="text-center border-b-2 mb-2 uppercase">Spacecraft List</h1>
                 
@@ -74,12 +87,12 @@ export default function SpacecraftPage(): react.JSX.Element
 
             {/* Details */}
 
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="flex-1 p-6 overflow-auto custom-scrollbar">
 
             {
                 selected
                 ?
-                <SpacecraftDetails item={selected} />
+                <SpacecraftDetails item={selected} models={models} />
                 :
                 <div className="text-stone-400">Add a spacecraft</div>
             }
@@ -159,9 +172,10 @@ export default function SpacecraftPage(): react.JSX.Element
  * @description Fill details of the selected spacecraft
  * 
  * @param item Selected spacecraft
+ * @param models Available 3D models
  * @returns JSX
  */
-function SpacecraftDetails({ item }: Readonly<{ item: IDbSpacecraftItem }>): react.JSX.Element
+function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem, models: IGlbModel[] }>): react.JSX.Element
 {
     return (
         <div className="text-stone-300 space-y-4">
@@ -195,15 +209,59 @@ function SpacecraftDetails({ item }: Readonly<{ item: IDbSpacecraftItem }>): rea
 
             <div className="border-b-2 border-stone-300"></div>
 
-            {/* Image */}
+            {/* Style */}
 
-            {item.image && (
-                <img
-                    src={item.image ? `data:image/png;base64,${item.image}` : undefined}
-                    alt={item.name}
-                    className="w-64 h-auto rounded border border-stone-700"
-                />
-            )}
+            <h2 className="text-2xl text-center">Style</h2>
+
+            <div className="grid grid-cols-2 gap-4 text-stone-300">
+
+                <div><strong>Width:</strong> {item.style.width} px</div>
+                <div className="flex align-center gap-4"><strong>Color:</strong>
+                    <div className="w-64 h-6 rounded" style={{ backgroundColor: item.style.color }}/>
+                </div>
+
+            </div>
+
+            <div className="border-b-2 border-stone-300"></div>
+
+            <div className="flex gap-4 h-75">
+
+                {/* Image */}
+
+                {
+                    item.image
+                    ?
+                    <img
+                        src={item.image ? `data:image/png;base64,${item.image}` : undefined}
+                        alt={item.name}
+                        className="w-1/2 rounded border-4 border-stone-700"
+                    />
+                    :
+                    <div className="border-stone-600 border-4 rounded w-1/2 flex items-center justify-center text-gray-500">
+                        Image preview not available
+                    </div>
+                }
+
+                {/* 3D Model */}
+
+                {
+                    item.model
+                    ?
+                    <div className="w-1/2">
+
+                        <GlbViewer
+                            model={item.model}
+                            scale={models.find(m => m.name === item.model)?.scale ?? 1} />
+
+                    </div>
+                    :
+                    <div className="border-stone-600 border-4 rounded w-1/2 flex items-center justify-center text-gray-500">
+                        Model preview not available
+                    </div>
+                }
+
+            </div>
+
         </div>
     )
 }

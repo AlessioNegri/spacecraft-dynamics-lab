@@ -5,6 +5,7 @@ import checkError from "@renderer/common/error"
 
 import Dialog from "./Dialog"
 import FormInput from "./FormInput"
+import GlbViewer from "../common/GlbViewer"
 
 const defaultSpacecraft: ISpacecraftForm =
 {
@@ -20,7 +21,21 @@ const defaultSpacecraft: ISpacecraftForm =
         aop: 0,
         tan: 0
     },
-    image: null
+    style:
+    {
+        width: 1,
+        color: "#FFFFFF"
+    },
+    image: null,
+    model: ""
+}
+
+const defaultModel: IGlbModel =
+{
+    name: "",
+    scale: 1,
+    minimumPixelSize: 1,
+    maximumScale: 1
 }
 
 interface SpacecraftDialogProps
@@ -41,6 +56,10 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
     const [errors, setErrors] = react.useState<Record<string, string>>({})
     
     const [preview, setPreview] = react.useState<string | null>(null)
+
+    const [models, setModels] = react.useState<IGlbModel[]>([])
+    
+    const [selectedModel, setSelectedModel] = react.useState<IGlbModel>(defaultModel)
 
     const [axiosError, setAxiosError] = react.useState<string>("")
 
@@ -64,7 +83,13 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                     aop: Number(props.item!.orbit.aop),
                     tan: Number(props.item!.orbit.tan)
                 },
-                image: null
+                style:
+                {
+                    width: Number(props.item!.style.width),
+                    color: String(props.item!.style.color)
+                },
+                image: null,
+                model: String(props.item!.model)
             }
 
             setForm(spacecraft)
@@ -73,6 +98,15 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         {
             setForm(defaultSpacecraft)
         }
+
+        fetch("/models/models.json")
+        .then(res => res.json())
+        .then((models: IGlbModel[]) =>
+        {
+            setModels(models)
+
+            if (props.edit) setSelectedModel(models.find(m => m.name === props.item!.model) || defaultModel)
+        })
     }, [])
 
     // --- FORM ---
@@ -93,6 +127,8 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         if (!validAngle(form.orbit.raan))   newErrors.raan  = "Right Ascension Ascending Node must be in rage [0°, 360°]"
         if (!validAngle(form.orbit.aop))    newErrors.aop   = "Argument Periapsis must be in rage [0°, 360°]"
         if (!validAngle(form.orbit.tan))    newErrors.tan   = "True Anomaly must be in rage [0°, 360°]"
+
+        if (Number(form.style.width) < 0)     newErrors.width   = "Width must be a positive number"
 
         setErrors(newErrors)
 
@@ -115,6 +151,13 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         if (name in form.orbit)
         {
             setForm({ ...form, orbit: { ...form.orbit, [name]: value } })
+
+            return
+        }
+
+        if (name in form.style)
+        {
+            setForm({ ...form, style: { ...form.style, [name]: value } })
 
             return
         }
@@ -143,7 +186,15 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
             tan: form.orbit.tan
         }))
 
+        data.append("style", JSON.stringify(
+        {
+            width: form.style.width,
+            color: form.style.color
+        }))
+
         if (form.image) data.append("image", form.image)
+        
+        data.append("model", selectedModel.name)
 
         try
         {
@@ -177,8 +228,10 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         <Dialog title={`${props.edit ? "Edit" : "Add"} Spacecraft`} onClose={() => { props.onClose() }} >
 
             <form
+                id="spacecraft-form"
                 onSubmit={handleSubmit}
-                className="mx-auto p-6 bg-stone-800 text-gray-100 rounded-lg shadow-lg space-y-6">
+                className="mx-auto p-6 bg-stone-800 text-gray-100 rounded-lg shadow-lg space-y-6 overflow-auto
+                            max-h-[80vh] custom-scrollbar">
 
                 <FormInput
                     label="Name"
@@ -256,6 +309,32 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
 
                 </div>
 
+                <div className="space-y-3">
+
+                    <h3 className="text-lg font-semibold">Style</h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+
+                        <FormInput
+                            label="Line Width (px)"
+                            type="number"
+                            name="width"
+                            value={form.style.width}
+                            error={errors.width}
+                            setValue={handleChange} />
+
+                        <FormInput
+                            label="Line Color"
+                            type="color"
+                            name="color"
+                            value={form.style.color}
+                            error={errors.color}
+                            setValue={handleChange} />
+
+                    </div>
+
+                </div>
+
                 <FormInput
                     label="Image"
                     type="file"
@@ -266,17 +345,54 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
             {
                 preview &&
                 (
-                    <div className="mt-3">
+                    <div className="mt-3 border-stone-600 border-4 rounded flex items-center justify-center">
 
-                        <img src={preview} alt="Preview" className="w-40 h-40 object-cover" />
+                        <img src={preview} alt="Preview" className="object-cover" />
 
                     </div>
                 )
             }
 
-                <button
+                <div>
+
+                    <label htmlFor="model" className="mr-4 font-medium">Model</label>
+                    
+                    <select
+                        id="model"
+                        className="w-7/8 bg-stone-700 border border-gray-700 focus:border-orange-500 
+                                    rounded h-8 mb-4"
+                        value={selectedModel.name}
+                        onChange={e => 
+                        {
+                            const name: string = e.target.value
+
+                            const model: IGlbModel | undefined = models.find(m => m.name === name)
+
+                            setSelectedModel(model ?? defaultModel)
+                        }}>
+
+                        <option value="">Choose a model</option>
+
+                        {
+                            models.map(m => (<option key={m.name} value={m.name}>{m.name}</option>))
+                        }
+                        
+                    </select>
+
+                    <div className="flex w-full h-64">
+                        
+                        <GlbViewer model={selectedModel.name} scale={selectedModel.scale} />
+                        
+                    </div>
+
+                </div>
+
+            </form>
+
+            <button
                     type="submit"
-                    className="w-full py-2 bg-blue-800 hover:bg-blue-700 rounded font-semibold transition">
+                    form="spacecraft-form"
+                    className="w-full py-2 bg-blue-800 hover:bg-blue-700 rounded font-semibold transition mt-4">
 
                     Save
 
@@ -285,8 +401,6 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
             {
                 axiosError && <p className="text-red-400 text-sm select-text">{axiosError}</p>
             }
-
-            </form>
 
         </Dialog>
     )

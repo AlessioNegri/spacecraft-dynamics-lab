@@ -17,13 +17,20 @@ class OrbitModel(pydantic.BaseModel):
     raan: float
     aop: float
     tan: float
+    
+class StyleModel(pydantic.BaseModel):
+    
+    width: int
+    color: str
 
 class SpacecraftModel(pydantic.BaseModel):
     
     name: str
     mass: float
     orbit: OrbitModel
+    style: StyleModel
     image: str | None
+    model: str
     
 class SpacecraftModelInfo(SpacecraftModel):
     

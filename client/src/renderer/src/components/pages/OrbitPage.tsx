@@ -6,21 +6,6 @@ import api from "@renderer/common/api"
 import checkError from "@renderer/common/error"
 import { generateOrbitPositions } from "@renderer/common/orbit"
 
-function buildSampledPosition(positions: cesium.Cartesian3[])
-{
-    const property = new cesium.SampledPositionProperty()
-
-    const start = cesium.JulianDate.now()
-    const step = 10 // seconds between samples
-
-    positions.forEach((pos, i) => {
-        const time = cesium.JulianDate.addSeconds(start, i * step, new cesium.JulianDate())
-        property.addSample(time, pos)
-    })
-
-    return property
-}
-
 /** @function OrbitPage */
 export default function OrbitPage()
 {
@@ -51,6 +36,8 @@ function OrbitViewer()
 
     const [viewerReady, setViewerReady] = react.useState(false)
 
+    const [models, setModels] = react.useState<IGlbModel[]>([])
+
     const [items, setItems] = react.useState<IDbSpacecraftItem[]>([])
 
     // --- USE REF ---
@@ -78,6 +65,15 @@ function OrbitViewer()
             creationFunction: () => osm
         })
     ], [osm])
+
+    // * Models
+
+    react.useEffect(() =>
+    {
+        // * Retrieve GLB models
+        
+        fetch("/models/models.json").then(res => res.json()).then(setModels)
+    }, [])
 
     // * Orbits
 
@@ -174,8 +170,8 @@ function OrbitViewer()
                     
                         <resium.PolylineGraphics
                             positions={positions}
-                            width={4}
-                            material={cesium.Color.DARKTURQUOISE}
+                            width={items[index].style.width}
+                            material={cesium.Color.fromCssColorString(items[index].style.color)}
                             clampToGround={false}/>
 
                     </resium.Entity>
@@ -183,25 +179,68 @@ function OrbitViewer()
                 ))}
 
                 {
-                    viewerReady && satellitePaths.map((path, index) => (
-                    
-                    <resium.Entity
-                        key={items[index]._id + "_sat"}
-                        position={path}
-                        path={new cesium.PathGraphics({ width: 2, material: cesium.Color.YELLOW.withAlpha(0.5) })}
-                        // point={new cesium.PointGraphics({ pixelSize: 10, color: cesium.Color.YELLOW })}
-                        model={new cesium.ModelGraphics(
-                            {
-                                uri: '/models/AcrimSAT.glb',
-                                scale: 1, // ? Tweak as needed
-                                minimumPixelSize: 32, // ? Keeps it visible when far
-                                maximumScale: 200 // ? Avoids insane scaling when close
-                            })}
-                        />
-                ))}
+                    viewerReady && satellitePaths.map((path, index) =>
+                    {
+                        if (items[index].model === "")
+                        {
+                            return (
+                                <resium.Entity
+                                    key={items[index]._id + "_sat"}
+                                    position={path}
+                                    point={new cesium.PointGraphics(
+                                        {
+                                            pixelSize: items[index].style.width * 2,
+                                            color: cesium.Color.fromCssColorString(items[index].style.color)
+                                        })}
+                                    />
+                            )
+                        }
+                        else
+                        {
+                            return (
+                                <resium.Entity
+                                    key={items[index]._id + "_sat"}
+                                    position={path}
+                                    //path={new cesium.PathGraphics({ width: 2, material: cesium.Color.YELLOW.withAlpha(0.5) })}
+                                    model={new cesium.ModelGraphics(
+                                        {
+                                            uri: `/models/${items[index].model}.glb`,
+                                            scale: 1, // ? Tweak as needed
+                                            minimumPixelSize: models.find(m => m.name === items[index].model)?.minimumPixelSize ?? 1, // ? Keeps it visible when far
+                                            maximumScale: models.find(m => m.name === items[index].model)?.maximumScale ?? 1 // ? Avoids insane scaling when close
+                                        })}
+                                    />
+                            )
+                        }                    
+                    }
+                )}
 
             </resium.Viewer>
             
         </>
     )
+}
+
+/**
+ * @description Build a SampledPositionProperty from an array of Cartesian3 positions for simulating orbits
+ * 
+ * @param positions Positions array
+ * @returns SampledPositionProperty
+ */
+function buildSampledPosition(positions: cesium.Cartesian3[]): cesium.SampledPositionProperty
+{
+    const property: cesium.SampledPositionProperty = new cesium.SampledPositionProperty()
+
+    const start: cesium.JulianDate = cesium.JulianDate.now()
+
+    const step = 10 // ? Seconds between samples
+
+    positions.forEach((pos: cesium.Cartesian3, i: number) =>
+    {
+        const time: cesium.JulianDate = cesium.JulianDate.addSeconds(start, i * step, new cesium.JulianDate())
+
+        property.addSample(time, pos)
+    })
+
+    return property
 }

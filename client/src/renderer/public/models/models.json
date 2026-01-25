@@ -1,0 +1,20 @@
+[
+    {
+        "name": "AcrimSAT",
+        "scale": 0.0005,
+        "minimumPixelSize": 50,
+        "maximumScale": 100
+    },
+    {
+        "name": "Aqua",
+        "scale": 0.015,
+        "minimumPixelSize": 2000,
+        "maximumScale": 4000
+    },
+    {
+        "name": "InternationalSpaceStation",
+        "scale": 0.25,
+        "minimumPixelSize": 30000,
+        "maximumScale": 60000
+    }
+]

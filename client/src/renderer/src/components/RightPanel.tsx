@@ -62,7 +62,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
 
             {/* Page fills remaining space */}
 
-            <div className="flex-1 min-h-1/4 overflow-auto">
+            <div className="flex-1 min-h-1/4 overflow-auto custom-scrollbar">
 
                 {props.activePage === "spacecraft" && <SpacecraftPage />}
                 {props.activePage === "orbit" && <OrbitPage/>}
@@ -70,29 +70,23 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
                 
             </div>
 
-        {
-            consoleShow && (
-            <>
+            {/* Resize bar */}
 
-                {/* Resize bar */}
+            <button
+                onMouseDown={onMouseDown}
+                className={`h-2 cursor-row-resize bg-stone-700 hover:bg-stone-600 active:bg-stone-500
+                            ${consoleShow ? "" : "hidden"}`}/>
 
-                <button
-                    onMouseDown={onMouseDown}
-                    className="h-2 cursor-row-resize bg-stone-700 hover:bg-stone-600 active:bg-stone-500"/>
+            {/* Console with dynamic height */}
+        
+            <div
+                className={`overflow-auto custom-scrollbar bg-red-300 text-white min-h-1/4 flex
+                            ${consoleShow ? "" : "hidden"}`}
+                style={{ height: consoleHeight }}>
 
-                {/* Console with dynamic height */}
+                <Console />
 
-            
-                <div
-                    className="overflow-auto custom-scrollbar bg-red-300 text-white min-h-1/4 flex"
-                    style={{ height: consoleHeight }}>
-
-                    <Console />
-
-                </div>
-                
-            </>)
-        }
+            </div>
 
         </div>
     )
