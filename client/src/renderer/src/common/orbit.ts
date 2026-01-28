@@ -1,4 +1,4 @@
-import * as Cesium from "cesium"
+import * as cesium from "cesium"
 
 /**
  * @description Generate orbit positions in ECEF frame
@@ -7,9 +7,9 @@ import * as Cesium from "cesium"
  * @param samples Number of samples to generate
  * @returns Cartesian3[] Array of positions in ECEF frame
  */
-export function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
+function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
 {
-    const positions: Cesium.Cartesian3[] = []
+    const positions: cesium.Cartesian3[] = []
 
     const { sma, ecc, inc, raan, aop } = orbit
 
@@ -22,7 +22,7 @@ export function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
     const cosw: number = Math.cos(aop)
     const sinw: number = Math.sin(aop)
 
-    const PQW_to_ECI: Cesium.Matrix3 = new Cesium.Matrix3(
+    const PQW_to_ECI: cesium.Matrix3 = new cesium.Matrix3(
                                                             cosO * cosw - sinO * sinw * cosi,
                                                             -cosO * sinw - sinO * cosw * cosi,
                                                             sinO * sini,
@@ -38,13 +38,13 @@ export function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
 
     // * Use a single timestamp for the whole orbit
 
-    const time: Cesium.JulianDate = Cesium.JulianDate.now()
+    const time: cesium.JulianDate = cesium.JulianDate.now()
 
     // * Samples
 
     let first: boolean = true
 
-    const firstPosition: Cesium.Cartesian3 = new Cesium.Cartesian3()
+    const firstPosition: cesium.Cartesian3 = new cesium.Cartesian3()
 
     for (let i = 0; i < samples; i++)
     {
@@ -64,17 +64,17 @@ export function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
 
         // * Rotate from perifocal → ECI
 
-        const perifocal: Cesium.Cartesian3 = new Cesium.Cartesian3(x, y, z)
+        const perifocal: cesium.Cartesian3 = new cesium.Cartesian3(x, y, z)
 
-        const eci: Cesium.Cartesian3 = Cesium.Matrix3.multiplyByVector(PQW_to_ECI, perifocal, new Cesium.Cartesian3())
+        const eci: cesium.Cartesian3 = cesium.Matrix3.multiplyByVector(PQW_to_ECI, perifocal, new cesium.Cartesian3())
 
         // * Rotate from ECI → ECEF
 
-        const icrfToFixed: Cesium.Matrix3 = Cesium.Transforms.computeIcrfToFixedMatrix(time) ||
-                                            Cesium.Transforms.computeTemeToPseudoFixedMatrix(time) ||
-                                            Cesium.Matrix3.IDENTITY
+        const icrfToFixed: cesium.Matrix3 = cesium.Transforms.computeIcrfToFixedMatrix(time) ||
+                                            cesium.Transforms.computeTemeToPseudoFixedMatrix(time) ||
+                                            cesium.Matrix3.IDENTITY
 
-        const ecef: Cesium.Cartesian3 = Cesium.Matrix3.multiplyByVector(icrfToFixed, eci, new Cesium.Cartesian3())
+        const ecef: cesium.Cartesian3 = cesium.Matrix3.multiplyByVector(icrfToFixed, eci, new cesium.Cartesian3())
 
         positions.push(ecef)
 
@@ -92,3 +92,35 @@ export function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
 
     return positions
 }
+
+/**
+ * @description Build a SampledPositionProperty from an array of Cartesian3 positions for simulating orbits
+ * 
+ * @param positions Positions array
+ * @returns SampledPositionProperty
+ */
+function buildSampledPosition(positions: cesium.Cartesian3[]): cesium.SampledPositionProperty
+{
+    const property: cesium.SampledPositionProperty = new cesium.SampledPositionProperty()
+
+    const start: cesium.JulianDate = cesium.JulianDate.now()
+
+    const step = 10 // ? Seconds between samples
+
+    positions.forEach((pos: cesium.Cartesian3, i: number) =>
+    {
+        const time: cesium.JulianDate = cesium.JulianDate.addSeconds(start, i * step, new cesium.JulianDate())
+
+        property.addSample(time, pos)
+    })
+
+    return property
+}
+
+const orbit =
+{
+    generateOrbitPositions,
+    buildSampledPosition
+}
+
+export default orbit

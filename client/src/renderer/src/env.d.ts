@@ -48,6 +48,7 @@ interface IDbSpacecraftItem
     style: IDbStyle
     image: string | null
     model: string
+    visible: boolean
 }
 
 interface ISpacecraftForm

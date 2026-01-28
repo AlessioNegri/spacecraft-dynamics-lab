@@ -1,10 +1,14 @@
 import * as react from "react"
 import * as cesium from "cesium"
 import * as resium from "resium"
+import * as iconify from "@iconify/react"
 
 import api from "@renderer/common/api"
 import checkError from "@renderer/common/error"
-import { generateOrbitPositions } from "@renderer/common/orbit"
+import orbit from "@renderer/common/orbit"
+import LayersPanel from "../common/LayersPanel"
+import TelemetryPanel from "../common/TelemetryPanel"
+import Tooltip from "../Tooltip"
 
 /** @function OrbitPage */
 export default function OrbitPage()
@@ -18,13 +22,22 @@ export default function OrbitPage()
     return (
         <div className="relative h-full w-full">
 
-            <button
-                onClick={() => setViewerKey(k => k + 1)}
-                className="absolute left-2 top-2 z-2 bg-stone-600 p-2 rounded hover:bg-stone-400 cursor-pointer" >
-                Reload Viewer
-            </button>
+            <div className="absolute right-0 bottom-8 z-2">
+
+                <Tooltip title="Reload" side="left">
+
+                    <iconify.Icon
+                        icon="mdi:reload"
+                        width={29}
+                        className="bg-gray-700 border border-gray-600 hover:bg-cyan-700 hover:border hover:border-cyan-300 cursor-pointer"
+                        onClick={() => setViewerKey(k => k + 1)} />
+                    
+                </Tooltip>
+
+            </div>
 
             <OrbitViewer key={viewerKey} />
+
         </div>
     )
 }
@@ -32,6 +45,26 @@ export default function OrbitPage()
 /** @function OrbitViewer */
 function OrbitViewer()
 {
+    // --- HTTP ---
+
+    const getSpacecrafts = async () =>
+    {
+        try
+        {
+            const res = await api.get<IDbSpacecraftItem[]>("/spacecraft/items")
+
+            const data = res.data.map(item => ({ ...item, visible: true }))
+
+            setItems(data)
+        }
+        catch (err)
+        {
+            const message: string | null = checkError(import.meta.url, err)
+            
+            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
+        }
+    }
+
     // --- USE STATE ---
 
     const [viewerReady, setViewerReady] = react.useState(false)
@@ -40,11 +73,85 @@ function OrbitViewer()
 
     const [items, setItems] = react.useState<IDbSpacecraftItem[]>([])
 
+    const [selectedId, setSelectedId] = react.useState<string | null>(null)
+
+    const [creditContainer, setCreditContainer] = react.useState<HTMLDivElement | null>(null)
+
+    const [layoutContainer, setLayoutContainer] = react.useState<HTMLDivElement | null>(null)
+    
+    const [telemetryContainer, setTelemetryContainer] = react.useState<HTMLDivElement | null>(null)
+
     // --- USE REF ---
 
     const viewerRef = react.useRef<resium.CesiumComponentRef<cesium.Viewer>>(null)
 
-    const creditRef = react.useRef<HTMLDivElement>(null)
+    const entityRefs = react.useRef<Map<string, cesium.Entity>>(new Map())
+
+    // --- USE EFFECT ---
+
+    react.useEffect(() =>
+    {
+        // * Retrieve GLB models
+        
+        fetch("/models/models.json").then(res => res.json()).then(setModels)
+
+        // * Retrieve Spacecraft from DB
+        
+        getSpacecrafts()
+    }, [])
+
+    react.useEffect(() =>
+    {
+        if (!items.length) return
+
+        const ref = viewerRef.current
+
+        if (!ref) return
+
+        const viewer = ref.cesiumElement
+
+        if (!viewer) return
+
+        //viewer.scene.globe.baseColor = cesium.Color.DARKGRAY
+
+        //viewer.camera.setView({ destination: cesium.Cartesian3.fromDegrees(0, 10_000_000, 20_000_000) })
+
+        const start: cesium.JulianDate  = cesium.JulianDate.now()
+        const stop: cesium.JulianDate   = cesium.JulianDate.addSeconds(start, 3600, new cesium.JulianDate())
+
+        clockViewModel.startTime        = start.clone()
+        clockViewModel.stopTime         = stop.clone()
+        clockViewModel.currentTime      = start.clone()
+        clockViewModel.clockRange       = cesium.ClockRange.LOOP_STOP
+        clockViewModel.multiplier       = 1 // ? 1 second
+        clockViewModel.shouldAnimate    = true
+
+        setViewerReady(true)
+    }, [items])
+
+    react.useEffect(() =>
+    {
+        const viewer = viewerRef.current?.cesiumElement
+
+        if (!viewer) return
+
+        if (selectedId)
+        {
+            const entity = entityRefs.current.get(selectedId)
+
+            viewer.selectedEntity = entity
+
+            viewer.selectedEntityChanged.raiseEvent(entity)
+
+            viewer.flyTo(entity!, { duration: 5 })
+
+            //viewer.camera.lookAtTransform(cesium.Matrix4.IDENTITY, new cesium.Cartesian3(0, -2000, 800))
+        }
+        else
+        {
+            viewer.selectedEntity = undefined
+        }
+    }, [selectedId])
 
     // --- USE MEMO ---
 
@@ -66,85 +173,63 @@ function OrbitViewer()
         })
     ], [osm])
 
-    // * Models
-
-    react.useEffect(() =>
-    {
-        // * Retrieve GLB models
-        
-        fetch("/models/models.json").then(res => res.json()).then(setModels)
-    }, [])
-
     // * Orbits
 
     const orbits = react.useMemo(() => items.map(item =>
     {
-        return generateOrbitPositions({ ...item.orbit, sma: item.orbit.sma * 1000 })
+        return orbit.generateOrbitPositions({ ...item.orbit, sma: item.orbit.sma * 1000 })
     }), [items])
 
     const satellitePaths = react.useMemo(() =>
     {
-        return orbits.map(positions => buildSampledPosition(positions))
+        return orbits.map(positions => orbit.buildSampledPosition(positions))
     }, [orbits])
-
-    // --- HTTP ---
-
-    const getSpacecrafts = async () =>
-    {
-        try
-        {
-            const res = await api.get<IDbSpacecraftItem[]>("/spacecraft/items")
-
-            setItems(res.data)
-        }
-        catch (err)
-        {
-            const message: string | null = checkError(import.meta.url, err)
-            
-            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
-        }
-    }
-
-    // --- USE EFFECT ---
-
-    react.useEffect(() => { getSpacecrafts() }, [])
-
-    react.useEffect(() =>
-    {
-        const ref = viewerRef.current
-
-        if (!ref) return
-
-        const viewer = ref.cesiumElement
-
-        if (!viewer) return
-
-        //viewer.scene.globe.baseColor = cesium.Color.DARKGRAY
-
-        //viewer.camera.setView({ destination: cesium.Cartesian3.fromDegrees(0, 0, 20_000_000) })
-
-        const start: cesium.JulianDate  = cesium.JulianDate.now()
-        const stop: cesium.JulianDate   = cesium.JulianDate.addSeconds(start, 3600, new cesium.JulianDate())
-
-        clockViewModel.startTime        = start.clone()
-        clockViewModel.stopTime         = stop.clone()
-        clockViewModel.currentTime      = start.clone()
-        clockViewModel.clockRange       = cesium.ClockRange.LOOP_STOP
-        clockViewModel.multiplier       = 100
-        clockViewModel.shouldAnimate    = true
-
-        setViewerReady(true)
-    })
 
     // --- RENDERING ---
 
-    return (
-        <>
+    const toggleVisibility = (id: string) =>
+    {
+        setItems(prev => prev.map(sc => sc._id === id ? { ...sc, visible: !sc.visible } : sc))
+    }
 
-            <div ref={creditRef} style={{ display: "none" }} /> {/* Hide default Cesium credit */}
+    return (
+        <div className="h-full w-full relative">
+
+            {/* Hide default Cesium credit */}
+
+            <div ref={setCreditContainer} style={{ display: "none" }} id="credit-container" />
+
+            {/* Layers panel */}
+
+            <div ref={setLayoutContainer}>
+
+                <LayersPanel
+                    spacecrafts={items}
+                    selectedId={selectedId}
+                    onToggle={toggleVisibility}
+                    onTrack={(id: string) => setSelectedId(id)}
+                    onStop={() => setSelectedId(null)} />
+            
+            </div>
+
+            {/* Telemetry panel */}
+
+            <div ref={setTelemetryContainer}>
+
+                <TelemetryPanel
+                    selectedId={selectedId}
+                    entityRefs={entityRefs}
+                    viewerRef={viewerRef}
+                    />
+
+            </div>
+
+        {
+            creditContainer && layoutContainer && telemetryContainer && (
 
             <resium.Viewer
                 ref={viewerRef}
+                creditDisplay={undefined}
                 timeline={false}
                 animation={false}
                 baseLayerPicker={true}
@@ -154,7 +239,7 @@ function OrbitViewer()
                 homeButton={true}
                 imageryProviderViewModels={viewModels}
                 terrain={undefined} // ? Disable terrain to avoid CSP issues
-                creditContainer={creditRef.current || undefined}
+                creditContainer={document.getElementById("credit-container") ?? undefined}
                 shouldAnimate={true}
                 clockViewModel={clockViewModel}
                 style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -172,6 +257,7 @@ function OrbitViewer()
                             positions={positions}
                             width={items[index].style.width}
                             material={cesium.Color.fromCssColorString(items[index].style.color)}
+                            show={items[index].visible}
                             clampToGround={false}/>
 
                     </resium.Entity>
@@ -186,12 +272,15 @@ function OrbitViewer()
                             return (
                                 <resium.Entity
                                     key={items[index]._id + "_sat"}
+                                    ref={el => { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
                                     position={path}
+                                    show={items[index].visible}
                                     point={new cesium.PointGraphics(
                                         {
                                             pixelSize: items[index].style.width * 2,
                                             color: cesium.Color.fromCssColorString(items[index].style.color)
                                         })}
+                                    onClick={() => setSelectedId(items[index]._id!)}
                                     />
                             )
                         }
@@ -200,8 +289,10 @@ function OrbitViewer()
                             return (
                                 <resium.Entity
                                     key={items[index]._id + "_sat"}
+                                    ref={el => { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
                                     position={path}
                                     //path={new cesium.PathGraphics({ width: 2, material: cesium.Color.YELLOW.withAlpha(0.5) })}
+                                    show={items[index].visible}
                                     model={new cesium.ModelGraphics(
                                         {
                                             uri: `/models/${items[index].model}.glb`,
@@ -209,38 +300,16 @@ function OrbitViewer()
                                             minimumPixelSize: models.find(m => m.name === items[index].model)?.minimumPixelSize ?? 1, // ? Keeps it visible when far
                                             maximumScale: models.find(m => m.name === items[index].model)?.maximumScale ?? 1 // ? Avoids insane scaling when close
                                         })}
+                                    onClick={() => setSelectedId(items[index]._id!)}
                                     />
                             )
                         }                    
                     }
                 )}
 
-            </resium.Viewer>
+            </resium.Viewer>)
+        }
             
-        </>
+        </div>
     )
-}
-
-/**
- * @description Build a SampledPositionProperty from an array of Cartesian3 positions for simulating orbits
- * 
- * @param positions Positions array
- * @returns SampledPositionProperty
- */
-function buildSampledPosition(positions: cesium.Cartesian3[]): cesium.SampledPositionProperty
-{
-    const property: cesium.SampledPositionProperty = new cesium.SampledPositionProperty()
-
-    const start: cesium.JulianDate = cesium.JulianDate.now()
-
-    const step = 10 // ? Seconds between samples
-
-    positions.forEach((pos: cesium.Cartesian3, i: number) =>
-    {
-        const time: cesium.JulianDate = cesium.JulianDate.addSeconds(start, i * step, new cesium.JulianDate())
-
-        property.addSample(time, pos)
-    })
-
-    return property
 }

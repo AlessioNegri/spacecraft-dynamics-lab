@@ -22,7 +22,7 @@ export default function Tooltip(props: Readonly<TooltipProps>): react.JSX.Elemen
 
             <tooltip.Content
                 side={props.side}
-                className="bg-stone-700 text-white px-2 py-1 rounded shadow">
+                className="bg-stone-700 text-white px-2 py-1 m-2 rounded shadow">
 
                 {props.title}
 
