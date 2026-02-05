@@ -58,3 +58,9 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
+
+/** Color of calendar in input */
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* makes icon white */
+}

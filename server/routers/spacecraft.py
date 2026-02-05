@@ -6,6 +6,7 @@ import typing
 
 import database
 import routers.utility as utility
+import schemas.common as common
 import schemas.spacecraft_schema as schema
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
@@ -53,7 +54,7 @@ def convert_orbit(orbit_data: dict) -> dict:
 
 # --- HTTP ---
 
-router:fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft', tags=['Spacecraft'])
+router: fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft', tags=['Spacecraft'])
 
 # >>> GET
 
@@ -80,7 +81,7 @@ async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_cl
 
 # >>> POST
 
-@router.post("/insert", response_model=schema.ActionModel)
+@router.post("/insert", response_model=common.ActionModel)
 async def post_insert(name: str = fastapi.Form(...),
                       mass: float = fastapi.Form(...),
                       orbit: str = fastapi.Form(...),
@@ -164,7 +165,7 @@ async def post_insert(name: str = fastapi.Form(...),
         
         return utility.error(fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR, f"Database insert failed: {str(e)}")
 
-@router.post("/update/{id}", response_model=schema.ActionModel)
+@router.post("/update/{id}", response_model=common.ActionModel)
 async def post_update(id: str,
                       name: str = fastapi.Form(...),
                       mass: float = fastapi.Form(...),
@@ -262,7 +263,7 @@ async def post_update(id: str,
 
 # >>> DELETE
 
-@router.delete("/{id}", response_model=schema.ActionModel)
+@router.delete("/{id}", response_model=common.ActionModel)
 async def delete_spacecraft(id: str,
                             client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
     """HTTP DELETE spacecrafts collection

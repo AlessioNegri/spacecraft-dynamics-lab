@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 import fastapi
 
@@ -10,7 +9,12 @@ import database
 
 import schemas.spacecraft_schema as spacecraft_schema
 
+from web_socket_manager import WebSocketManager
+from app_data import AppData
+
+from routers.web_socket import router as router_web_socket
 from routers.spacecraft import router as router_spacecraft
+from routers.interplanetary import router as router_interplanetary
 
 # --- CONTEXT ---
 
@@ -106,80 +110,14 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=["*"],
                    allow_headers=["*"])
 
+app.state.wsm   = WebSocketManager()
+app.state.data  = AppData()
+
+app.include_router(router=router_web_socket)
 app.include_router(router=router_spacecraft)
+app.include_router(router=router_interplanetary)
 
 @app.get("/")
 async def get_root():
     
     return {"message": "Hello from FastAPI!"}
-
-# --- WEB SOCKET ---
-
-app.state.send_enabled = False # ? CHeck if I can send to web socket
-
-async def reader(ws: fastapi.WebSocket) -> None:
-    """Read from web socket
-
-    Args:
-        ws (fastapi.WebSocket): Web socket
-    """
-    
-    while True:
-        
-        msg = await ws.receive_json()
-        
-        print(msg)
-        
-async def sender(ws: fastapi.WebSocket) -> None:
-    """Write to web socket
-
-    Args:
-        ws (fastapi.WebSocket): Web socket
-    """
-    
-    while True:
-        
-        if app.state.send_enabled:
-            
-            print("SENDING...")
-            
-            await ws.send_json({"Text": "Polling"})
-            
-        await asyncio.sleep(1)
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: fastapi.WebSocket):
-    """Manage the web socket endpoint
-
-    Args:
-        websocket (fastapi.WebSocket): Receiving web socket
-    """
-    
-    # * Accecpt client
-    
-    await websocket.accept()
-    
-    print("Client connected: ", websocket.base_url)
-    
-    # * Tasks
-    
-    read_task = asyncio.create_task(reader(websocket))
-    send_task = asyncio.create_task(sender(websocket))
-    
-    _, pending = await asyncio.wait({ read_task, send_task }, return_when=asyncio.FIRST_EXCEPTION)
-    
-    for task in pending: task.cancel()
-    
-    print("Client disconnected: ", websocket.base_url)
-
-@app.get("/start")
-async def start():
-    print("STARTED")
-    app.state.send_enabled = True
-    return {"message": "STARTED"}
-
-@app.get("/end")
-async def end():
-    print("ENDED")
-    app.state.send_enabled = False
-    return {"message": "ENDED"}

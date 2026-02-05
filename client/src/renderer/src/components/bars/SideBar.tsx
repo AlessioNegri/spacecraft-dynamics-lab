@@ -36,6 +36,11 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
             id: "orbit",
             label: "Orbit",
             icon: "mdi:orbit"
+        },
+        {
+            id: "interplanetary",
+            label: "Interplanetary",
+            icon: "game-icons:orbital"
         }
     ]
 

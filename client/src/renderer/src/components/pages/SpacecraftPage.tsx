@@ -60,7 +60,7 @@ export default function SpacecraftPage(): react.JSX.Element
     // --- RENDERING ---
 
     return (
-        <div className="flex w-full h-full relative">
+        <div className="flex w-full h-full relative bg-neutral-900">
             
             {/* List */}
             

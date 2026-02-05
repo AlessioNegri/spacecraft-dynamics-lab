@@ -1,12 +1,5 @@
 import pydantic
 
-# * generic collection
-    
-class ActionModel(pydantic.BaseModel):
-    
-    id: str | None
-    error: str | None
-
 # * "spacecrafts" collection
 
 class OrbitModel(pydantic.BaseModel):

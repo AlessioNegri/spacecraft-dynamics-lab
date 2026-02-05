@@ -15,8 +15,9 @@
             content="default-src 'self'; 
                         script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; 
                         worker-src 'self' blob:;
-                        style-src 'self' 'unsafe-inline'; 
+                        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
                         img-src 'self' data: blob:; 
+                        font-src 'self' https://fonts.gstatic.com;
                         connect-src 'self' 
                                             http://127.0.0.1:8000 
                                             https://api.iconify.design 
@@ -32,6 +33,10 @@
                                             https://www.gstatic.com/draco/versioned/decoders/1.5.5/draco_decoder.wasm;"/>
 
                         <!-- wasm-unsafe-eval; -->
+
+            <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+
+            <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
 
     </head>
 

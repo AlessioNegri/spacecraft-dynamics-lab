@@ -81,3 +81,24 @@ interface IGlbModel
     minimumPixelSize: number,
     maximumScale: number
 }
+
+interface IInterplanetaryMissionForm
+{
+    departureBody: string
+    arrivalBody: string
+    launchWindowStart: string
+    launchWindowEnd: string
+    arrivalWindowStart: string
+    arrivalWindowEnd: string
+    gridSize: number
+}
+
+interface ISelectionInfo
+{
+    launchDate: string
+    arrivalDate: string
+    dv: number
+    dv1: number
+    dv2: number
+    tofDays: number
+}

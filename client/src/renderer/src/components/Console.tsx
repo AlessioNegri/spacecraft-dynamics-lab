@@ -7,9 +7,15 @@ import LogStore from "./Log"
 /** @function Console */
 export default function Console(): react.JSX.Element
 {
+    const logStore = LogStore()
+
     // --- USE STATE ---
 
     const [show, setShow] = react.useState<boolean>(true)
+
+    // --- USE REF ---
+
+    const logRef = react.useRef<HTMLDivElement>(null)
 
     // --- USE EFFECT ---
         
@@ -20,9 +26,9 @@ export default function Console(): react.JSX.Element
         return () => { rmTC() }
     }, [])
 
-    // --- RENDERING ---
+    react.useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight }, [logStore[0]])
 
-    const logStore = LogStore()
+    // --- RENDERING ---
 
     const color = { debug: "text-stone-300", info: "text-blue-300", warning: "text-yellow-300", error: "text-red-400" }
 
@@ -40,11 +46,11 @@ export default function Console(): react.JSX.Element
 
             </Tooltip>
         
-            <div className="overflow-auto custom-scrollbar h-full">
+            <div ref={logRef} className="overflow-auto custom-scrollbar h-full">
 
             {
                 logStore[0].map((log: LogEntry, i: react.Key) => (
-                    <div key={i} className={color[log.level]}>
+                    <div key={i} className={`${color[log.level]} break-all`}>
 
                         <span className="text-gray-500">{log.timestamp}</span>
 

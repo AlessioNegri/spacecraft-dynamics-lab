@@ -11,6 +11,15 @@ declare global
         timestamp: string
     }
 
+    interface WebSocketInfo
+    {
+        source: string = ""
+        counter: number = 0
+        total: number = 0
+        running: boolean = false
+        data: JSON
+    }
+
     interface Window
     {
         electron: preload.ElectronAPI,
@@ -33,6 +42,7 @@ declare global
             onTriggerConsole    : (callback: () => void) => () => void
             onLog               : (callback: (entry: LogEntry) => void) => () => void
             onTcpOpened         : (callback: (opened: boolean) => void) => () => void
+            onReceivedInfo      : (callback: (info: WebSocketInfo) => void) => () => void
         }
     }
 }

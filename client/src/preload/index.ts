@@ -59,6 +59,14 @@ const callback =
         electron.ipcRenderer.on('tcp:opened', listener)
 
         return () => electron.ipcRenderer.removeListener('tcp:opened', listener)
+    },
+    onReceivedInfo: (callback: (info: WebSocketInfo) => void): (() => void) =>
+    {
+        const listener = (_event: Electron.IpcRendererEvent, info: WebSocketInfo) => callback(info)
+
+        electron.ipcRenderer.on('ws:received-info', listener)
+
+        return () => electron.ipcRenderer.removeListener('ws:received-info', listener)
     }
 }
 

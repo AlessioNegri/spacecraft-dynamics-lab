@@ -4,7 +4,12 @@ export default {
         "./src/**/*.{js,ts,jsx,tsx}"
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                clock: ['Orbitron', 'sans-serif'],
+                tech: ['"Share Tech Mono"', 'monospace']
+            }
+        },
     },
     plugins: [],
 }

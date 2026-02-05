@@ -2,6 +2,7 @@ import * as react from "react"
 
 import SpacecraftPage from "./pages/SpacecraftPage"
 import OrbitPage from "./pages/OrbitPage"
+import InterplanetaryPage from "./pages/InterplanetaryPage"
 import Console from "./Console"
 
 interface RightPanelProps
@@ -66,6 +67,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
 
                 {props.activePage === "spacecraft" && <SpacecraftPage />}
                 {props.activePage === "orbit" && <OrbitPage/>}
+                {props.activePage === "interplanetary" && <InterplanetaryPage/>}
                 {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
                 
             </div>

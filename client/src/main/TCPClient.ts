@@ -55,7 +55,18 @@ export default class TCPClient extends Singleton<TCPClient>
         
         this.ws.onmessage = (event: MessageEvent<any>) =>
         {
-            Logger.debug("Received: " + event.data)
+            const json: JSON = JSON.parse(event.data)
+
+            const info: WebSocketInfo =
+            {
+                source: json["source"],
+                counter: json["counter"],
+                total: json["total"],
+                running: json["running"],
+                data: json["data"]
+            }
+
+            win.webContents.send("ws:received-info", info)
         }
 
         this.ws.onerror = (event: Event) =>

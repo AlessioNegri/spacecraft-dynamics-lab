@@ -71,7 +71,7 @@ export default function TelemetryPanel(props : Readonly<TelemetryPanelProps>)
             {
                 const diff: cesium.Cartesian3 = cesium.Cartesian3.subtract(pos, prev, new cesium.Cartesian3())
 
-                speed = cesium.Cartesian3.magnitude(diff)
+                speed = cesium.Cartesian3.magnitude(diff) / 1000 // ? km/s
             }
 
             setTelemetry({ lat: lat, lon: lon, alt: alt, speed: speed, time: cesium.JulianDate.toDate(time) })
@@ -116,11 +116,11 @@ export default function TelemetryPanel(props : Readonly<TelemetryPanelProps>)
 
                 <strong>Altitude</strong>
                 
-                <p>{telemetry.alt.toFixed(2)} km</p>
+                <p>{telemetry.alt.toFixed(3)} km</p>
 
                 <strong>Speed</strong>
                 
-                <p>{telemetry.speed.toFixed(2)} m/s</p>
+                <p>{telemetry.speed.toFixed(3)} km/s</p>
 
                 <strong>Time</strong>
                 

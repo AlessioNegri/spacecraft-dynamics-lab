@@ -27,6 +27,8 @@
     "@react-three/fiber": "^9.5.0",
     "cesium": "^1.137.0",
     "electron-updater": "^6.3.9",
+    "plotly.js": "^3.3.1",
+    "react-plotly.js": "^2.6.0",
     "resium": "^1.19.3",
     "three": "^0.182.0"
   },
@@ -41,6 +43,7 @@
     "@types/node": "^22.19.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/react-plotly.js": "^2.6.4",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.23",
     "axios": "^1.13.2",

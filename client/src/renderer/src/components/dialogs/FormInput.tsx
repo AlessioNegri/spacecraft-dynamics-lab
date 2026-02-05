@@ -8,6 +8,8 @@ interface FormInputProps
     value: any
     placeholder?: string
     error?: string
+    min?: number
+    max?: number
     setValue: (e: react.ChangeEvent<HTMLInputElement>) => void
 }
 
@@ -26,12 +28,12 @@ export default function FormInput(props: Readonly<FormInputProps>): react.JSX.El
     
     // * CSS default style
     
-    const cssDefault: string = `w-full px-3 py-2 rounded focus:outline-none \
-                                bg-stone-700 border border-gray-700 focus:border-orange-500`
+    const cssDefault: string = `w-full px-2 py-1 rounded focus:outline-none text-sm \
+                                bg-neutral-800 border border-neutral-700 focus:border-orange-500`
 
     // * CSS style for type "file"
 
-    const cssFile: string = "w-full text-gray-300"
+    const cssFile: string = "w-full text-neutral-400"
 
     // * CSS style for type "color"
 
@@ -45,9 +47,11 @@ export default function FormInput(props: Readonly<FormInputProps>): react.JSX.El
     if (props.type == "color") css = cssColor
 
     return (
-        <div>
+        <div className="mb-2">
 
-            <label className="block mb-1 font-medium">{props.label}</label>
+            <label htmlFor={props.name} className="block mb-1 text-neutral-400 text-xs">
+                {props.label}
+            </label>
 
             {
                 props.type === "color" && 
@@ -69,7 +73,10 @@ export default function FormInput(props: Readonly<FormInputProps>): react.JSX.El
                 onChange={props.setValue}
                 placeholder={props.placeholder}
                 className={css}
-                {...(props.type === "file" ? {} : { value: props.value })} />
+                {...(props.type === "file" ? {} : { value: props.value })}
+                {...(props.min ? { min: props.min} : {})}
+                {...(props.max ? { max: props.max} : {})}
+            />
 
         {
             props.error && <p className="text-red-400 text-sm">{props.error}</p>
