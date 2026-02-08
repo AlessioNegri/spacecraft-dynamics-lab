@@ -2,24 +2,16 @@ import * as react from "react"
 
 import InterplanetaryLeftBar from "../common/InterplanetaryLeftBar"
 import InterplanetaryMainPlot from "../common/InterplanetaryMainPlot"
-import { InterplanetaryRightBar } from "../common/InterplanetaryRightBar"
+import InterplanetaryRightBar from "../common/InterplanetaryRightBar"
 
 /** @function InterplanetaryPage */
 export default function InterplanetaryPage()
 {
     // --- USE STATE ---
 
-    const [dvGrid, setDvGrid] = react.useState<number[][] | null>(null)
+    const [porkChopData2D, setPorkChopData2D] = react.useState<IPorkChopData2D | null>(null)
 
-    const [dv1Grid, setDv1Grid] = react.useState<number[][] | null>(null)
-
-    const [dv2Grid, setDv2Grid] = react.useState<number[][] | null>(null)
-
-    const [tofGrid, setTofGrid] = react.useState<number[][] | null>(null)
-
-    const [launchDates, setLaunchDates] = react.useState<string[] | null>(null)
-
-    const [arrivalDates, setArrivalDates] = react.useState<string[] | null>(null)
+    const [porkChopData3D, setPorkChopData3D] = react.useState<IPorkChopData3D | null>(null)
 
     const [selected, setSelected] = react.useState<ISelectionInfo | null>(null)
 
@@ -33,12 +25,92 @@ export default function InterplanetaryPage()
         {
             if (info.source === "interplanetary" && info.data != undefined)
             {
-                setDvGrid(info.data["dv"])
-                setDv1Grid(info.data["dv_1"])
-                setDv2Grid(info.data["dv_2"])
-                setTofGrid(info.data["tof"])
-                setLaunchDates(info.data["launch_dates"])
-                setArrivalDates(info.data["arrival_dates"])
+                if (info.data["dvGA"] === undefined)
+                {
+                    const A: number = info.data["arrivalDates"].length
+                    const L: number = info.data["launchDates"].length
+
+                    const dv: number[][] = []
+
+                    for (let a = 0; a < A; a++)
+                    {
+                        const row: number[] = []
+
+                        for (let l = 0; l < L; l++)
+                        {
+                            row.push(info.data["dv1"][a][l] + info.data["dv2"][a][l])
+                        }
+
+                        dv.push(row)
+                    }
+
+                    const data: IPorkChopData2D =
+                    {
+                        launchDates: info.data["launchDates"],
+                        arrivalDates: info.data["arrivalDates"],
+                        tofGrid: info.data["tof"],
+                        dv1Grid: info.data["dv1"],
+                        dv2Grid: info.data["dv2"],
+                        dvGrid: dv
+                    }
+
+                    setPorkChopData2D(data)
+                    setPorkChopData3D(null)
+                }
+                else
+                {
+                    const A = info.data["arrivalDates"].length
+                    const L = info.data["launchDates"].length
+
+                    const tof1  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const tof2  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const tof   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const dv1   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const dvGA  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const dv2   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+                    const dv    : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+
+                    for (let a = 0; a < A; a++)
+                    {
+                        for (let l = 0; l < L; l++)
+                        {
+                            tof1[a][l]  = info.data["tof1"][a][0][l]
+                            tof2[a][l]  = info.data["tof2"][a][0][l]
+                            tof[a][l]   = tof1[a][l] + tof2[a][l]
+                            dv1[a][l]   = info.data["dv1"][a][0][l]
+                            dvGA[a][l]  = info.data["dvGA"][a][0][l]
+                            dv2[a][l]   = info.data["dv2"][a][0][l]
+                            dv[a][l]    = dv1[a][l] + dvGA[a][l] + dv2[a][l]
+                        }
+                    }
+
+                    const data: IPorkChopData3D =
+                    {
+                        launchDates: info.data["launchDates"],
+                        flybyDates: info.data["flybyDates"],
+                        arrivalDates: info.data["arrivalDates"],
+                        tof1Grid: tof1,
+                        tof2Grid: tof2,
+                        tofGrid: tof,
+                        dv1Grid: dv1,
+                        dvGAGrid: dvGA,
+                        dv2Grid: dv2,
+                        dvGrid: dv,
+                        tof1: info.data["tof1"],
+                        tof2: info.data["tof2"],
+                        dv1: info.data["dv1"],
+                        dvGA: info.data["dvGA"],
+                        dv2: info.data["dv2"]
+                    }
+
+                    setPorkChopData2D(null)
+                    setPorkChopData3D(data)
+                }
+            }
+            else if (info.source === "interplanetary" && info.data == undefined && porkChopData2D !== null)
+            {
+                setPorkChopData2D(null)
+                setPorkChopData3D(null)
             }
         })
 
@@ -77,8 +149,9 @@ export default function InterplanetaryPage()
                 <h1 className="text-xl font-semibold">Interplanetary Analysis</h1>
 
                 <div
-                    className="w-70 p-1 bg-neutral-950 text-green-300 rounded-lg shadow-md flex items-center 
-                                justify-center text-xl font-mono tracking-widest">
+                    className="w-85 p-1 bg-neutral-950 text-green-300 rounded-lg shadow-md flex items-center 
+                                justify-center text-xl tracking-widest"
+                    style={{ fontFamily: "Orbitron" }} >
                 
                     {time}
 
@@ -98,12 +171,8 @@ export default function InterplanetaryPage()
                 <div className="flex-1 p-4 overflow-auto flex items-center justify-center">
                     
                     <InterplanetaryMainPlot
-                        dvGrid={dvGrid}
-                        dv1Grid={dv1Grid}
-                        dv2Grid={dv2Grid}
-                        tofGrid={tofGrid}
-                        launchDates={launchDates}
-                        arrivalDates={arrivalDates}
+                        porkChopData2D={porkChopData2D}
+                        porkChopData3D={porkChopData3D}
                         onSelect={setSelected}
                     />
 

@@ -1,103 +1,36 @@
-import Plot from "react-plotly.js"
+import * as react from "react"
 import * as plotly from "plotly.js"
+import Plot from "react-plotly.js"
+
+import FormInput from "../dialogs/FormInput"
 
 interface InterplanetaryMainPlotProps
 {
-    dvGrid: number[][] | null
-    dv1Grid: number[][] | null
-    dv2Grid: number[][] | null
-    tofGrid: number[][] | null
-    launchDates: string[] | null
-    arrivalDates: string[] | null
+    porkChopData2D: IPorkChopData2D | null
+    porkChopData3D: IPorkChopData3D | null
     onSelect: (info: ISelectionInfo) => void
 }
 
 /** @function InterplanetaryMainPlot */
 export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMainPlotProps>)
 {
-    const dvHeatmap: plotly.Data =
-    {
-        x: props.launchDates,
-        y: props.arrivalDates,
-        z: props.dvGrid,
-        name: "Total Δv",
-        type: "contour",
-        colorscale: "Viridis",
-        reversescale: false,
-        contours:
-        {
-            coloring: "heatmap",
-            showlabels: true
-        },
-        colorbar:
-        {
-            title: "Δv (km/s)",
-            titleside: "right",
-            x: -0.15
-        },
-    }
+    // --- USE STATE ---
 
-    const dv1Isolines: plotly.Data =
-    {
-        x: props.launchDates,
-        y: props.arrivalDates,
-        z: props.dv1Grid,
-        name: "ΔV₁",
-        hoverinfo: "skip",
-        type: "contour",
-        showscale: false,
-        line:
-        {
-            color: "red",
-            width: 1
-        },
-        contours:
-        {
-            coloring: "none",
-            showlines: true,
-            showlabels: true,
-            labelfont:
-            {
-                color: "red",
-                size: 10
-            }
-        }
-    }
+    const [data, setData] = react.useState<plotly.Data[]>()
 
-    const tofIsolines: plotly.Data =
-    {
-        x: props.launchDates,
-        y: props.arrivalDates,
-        z: props.tofGrid,
-        name: "TOF",
-        hoverinfo: "skip",
-        type: "contour",
-        showscale: false,
-        line:
-        {
-            color: "white",
-            width: 1
-        },
-        contours:
-        {
-            coloring: "none",
-            showlines: true,
-            showlabels: true,
-            labelfont:
-            {
-                color: "white",
-                size: 10
-            }
-        }
-    }
+    const [flybyDateIndex, setFlybyDateIndex] = react.useState<number>(0)
 
-    const layout: plotly.Layout =
+    const [flybyDateLength, setFlybyDateLength] = react.useState<number>(0)
+
+    // --- CONST ---
+
+    const layout: any = //plotly.Layout
     {
         autosize: true,
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         font: { color: "#e5e5e5" },
-        margin: { l: 80, r: 80, t: 50, b: 50 },
+        margin: { l: 80, r: 100, t: 50, b: 50 },
         title:
         {
             text: "Pork Chop Plot",
@@ -124,7 +57,8 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             tickformat: "%Y-%m-%d",
             showgrid: true,
             gridcolor: "#ccc",
-            gridwidth: 1
+            gridwidth: 1,
+            constrain: "range"
         },
         yaxis:
         {
@@ -139,18 +73,304 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
                 }
             },
             type: "date",
-            tickformat: "%Y-%m-%d"
-        }
+            tickformat: "%Y-%m-%d",
+            constrain: "range"
+        },
+        transition: { duration: 0 },
+        uirevision: "static"
     }
 
-    const config: plotly.Config =
+    const config: any = //plotly.Config
     {
         responsive: true,
         displaylogo: false,
         scrollZoom: true
     }
 
-    const handleClick = (e: plotly.PlotMouseEvent) =>
+    // --- USE EFFECT ---
+
+    react.useEffect(() =>
+    {
+        if (props.porkChopData2D === null) return
+
+        const dvHeatmap: plotly.Data =
+        {
+            x: props.porkChopData2D.launchDates,
+            y: props.porkChopData2D.arrivalDates,
+            z: props.porkChopData2D.dvGrid,
+            name: "ΔV (km/s)",
+            type: "contour",
+            colorscale: "Cividis",
+            reversescale: false,
+            line:
+            {
+                color: "black",
+                width: 1
+            },
+            contours:
+            {
+                coloring: "heatmap",
+                showlabels: true,
+                size: 15,
+                showlines: true,
+                type: "levels",
+                labelfont:
+                {
+                    color: "black",
+                    size: 15
+                }
+            },
+            colorbar:
+            {
+                title:
+                {
+                    text: "ΔV (km/s)",//"$\\Delta v_{total}$",
+                },
+                x: -0.15
+            }
+        }
+
+        const dv1Isolines: plotly.Data =
+        {
+            x: props.porkChopData2D.launchDates,
+            y: props.porkChopData2D.arrivalDates,
+            z: props.porkChopData2D.dv1Grid,
+            name: "ΔV_1 (km/s)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "red",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "red",
+                    size: 15
+                }
+            }
+        }
+
+        const dv2Isolines: plotly.Data =
+        {
+            x: props.porkChopData2D.launchDates,
+            y: props.porkChopData2D.arrivalDates,
+            z: props.porkChopData2D.dv2Grid,
+            name: "ΔV_2 (km/s)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "yellow",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "yellow",
+                    size: 15
+                }
+            }
+        }
+
+        const tofIsolines: plotly.Data =
+        {
+            x: props.porkChopData2D.launchDates,
+            y: props.porkChopData2D.arrivalDates,
+            z: props.porkChopData2D.tofGrid,
+            name: "TOF (days)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "white",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "white",
+                    size: 15
+                }
+            }
+        }
+        
+        setData([dvHeatmap, dv1Isolines, dv2Isolines, tofIsolines])
+    }, [props.porkChopData2D])
+
+    react.useEffect(() =>
+    {
+        if (props.porkChopData3D === null) return
+
+        setFlybyDateLength(props.porkChopData3D.flybyDates.length - 1)
+
+        const dvHeatmap: plotly.Data =
+        {
+            x: props.porkChopData3D.launchDates,
+            y: props.porkChopData3D.arrivalDates,
+            z: props.porkChopData3D.dvGrid,
+            name: "ΔV (km/s)",
+            type: "contour",
+            colorscale: "Viridis",
+            reversescale: false,
+            line:
+            {
+                color: "black",
+                width: 1
+            },
+            contours:
+            {
+                coloring: "heatmap",
+                showlabels: true,
+                size: 15,
+                showlines: true,
+                type: "levels",
+                labelfont:
+                {
+                    color: "black",
+                    size: 15
+                }
+            },
+            colorbar:
+            {
+                title:
+                {
+                    text: "Δv (km/s)",
+                },
+                x: -0.15
+            }
+        }
+
+        const dv1Isolines: plotly.Data =
+        {
+            x: props.porkChopData3D.launchDates,
+            y: props.porkChopData3D.arrivalDates,
+            z: props.porkChopData3D.dv1Grid,
+            name: "ΔV_1 (km/s)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "red",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "red",
+                    size: 15
+                }
+            }
+        }
+
+        const dvGAIsolines: plotly.Data =
+        {
+            x: props.porkChopData3D.launchDates,
+            y: props.porkChopData3D.arrivalDates,
+            z: props.porkChopData3D.dvGAGrid,
+            name: "ΔV_GA (km/s)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "green",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "green",
+                    size: 15
+                }
+            }
+        }
+
+        const dv2Isolines: plotly.Data =
+        {
+            x: props.porkChopData3D.launchDates,
+            y: props.porkChopData3D.arrivalDates,
+            z: props.porkChopData3D.dv2Grid,
+            name: "ΔV_2 (km/s)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "yellow",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "yellow",
+                    size: 15
+                }
+            }
+        }
+
+        const tofIsolines: plotly.Data =
+        {
+            x: props.porkChopData3D.launchDates,
+            y: props.porkChopData3D.arrivalDates,
+            z: props.porkChopData3D.tofGrid,
+            name: "TOF (days)",
+            hoverinfo: "skip",
+            type: "contour",
+            showscale: false,
+            line:
+            {
+                color: "white",
+                width: 2
+            },
+            contours:
+            {
+                coloring: "none",
+                showlines: true,
+                showlabels: true,
+                labelfont:
+                {
+                    color: "white",
+                    size: 15
+                }
+            }
+        }
+        
+        setData([dvHeatmap, dv1Isolines, dvGAIsolines, dv2Isolines, tofIsolines])
+    }, [props.porkChopData3D, flybyDateIndex])
+
+    // --- HANDLE ---
+
+    const handleClick2D = (e: plotly.PlotMouseEvent) =>
     {
         if (!e.points || e.points.length === 0) return
 
@@ -160,40 +380,135 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
         {
             launchDate: p.x as string,
             arrivalDate: p.y as string,
-            dv: p.z as number,
-            dv1: props.dv1Grid![p.pointIndex[0]][p.pointIndex[1]],
-            dv2: props.dv2Grid![p.pointIndex[0]][p.pointIndex[1]],
-            tofDays: props.tofGrid![p.pointIndex[0]][p.pointIndex[1]]
+            dv: props.porkChopData2D!.dvGrid[p.pointIndex[0]][p.pointIndex[1]],
+            dv1: props.porkChopData2D!.dv1Grid[p.pointIndex[0]][p.pointIndex[1]],
+            dv2: props.porkChopData2D!.dv2Grid[p.pointIndex[0]][p.pointIndex[1]],
+            tofDays: props.porkChopData2D!.tofGrid[p.pointIndex[0]][p.pointIndex[1]]
         })
     }
+
+    const handleClick3D = (e: plotly.PlotMouseEvent) =>
+    {
+        if (!e.points || e.points.length === 0) return
+
+        const p = e.points[0]
+
+        props.onSelect(
+        {
+            launchDate: p.x as string,
+            flybyDate: props.porkChopData3D!.flybyDates[flybyDateIndex],
+            arrivalDate: p.y as string,
+            dv: props.porkChopData3D!.dvGrid[p.pointIndex[0]][p.pointIndex[1]],
+            dv1: props.porkChopData3D!.dv1Grid[p.pointIndex[0]][p.pointIndex[1]],
+            dvGA: props.porkChopData3D!.dvGAGrid[p.pointIndex[0]][p.pointIndex[1]],
+            dv2: props.porkChopData3D!.dv2Grid[p.pointIndex[0]][p.pointIndex[1]],
+            tof1Days: props.porkChopData3D!.tof1Grid[p.pointIndex[0]][p.pointIndex[1]],
+            tof2Days: props.porkChopData3D!.tof2Grid[p.pointIndex[0]][p.pointIndex[1]],
+            tofDays: props.porkChopData3D!.tofGrid[p.pointIndex[0]][p.pointIndex[1]]
+        })
+    }
+
+    const handleLayer = (e: react.ChangeEvent<HTMLInputElement>) =>
+    {
+        const index: number = Number(e.target.value)
+
+        const A = props.porkChopData3D!.arrivalDates.length
+        const L = props.porkChopData3D!.launchDates.length
+
+        const tof1  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const tof2  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const tof   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const dv1   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const dvGA  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const dv2   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const dv    : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+
+        for (let a = 0; a < A; a++)
+        {
+            for (let l = 0; l < L; l++)
+            {
+                tof1[a][l]  = props.porkChopData3D!.tof1[a][index][l]
+                tof2[a][l]  = props.porkChopData3D!.tof2[a][index][l]
+                tof[a][l]   = tof1[a][l] + tof2[a][l]
+                dv1[a][l]   = props.porkChopData3D!.dv1[a][index][l]
+                dvGA[a][l]  = props.porkChopData3D!.dvGA[a][index][l]
+                dv2[a][l]   = props.porkChopData3D!.dv2[a][index][l]
+                dv[a][l]    = dv1[a][l] + dvGA[a][l] + dv2[a][l]
+            }
+        }
+
+        props.porkChopData3D!.tof1Grid  = tof1
+        props.porkChopData3D!.tof2Grid  = tof2
+        props.porkChopData3D!.tofGrid   = tof
+        props.porkChopData3D!.dv1Grid   = dv1
+        props.porkChopData3D!.dvGAGrid  = dvGA
+        props.porkChopData3D!.dv2Grid   = dv2
+        props.porkChopData3D!.dvGrid    = dv
+
+        setFlybyDateIndex(index)
+    }
+
+    // --- RENDERING ---
 
     return (
         <div className="w-full h-full bg-neutral-900 rounded-lg shadow-inner p-2 flex">
 
         {
-            !props.dvGrid &&
+            !props.porkChopData2D && !props.porkChopData3D &&
                 <div className="w-full h-full flex items-center justify-center text-neutral-500">
                     Run the analysis to generate the pork‑chop plot
                 </div>
         }
 
+        <div className="flex-1 relative">
+
         {
-            props.dvGrid && (
-            <div className="flex-1">
+            props.porkChopData2D && 
+
+            <Plot
+                data={data ?? []}
+                layout={layout}
+                style={{ width: "100%", height: "100%" }}
+                config={config}
+                onClick={handleClick2D}
+            />
+        }
+
+        {
+            props.porkChopData3D &&
+
+            <>
+
+                <div className="absolute left-100 z-2 flex">
+
+                    <FormInput
+                        label={`Flyby Date: ${props.porkChopData3D.flybyDates[flybyDateIndex]}`}
+                        type="range"
+                        name="flybyDate"
+                        min={0}
+                        max={flybyDateLength}
+                        value={flybyDateIndex}
+                        setValue={handleLayer}
+                    />
+
+                </div>
 
                 <Plot
-                    data={[dvHeatmap, tofIsolines, dv1Isolines]}
+                    data={data ?? []}
+                    key={flybyDateIndex}
                     layout={layout}
                     style={{ width: "100%", height: "100%" }}
                     config={config}
-                    onClick={handleClick}
+                    onClick={handleClick3D}
                 />
 
-            </div>
-        )}
+            </>
+        }
+
+        </div>
 
         {
-            props.dvGrid && <PorkChopLegend/>
+            //props.porkChopData2D && <PorkChopLegend/>
         }
 
         </div>

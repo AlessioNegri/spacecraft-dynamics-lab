@@ -64,3 +64,12 @@ input[type="number"] {
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1); /* makes icon white */
 }
+
+/** Fonts */
+
+@font-face {
+  font-family: "Orbitron";
+  src: url("./fonts/Orbitron-VariableFont_wght.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}

@@ -3,7 +3,7 @@ import * as react from "react"
 import FormSection from "../dialogs/FormSection"
 
 /** @function InterplanetaryRightBar */
-export function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo | null }>): react.JSX.Element
+export default function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo | null }>): react.JSX.Element
 {
     return (
         <div className="w-full h-full bg-neutral-900 p-4 overflow-y-auto space-y-6">
@@ -28,7 +28,35 @@ export function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo
 
                         <Field title="Launch" value={info.launchDate} />
 
+                        { info.flybyDate && <Field title="Flyby" value={info.flybyDate} /> }
+
                         <Field title="Arrival" value={info.arrivalDate} />
+
+                    {
+                        info.tof1Days &&
+                        <>
+                        
+                            <Field title="TOF 1" value={String(info.tof1Days) + " days"} />
+
+                            <Field title="" value={Number(info.tof1Days / 365).toFixed(0) + " years"} />
+
+                            <Field title="" value={Number(info.tof1Days * 24).toFixed(0) + " hours"} />
+
+                        </>
+                    }
+
+                    {
+                        info.tof2Days &&
+                        <>
+                        
+                            <Field title="TOF 2" value={String(info.tof2Days) + " days"} />
+
+                            <Field title="" value={Number(info.tof2Days / 365).toFixed(0) + " years"} />
+
+                            <Field title="" value={Number(info.tof2Days * 24).toFixed(0) + " hours"} />
+
+                        </>
+                    }
 
                         <Field title="TOF" value={String(info.tofDays) + " days"} />
 
@@ -43,6 +71,8 @@ export function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo
                     <FormSection title="Δv Breakdown">
 
                         <Field title="Departure Δv" value={info.dv1.toFixed(3) + " km/s"} />
+
+                        { info.dvGA && <Field title="Gravity Assist Δv" value={info.dvGA.toFixed(3) + " km/s"} /> }
 
                         <Field title="Arrival Δv" value={info.dv2.toFixed(3) + " km/s"} />
 

@@ -11,11 +11,14 @@ import FormButton from "../dialogs/FormButton"
 const defaultMission: IInterplanetaryMissionForm =
 {
     departureBody: "earth",
-    arrivalBody: "mars",
+    flybyBody: "",
+    arrivalBody: "neptune",
     launchWindowStart: "2020-01-01",//new Date().toISOString().slice(0, 10),
-    launchWindowEnd: "2020-12-31",//new Date().toISOString().slice(0, 10),
-    arrivalWindowStart: "2021-01-01",//new Date().toISOString().slice(0, 10),
-    arrivalWindowEnd: "2024-12-31",//new Date().toISOString().slice(0, 10),
+    launchWindowEnd: "2021-12-31",//new Date().toISOString().slice(0, 10),
+    flybyWindowStart: "2025-01-01",
+    flybyWindowEnd: "2025-12-31",
+    arrivalWindowStart: "2030-01-01",//new Date().toISOString().slice(0, 10),
+    arrivalWindowEnd: "2040-12-31",//new Date().toISOString().slice(0, 10),
     gridSize: 1
 }
 
@@ -65,16 +68,27 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
     {
         const newErrors: Record<string, string> = {}
 
-        if (form.departureBody === form.arrivalBody) newErrors.bodies = "Choose different bodies"
+        if (form.departureBody === form.arrivalBody)    newErrors.bodies = "Choose different bodies"
+        if (form.flybyBody === form.departureBody)      newErrors.bodies = "Choose different bodies"
+        if (form.flybyBody === form.arrivalBody)        newErrors.bodies = "Choose different bodies"
 
         if (!form.launchWindowStart)    newErrors.windows = "Choose valid launch start window"
         if (!form.launchWindowEnd)      newErrors.windows = "Choose valid launch end window"
+        if (!form.flybyWindowStart)     newErrors.windows = "Choose valid launch start window"
+        if (!form.flybyWindowEnd)       newErrors.windows = "Choose valid launch end window"
         if (!form.arrivalWindowStart)   newErrors.windows = "Choose valid arrival start window"
         if (!form.arrivalWindowEnd)     newErrors.windows = "Choose valid arrival end window"
 
         if (form.launchWindowStart >= form.launchWindowEnd)     newErrors.windows = "Launch window start < launch window end"
-        if (form.arrivalWindowStart >= form.arrivalWindowEnd)   newErrors.windows =  "Arrival window start < arrival window end"
-        if (form.launchWindowStart >= form.arrivalWindowStart)  newErrors.windows =  "Launch window start < arrival window start"
+        if (form.arrivalWindowStart >= form.arrivalWindowEnd)   newErrors.windows = "Arrival window start < arrival window end"
+        if (form.launchWindowStart >= form.arrivalWindowStart)  newErrors.windows = "Launch window start < arrival window start"
+        
+        if (form.flybyBody != "")
+        {
+            if (form.flybyWindowStart >= form.flybyWindowEnd)       newErrors.windows = "Flyby window start < flyby window end"
+            if (form.flybyWindowStart >= form.arrivalWindowStart)   newErrors.windows = "Flyby window start < arrival window start"
+            if (form.launchWindowStart >= form.flybyWindowStart)    newErrors.windows = "Launch window start < flyby window start"
+        }
 
         if (form.gridSize < 1 || form.gridSize > 200) newErrors.resolution = "Grid size must be between 1 and 200"
 
@@ -149,6 +163,25 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
                 />
 
                 <FormSelect
+                    label="Flyby Body"
+                    name="flybyBody"
+                    value={form.flybyBody}
+                    setValue={handleSelectChange}
+                    options={
+                        [
+                            { name: "None", value: "" },
+                            { name: "Mercury", value: "mercury" },
+                            { name: "Venus", value: "venus" },
+                            { name: "Earth", value: "earth" },
+                            { name: "Mars", value: "mars" },
+                            { name: "Jupiter", value: "jupiter" },
+                            { name: "Saturn", value: "saturn" },
+                            { name: "Uranus", value: "uranus" },
+                            { name: "Neptune", value: "neptune" }
+                        ]}
+                />
+
+                <FormSelect
                     label="Arrival Body"
                     name="arrivalBody"
                     value={form.arrivalBody}
@@ -191,6 +224,30 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
                     value={form.launchWindowEnd}
                     setValue={handleInputChange}
                 />
+
+                {
+                    form.flybyBody !== "" &&
+                    
+                    <>
+
+                        <FormInput
+                            label="Flyby Window Start"
+                            type="date"
+                            name="flybyWindowStart"
+                            value={form.flybyWindowStart}
+                            setValue={handleInputChange}
+                        />
+
+                        <FormInput
+                            label="Flyby Window End"
+                            type="date"
+                            name="flybyWindowEnd"
+                            value={form.flybyWindowEnd}
+                            setValue={handleInputChange}
+                        />
+
+                    </>
+                }
 
                 <FormInput
                     label="Arrival Window Start"

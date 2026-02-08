@@ -6,8 +6,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                clock: ['Orbitron', 'sans-serif'],
-                tech: ['"Share Tech Mono"', 'monospace']
+                orbitron: ['Orbitron', 'sans-serif']
             }
         },
     },

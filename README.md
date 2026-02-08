@@ -9,3 +9,5 @@ Spacecraft Dynamics Lab is a desktop application to simulate spacecraft dynamics
 <p align="center"><img src="./images/orbit.png" width="100%"></p>
 
 <p align="center"><img src="./images/interplanetary.png" width="100%"></p>
+
+<p align="center"><img src="./images/interplanetary-flyby.png" width="100%"></p>
