@@ -4,13 +4,13 @@ import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 
-import converter
-import database
+import common.converter as converter
+import common.database as database
 
 import schemas.spacecraft_schema as spacecraft_schema
 
-from web_socket_manager import WebSocketManager
-from app_data import AppData
+from common.web_socket_manager import WebSocketManager
+from common.app_data import AppData
 
 from routers.web_socket import router as router_web_socket
 from routers.spacecraft import router as router_spacecraft

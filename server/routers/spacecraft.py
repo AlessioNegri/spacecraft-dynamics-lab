@@ -4,7 +4,7 @@ import fastapi
 import json
 import typing
 
-import database
+import common.database as database
 import routers.utility as utility
 import schemas.common as common
 import schemas.spacecraft_schema as schema

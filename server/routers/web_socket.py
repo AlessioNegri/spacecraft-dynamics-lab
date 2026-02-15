@@ -1,8 +1,8 @@
 import asyncio
 import fastapi
 
-from web_socket_manager import WebSocketManager
-from app_data import AppData
+from common.web_socket_manager import WebSocketManager
+from common.app_data import AppData
 
 import routers.utility as utility
 import schemas.common as common
