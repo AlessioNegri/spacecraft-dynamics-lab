@@ -2,6 +2,8 @@ import * as react from "react"
 import * as plotly from "plotly.js"
 import Plot from "react-plotly.js"
 
+import utility from "@renderer/common/utility"
+
 import FormInput from "../dialogs/FormInput"
 
 interface InterplanetaryMainPlotProps
@@ -16,7 +18,9 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
 {
     // --- USE STATE ---
 
-    const [data, setData] = react.useState<plotly.Data[]>()
+    const [data2D, setData2D] = react.useState<plotly.Data[]>()
+
+    const [data3D, setData3D] = react.useState<plotly.Data[]>()
 
     const [flybyDateIndex, setFlybyDateIndex] = react.useState<number>(0)
 
@@ -76,8 +80,8 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             tickformat: "%Y-%m-%d",
             constrain: "range"
         },
-        transition: { duration: 0 },
-        uirevision: "static"
+        //transition: { duration: 0 },
+        //uirevision: "static"
     }
 
     const config: any = //plotly.Config
@@ -211,7 +215,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             }
         }
         
-        setData([dvHeatmap, dv1Isolines, dv2Isolines, tofIsolines])
+        setData2D([dvHeatmap, dv1Isolines, dv2Isolines, tofIsolines])
     }, [props.porkChopData2D])
 
     react.useEffect(() =>
@@ -227,7 +231,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             z: props.porkChopData3D.dvGrid,
             name: "ΔV (km/s)",
             type: "contour",
-            colorscale: "Viridis",
+            colorscale: "Cividis",
             reversescale: false,
             line:
             {
@@ -365,7 +369,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             }
         }
         
-        setData([dvHeatmap, dv1Isolines, dvGAIsolines, dv2Isolines, tofIsolines])
+        setData3D([dvHeatmap, dv1Isolines, dvGAIsolines, dv2Isolines, tofIsolines])
     }, [props.porkChopData3D, flybyDateIndex])
 
     // --- HANDLE ---
@@ -415,13 +419,13 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
         const A = props.porkChopData3D!.arrivalDates.length
         const L = props.porkChopData3D!.launchDates.length
 
-        const tof1  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const tof2  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const tof   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const dv1   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const dvGA  : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const dv2   : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
-        const dv    : number[][] = Array.from({ length: A }, () => Array.from({ length: L }, () => 0) )
+        const tof1  : number[][] = utility.initArray(A, L)
+        const tof2  : number[][] = utility.initArray(A, L)
+        const tof   : number[][] = utility.initArray(A, L)
+        const dv1   : number[][] = utility.initArray(A, L)
+        const dvGA  : number[][] = utility.initArray(A, L)
+        const dv2   : number[][] = utility.initArray(A, L)
+        const dv    : number[][] = utility.initArray(A, L)
 
         for (let a = 0; a < A; a++)
         {
@@ -451,7 +455,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
     // --- RENDERING ---
 
     return (
-        <div className="w-full h-full bg-neutral-900 rounded-lg shadow-inner p-2 flex">
+        <div className="w-full h-full rounded-lg shadow-inner p-2 flex">
 
         {
             !props.porkChopData2D && !props.porkChopData3D &&
@@ -466,7 +470,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             props.porkChopData2D && 
 
             <Plot
-                data={data ?? []}
+                data={data2D ?? []}
                 layout={layout}
                 style={{ width: "100%", height: "100%" }}
                 config={config}
@@ -494,7 +498,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
                 </div>
 
                 <Plot
-                    data={data ?? []}
+                    data={data3D ?? []}
                     key={flybyDateIndex}
                     layout={layout}
                     style={{ width: "100%", height: "100%" }}

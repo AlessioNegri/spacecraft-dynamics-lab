@@ -1,4 +1,4 @@
-import * as react from "react";
+import * as react from "react"
 import * as tooltip from "@radix-ui/react-tooltip"
 
 interface TooltipProps
@@ -22,7 +22,7 @@ export default function Tooltip(props: Readonly<TooltipProps>): react.JSX.Elemen
 
             <tooltip.Content
                 side={props.side}
-                className="bg-stone-700 text-white px-2 py-1 m-2 rounded shadow">
+                className="bg-neutral-700 text-white px-2 py-1 m-2 rounded shadow">
 
                 {props.title}
 

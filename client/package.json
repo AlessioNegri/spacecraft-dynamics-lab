@@ -1,10 +1,11 @@
 {
-  "name": "client",
+  "name": "spacecraft-dynamics-lab",
   "version": "1.0.0",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "alessio-negri.com",
   "homepage": "https://electron-vite.org",
+  "icon": "./resources/icon.ico",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -13,10 +14,10 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "start": "cls && electron-vite preview",
     "dev": "cls && electron-vite dev",
-    "build": "npm run typecheck && electron-vite build",
+    "build": "cls && npm run typecheck && electron-vite build && node scripts/copy-cesium.js",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win",
+    "build:win": "npm run build && electron-builder --win portable",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux"
   },
@@ -61,6 +62,7 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
-    "vite-plugin-cesium": "^1.2.23"
+    "vite-plugin-cesium": "^1.2.23",
+    "vite-plugin-static-copy": "^3.2.0"
   }
 }

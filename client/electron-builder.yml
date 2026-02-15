@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: client
+productName: SpacecraftDynamicsLab
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: client
+  executableName: SpacecraftDynamicsLab
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

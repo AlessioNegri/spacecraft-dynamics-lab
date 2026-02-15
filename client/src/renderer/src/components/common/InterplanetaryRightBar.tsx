@@ -6,7 +6,7 @@ import FormSection from "../dialogs/FormSection"
 export default function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo | null }>): react.JSX.Element
 {
     return (
-        <div className="w-full h-full bg-neutral-900 p-4 overflow-y-auto space-y-6">
+        <div className="w-full h-full p-4 overflow-y-auto space-y-6">
 
             {/* Title */}
 

@@ -3,9 +3,9 @@ import * as cesium from "cesium"
 import * as resium from "resium"
 import * as iconify from "@iconify/react"
 
-import api from "@renderer/common/api"
-import checkError from "@renderer/common/error"
+import http from "@renderer/common/http"
 import orbit from "@renderer/common/orbit"
+
 import LayersPanel from "../common/LayersPanel"
 import TelemetryPanel from "../common/TelemetryPanel"
 import Tooltip from "../Tooltip"
@@ -51,7 +51,7 @@ function OrbitViewer()
     {
         try
         {
-            const res = await api.get<IDbSpacecraftItem[]>("/spacecraft/items")
+            const res = await http.api.get<IDbSpacecraftItem[]>("/spacecraft/items")
 
             const data = res.data.map(item => ({ ...item, visible: true }))
 
@@ -59,7 +59,7 @@ function OrbitViewer()
         }
         catch (err)
         {
-            const message: string | null = checkError(import.meta.url, err)
+            const message: string | null = http.checkError(import.meta.url, err)
             
             if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
         }
@@ -93,7 +93,7 @@ function OrbitViewer()
     {
         // * Retrieve GLB models
         
-        fetch("/models/models.json").then(res => res.json()).then(setModels)
+        fetch("./models/models.json").then(res => res.json()).then(setModels)
 
         // * Retrieve Spacecraft from DB
         
@@ -295,7 +295,7 @@ function OrbitViewer()
                                     show={items[index].visible}
                                     model={new cesium.ModelGraphics(
                                         {
-                                            uri: `/models/${items[index].model}.glb`,
+                                            uri: `./models/${items[index].model}.glb`,
                                             scale: 1, // ? Tweak as needed
                                             minimumPixelSize: models.find(m => m.name === items[index].model)?.minimumPixelSize ?? 1, // ? Keeps it visible when far
                                             maximumScale: models.find(m => m.name === items[index].model)?.maximumScale ?? 1 // ? Avoids insane scaling when close

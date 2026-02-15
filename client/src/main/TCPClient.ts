@@ -5,7 +5,7 @@ import Singleton from './Singleton'
 import MainWindow from './MainWindow'
 
 /** @class TCP client class */
-export default class TCPClient extends Singleton<TCPClient>
+export default class TCPClient extends Singleton
 {
     // --- MEMBER ---
 

@@ -1,9 +1,9 @@
 /** @class Singleton class */
-export default abstract class Singleton<T>
+export default abstract class Singleton
 {
     // --- MEMBER ---
 
-    private static _instances = new Map<Function, any>()
+    private static readonly _instances = new Map<Function, any>()
 
     // --- STATIC ---
 

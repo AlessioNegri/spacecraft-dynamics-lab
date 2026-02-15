@@ -1,7 +1,6 @@
 import * as react from "react"
 
-import api from "@renderer/common/api"
-import checkError from "@renderer/common/error"
+import http from "@renderer/common/http"
 
 import FormSection from "../dialogs/FormSection"
 import FormInput from "../dialogs/FormInput"
@@ -13,12 +12,12 @@ const defaultMission: IInterplanetaryMissionForm =
     departureBody: "earth",
     flybyBody: "",
     arrivalBody: "neptune",
-    launchWindowStart: "2020-01-01",//new Date().toISOString().slice(0, 10),
-    launchWindowEnd: "2021-12-31",//new Date().toISOString().slice(0, 10),
+    launchWindowStart: "2020-01-01",
+    launchWindowEnd: "2021-12-31",
     flybyWindowStart: "2025-01-01",
     flybyWindowEnd: "2025-12-31",
-    arrivalWindowStart: "2030-01-01",//new Date().toISOString().slice(0, 10),
-    arrivalWindowEnd: "2040-12-31",//new Date().toISOString().slice(0, 10),
+    arrivalWindowStart: "2030-01-01",
+    arrivalWindowEnd: "2040-12-31",
     gridSize: 1
 }
 
@@ -83,7 +82,7 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
         if (form.arrivalWindowStart >= form.arrivalWindowEnd)   newErrors.windows = "Arrival window start < arrival window end"
         if (form.launchWindowStart >= form.arrivalWindowStart)  newErrors.windows = "Launch window start < arrival window start"
         
-        if (form.flybyBody != "")
+        if (form.flybyBody !== "")
         {
             if (form.flybyWindowStart >= form.flybyWindowEnd)       newErrors.windows = "Flyby window start < flyby window end"
             if (form.flybyWindowStart >= form.arrivalWindowStart)   newErrors.windows = "Flyby window start < arrival window start"
@@ -105,13 +104,13 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
 
         try
         {
-            let response: any = await api.post(`/interplanetary/run`, form)
+            let response: any = await http.api.post(`/interplanetary/run`, form)
 
             globalThis.window.api.info(`[${import.meta.url}] ${JSON.stringify(response.data)}`)
         }
         catch (err)
         {
-            const message: string | null = checkError(import.meta.url, err)
+            const message: string | null = http.checkError(import.meta.url, err)
 
             if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
         }
@@ -123,13 +122,13 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
 
         try
         {
-            let response: any = await api.put(`/ws/stop-simulation`)
+            let response: any = await http.api.put(`/ws/stop-simulation`)
 
             globalThis.window.api.info(`[${import.meta.url}] ${JSON.stringify(response.data)}`)
         }
         catch (err)
         {
-            const message: string | null = checkError(import.meta.url, err)
+            const message: string | null = http.checkError(import.meta.url, err)
 
             if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
         }
@@ -138,7 +137,7 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
     // --- RENDERING ---
 
     return (
-        <div className="w-full h-full bg-neutral-900 p-4 overflow-y-auto space-y-6">
+        <div className="w-full h-full p-4 overflow-y-auto space-y-6">
 
             {/* Mission Section */}
 
@@ -291,13 +290,13 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
 
             </FormSection>
 
-            {/* Run Button */}
+            {/* Buttons */}
 
-            <div>
+            <div className="flex justify-between">
 
-                <FormButton text="Run Analysis" disabled={running} onClick={handleSubmit} />
+                <FormButton text="Run Analysis" color="green" disabled={running} onClick={handleSubmit} />
 
-                <FormButton text="Stop Analysis" disabled={!running} onClick={handleStop} />
+                <FormButton text="Stop Analysis" color="red" disabled={!running} onClick={handleStop} />
 
             </div>
             

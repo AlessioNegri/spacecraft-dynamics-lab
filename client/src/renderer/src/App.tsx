@@ -1,5 +1,5 @@
 import * as react from 'react'
-import * as Tooltip from "@radix-ui/react-tooltip"
+import * as tooltip from "@radix-ui/react-tooltip"
 
 import Shortcut from "./components/Shortcut"
 import MenuBar from './components/bars/MenuBar'
@@ -23,9 +23,9 @@ export default function App(): react.JSX.Element
     // --- RENDERING ---
     
     return (
-        <Tooltip.Provider>
+        <tooltip.Provider>
 
-            <div className='flex flex-col w-full h-full'>
+            <div className='flex flex-col w-full h-full bg-neutral-800'>
 
                 <MenuBar />
 
@@ -41,6 +41,6 @@ export default function App(): react.JSX.Element
 
             </div>
             
-        </Tooltip.Provider>
+        </tooltip.Provider>
     )
 }

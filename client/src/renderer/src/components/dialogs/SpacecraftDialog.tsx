@@ -1,11 +1,14 @@
 import * as react from "react"
 
-import api from "@renderer/common/api"
-import checkError from "@renderer/common/error"
+import type { OptionProps } from "./FormSelect"
+
+import http from "@renderer/common/http"
 
 import Dialog from "./Dialog"
 import FormInput from "./FormInput"
 import GlbViewer from "../common/GlbViewer"
+import FormSelect from "./FormSelect"
+import FormButton from "./FormButton"
 
 const defaultSpacecraft: ISpacecraftForm =
 {
@@ -58,6 +61,8 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
     const [preview, setPreview] = react.useState<string | null>(null)
 
     const [models, setModels] = react.useState<IGlbModel[]>([])
+
+    const [options, setOptions] = react.useState<OptionProps[]>([])
     
     const [selectedModel, setSelectedModel] = react.useState<IGlbModel>(defaultModel)
 
@@ -99,11 +104,16 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
             setForm(defaultSpacecraft)
         }
 
-        fetch("/models/models.json")
+        fetch("./models/models.json")
         .then(res => res.json())
         .then((models: IGlbModel[]) =>
         {
             setModels(models)
+
+            const options: OptionProps[] = [ { name: "Choose a model", value: "" },
+                                                    ...models.map(m => ({ name: m.name, value: m.name }))]
+
+            setOptions(options)
 
             if (props.edit) setSelectedModel(models.find(m => m.name === props.item!.model) || defaultModel)
         })
@@ -128,7 +138,7 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         if (!validAngle(form.orbit.aop))    newErrors.aop   = "Argument Periapsis must be in rage [0°, 360°]"
         if (!validAngle(form.orbit.tan))    newErrors.tan   = "True Anomaly must be in rage [0°, 360°]"
 
-        if (Number(form.style.width) < 0)     newErrors.width   = "Width must be a positive number"
+        if (Number(form.style.width) < 0)   newErrors.width = "Width must be a positive number"
 
         setErrors(newErrors)
 
@@ -202,11 +212,11 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
 
             if (props.edit)
             {
-                response = await api.post(`/spacecraft/update/${form._id!}`, data)
+                response = await http.api.post(`/spacecraft/update/${form._id!}`, data)
             }
             else
             {
-                response = await api.post("/spacecraft/insert", data)
+                response = await http.api.post("/spacecraft/insert", data)
             }
 
             globalThis.window.api.info(`[${import.meta.url}] ${JSON.stringify(response.data)}`)
@@ -216,7 +226,7 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
         }
         catch (err)
         {
-            const message: string | null = checkError(import.meta.url, err)
+            const message: string | null = http.checkError(import.meta.url, err)
 
             if (message) setAxiosError(message)
         }
@@ -230,30 +240,43 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
             <form
                 id="spacecraft-form"
                 onSubmit={handleSubmit}
-                className="mx-auto p-6 bg-stone-800 text-gray-100 rounded-lg shadow-lg space-y-6 overflow-auto
+                className="mx-auto p-6 bg-neutral-800 text-neutral-100 rounded-lg shadow-lg space-y-6 overflow-auto
                             max-h-[80vh] custom-scrollbar">
 
-                <FormInput
-                    label="Name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    error={errors.name}
-                    placeholder="e.g. Voyager 1"
-                    setValue={handleChange} />
+                <div className="space-y-3">
 
-                <FormInput
-                    label="Mass (kg)"
-                    type="number"
-                    name="mass"
-                    value={form.mass}
-                    error={errors.mass}
-                    placeholder="e.g. 825"
-                    setValue={handleChange} />
+                    <FormInput
+                        label="Name"
+                        type="text"
+                        name="name"
+                        value={form.name}
+                        error={errors.name}
+                        placeholder="e.g. Voyager 1"
+                        setValue={handleChange}
+                    />
+                    
+                </div>
+
+                <div className="space-y-3">
+
+                    <h3 className="text-lg font-semibold">Ballistic / Mass</h3>
+
+                    <FormInput
+                        label="Mass (kg)"
+                        type="number"
+                        name="mass"
+                        value={form.mass}
+                        error={errors.mass}
+                        placeholder="e.g. 825"
+                        setValue={handleChange}
+                    />
+
+                </div>
+
                 
                 <div className="space-y-3">
 
-                    <h3 className="text-lg font-semibold">Orbital Elements</h3>
+                    <h3 className="text-lg font-semibold">Orbit</h3>
 
                     <div className="grid grid-cols-2 gap-4">
 
@@ -263,7 +286,8 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                             name="sma"
                             value={form.orbit.sma}
                             error={errors.sma}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
                             label="Eccentricity"
@@ -271,39 +295,44 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                             name="ecc"
                             value={form.orbit.ecc}
                             error={errors.ecc}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
-                            label="Inclination (°)"
+                            label="Inclination (deg)"
                             type="number"
                             name="inc"
                             value={form.orbit.inc}
                             error={errors.inc}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
-                            label="Right Ascension Ascending Node (°)"
+                            label="Right Ascension Ascending Node (deg)"
                             type="number"
                             name="raan"
                             value={form.orbit.raan}
                             error={errors.raan}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
-                            label="Argument Periapsis (°)"
+                            label="Argument Periapsis (deg)"
                             type="number"
                             name="aop"
                             value={form.orbit.aop}
                             error={errors.aop}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
-                            label="True Anomaly (°)"
+                            label="True Anomaly (deg)"
                             type="number"
                             name="tan"
                             value={form.orbit.tan}
                             error={errors.tan}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                     </div>
 
@@ -321,7 +350,8 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                             name="width"
                             value={form.style.width}
                             error={errors.width}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                         <FormInput
                             label="Line Color"
@@ -329,7 +359,8 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                             name="color"
                             value={form.style.color}
                             error={errors.color}
-                            setValue={handleChange} />
+                            setValue={handleChange}
+                        />
 
                     </div>
 
@@ -340,12 +371,13 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
                     type="file"
                     name="image"
                     value={form.image}
-                    setValue={handleChange} />
+                    setValue={handleChange}
+                />
 
             {
                 preview &&
                 (
-                    <div className="mt-3 border-stone-600 border-4 rounded flex items-center justify-center">
+                    <div className="mt-3 border-neutral-400 border-2 rounded flex items-center justify-center">
 
                         <img src={preview} alt="Preview" className="object-cover" />
 
@@ -355,29 +387,20 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
 
                 <div>
 
-                    <label htmlFor="model" className="mr-4 font-medium">Model</label>
-                    
-                    <select
-                        id="model"
-                        className="w-7/8 bg-stone-700 border border-gray-700 focus:border-orange-500 
-                                    rounded h-8 mb-4"
+                    <FormSelect
+                        label="Model"
+                        name="model"
                         value={selectedModel.name}
-                        onChange={e => 
+                        setValue={e => 
                         {
                             const name: string = e.target.value
 
                             const model: IGlbModel | undefined = models.find(m => m.name === name)
 
                             setSelectedModel(model ?? defaultModel)
-                        }}>
-
-                        <option value="">Choose a model</option>
-
-                        {
-                            models.map(m => (<option key={m.name} value={m.name}>{m.name}</option>))
-                        }
-                        
-                    </select>
+                        }}
+                        options={options}
+                    />
 
                     <div className="flex w-full h-64">
                         
@@ -389,14 +412,11 @@ export default function SpacecraftDialog(props: Readonly<SpacecraftDialogProps>)
 
             </form>
 
-            <button
-                    type="submit"
-                    form="spacecraft-form"
-                    className="w-full py-2 bg-blue-800 hover:bg-blue-700 rounded font-semibold transition mt-4">
+            <div className="flex justify-center">
+            
+                <FormButton text="Save" color="blue" type="submit" form="spacecraft-form" onClick={() => props.onOk()} />
 
-                    Save
-
-                </button>
+            </div>
 
             {
                 axiosError && <p className="text-red-400 text-sm select-text">{axiosError}</p>

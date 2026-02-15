@@ -1,8 +1,7 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
 
-import api from "@renderer/common/api"
-import checkError from "@renderer/common/error"
+import http from "@renderer/common/http"
 
 import Tooltip from "../Tooltip"
 import SpacecraftDialog from "../dialogs/SpacecraftDialog"
@@ -12,9 +11,29 @@ import GlbViewer from "../common/GlbViewer"
 /** @function SpacecraftPage */
 export default function SpacecraftPage(): react.JSX.Element
 {
+    // --- HTTP ---
+
+    const getItems = async () =>
+    {
+        try
+        {
+            const res = await http.api.get<IDbSpacecraftItem[]>("/spacecraft/items")
+
+            setItems(res.data)
+
+            if (res.data.length > 0) setSelected(res.data[0])
+        }
+        catch (err)
+        {
+            const message: string | null = http.checkError(import.meta.url, err)
+            
+            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
+        }
+    }
+
     // --- USE STATE ---
 
-    const [open, setOpen] = react.useState<boolean>(false)
+    const [openAddEdit, setOpenAddEdit] = react.useState<boolean>(false)
 
     const [openDelete, setOpenDelete] = react.useState<boolean>(false)
 
@@ -28,29 +47,11 @@ export default function SpacecraftPage(): react.JSX.Element
 
     // --- USE EFFECT ---
 
-    const getItems = async () =>
-    {
-        try
-        {
-            const res = await api.get<IDbSpacecraftItem[]>("/spacecraft/items")
-
-            setItems(res.data)
-
-            if (res.data.length > 0) setSelected(res.data[0])
-        }
-        catch (err)
-        {
-            const message: string | null = checkError(import.meta.url, err)
-            
-            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
-        }
-    }
-
     react.useEffect(() =>
     {
         // * Retrieve GLB models
 
-        fetch("/models/models.json").then(res => res.json()).then(setModels)
+        fetch("./models/models.json").then(res => res.json()).then(setModels)
 
         // * Retrieve spacecraft items
         
@@ -60,11 +61,11 @@ export default function SpacecraftPage(): react.JSX.Element
     // --- RENDERING ---
 
     return (
-        <div className="flex w-full h-full relative bg-neutral-900">
+        <div className="flex w-full h-full relative bg-neutral-800">
             
             {/* List */}
             
-            <div className="w-64 bg-stone-800 text-white overflow-y-auto border-4 border-stone-600 p-2 rounded
+            <div className="w-64 bg-neutral-800 text-white overflow-y-auto border-r border-neutral-700 p-2
                             overflow-auto custom-scrollbar">
 
                 <h1 className="text-center border-b-2 mb-2 uppercase">Spacecraft List</h1>
@@ -74,8 +75,8 @@ export default function SpacecraftPage(): react.JSX.Element
                     <button
                         key={item._id}
                         onClick={() => setSelected(item)}
-                        className={`w-full text-left px-4 py-2 hover:bg-stone-600 transition rounded cursor-pointer
-                            ${selected?._id === item._id ? "bg-orange-300/25" : ""}`}>
+                        className={`w-full text-left px-4 py-2 hover:bg-neutral-600 transition rounded cursor-pointer
+                            ${selected?._id === item._id ? "bg-orange-300/25 text-orange-300 font-bold" : ""}`}>
 
                         {item.name}
 
@@ -87,19 +88,19 @@ export default function SpacecraftPage(): react.JSX.Element
 
             {/* Details */}
 
-            <div className="flex-1 p-6 overflow-auto custom-scrollbar">
+            <div className="flex-1 p-6 overflow-auto custom-scrollbar flex justify-center mt-15 mb-4">
 
             {
                 selected
                 ?
                 <SpacecraftDetails item={selected} models={models} />
                 :
-                <div className="text-stone-400">Add a spacecraft</div>
+                <div className="text-neutral-400 text-4xl">Add a spacecraft</div>
             }
 
             </div>
 
-            {/* Open dialog */}
+            {/* Actions */}
 
             <div className="absolute top-2 right-4 flex">
 
@@ -108,8 +109,9 @@ export default function SpacecraftPage(): react.JSX.Element
                     <iconify.Icon
                         icon={"mdi:add-box"}
                         width={40}
-                        onClick={() => { setOpen(true); setEdit(false) }}
-                        className="text-green-300 hover:text-white cursor-pointer" />
+                        onClick={() => { setOpenAddEdit(true); setEdit(false) }}
+                        className="text-green-300 hover:text-white cursor-pointer"
+                    />
 
                 </Tooltip>
 
@@ -123,8 +125,9 @@ export default function SpacecraftPage(): react.JSX.Element
                             <iconify.Icon
                                 icon={"mdi:edit-box"}
                                 width={40}
-                                onClick={() => { setOpen(true); setEdit(true) }}
-                                className="text-blue-300 hover:text-white cursor-pointer" />
+                                onClick={() => { setOpenAddEdit(true); setEdit(true) }}
+                                className="text-blue-300 hover:text-white cursor-pointer"
+                            />
 
                         </Tooltip>
 
@@ -134,7 +137,8 @@ export default function SpacecraftPage(): react.JSX.Element
                                 icon={"mdi:cancel-box"}
                                 width={40}
                                 onClick={() => setOpenDelete(true)}
-                                className="text-red-300 hover:text-white cursor-pointer" />
+                                className="text-red-300 hover:text-white cursor-pointer"
+                            />
 
                         </Tooltip>
 
@@ -147,12 +151,13 @@ export default function SpacecraftPage(): react.JSX.Element
             {/* Dialogs */}
 
             {
-                open &&
+                openAddEdit &&
                 <SpacecraftDialog
                     item={selected}
                     edit={edit}
-                    onClose={() => { setOpen(false) }}
-                    onOk={() => { getItems() }} />
+                    onClose={() => { setOpenAddEdit(false) }}
+                    onOk={() => { getItems() }}
+                />
             }
 
             {
@@ -161,7 +166,8 @@ export default function SpacecraftPage(): react.JSX.Element
                     id={selected!._id!}
                     name={selected!.name}
                     onClose={() => { setOpenDelete(false) }}
-                    onOk={() => { getItems() }} />
+                    onOk={() => { getItems() }}
+                />
             }
 
         </div>
@@ -177,54 +183,39 @@ export default function SpacecraftPage(): react.JSX.Element
  */
 function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem, models: IGlbModel[] }>): react.JSX.Element
 {
+    const ballisticMassItems: SectionItem[] =
+    [
+        { name: "Mass", value: item.mass, unit: "kg" }
+    ]
+
+    const orbitItems: SectionItem[] =
+    [
+        { name: "Semi-Major Axis", value: item.orbit.sma, unit: "km" },
+        { name: "Eccentricity", value: item.orbit.ecc, unit: "" },
+        { name: "Inclination", value: item.orbit.inc, unit: "deg" },
+        { name: "Right Ascension Ascending Node", value: item.orbit.raan, unit: "deg" },
+        { name: "Argument Periapsis", value: item.orbit.aop, unit: "deg" },
+        { name: "True Anomaly", value: item.orbit.tan, unit: "deg" }
+    ]
+
+    const styleItems: SectionItem[] =
+    [
+        { name: "Width", value: item.style.width, unit: "px" },
+        { name: "Color", value: item.style.color, unit: "" }
+    ]
+
     return (
-        <div className="text-stone-300 space-y-4">
+        <div className="text-neutral-300 space-y-8">
 
-            {/* Name */}
+            {/* <h1 className="text-3xl font-bold text-orange-300 border-b-2 mb-2">{item.name}</h1> */}
 
-            <h1 className="text-3xl font-bold text-orange-300 border-b-2 mb-2">{item.name}</h1>
+            <Section title="Ballistic / Mass" items={ballisticMassItems} />
 
-            {/* General */}
+            <Section title="Orbit" items={orbitItems} />
 
-            <h2 className="text-2xl text-center">General</h2>
+            <Section title="Style" items={styleItems} />
 
-            <p><strong className="font-bold">Mass:</strong> {item.mass} kg</p>
-
-            <div className="border-b-2 border-stone-300"></div>
-
-            {/* Orbit */}
-
-            <h2 className="text-2xl text-center">Orbit</h2>
-
-            <div className="grid grid-cols-2 gap-4 text-stone-300">
-
-                <div><strong>Semi-Major Axis:</strong> {item.orbit.sma} km</div>
-                <div><strong>Eccentricity:</strong> {item.orbit.ecc}</div>
-                <div><strong>Inclination:</strong> {item.orbit.inc}°</div>
-                <div><strong>Right Ascension Ascending Node:</strong> {item.orbit.raan}°</div>
-                <div><strong>Argument Periapsis:</strong> {item.orbit.aop}°</div>
-                <div><strong>True Anomaly:</strong> {item.orbit.tan}°</div>
-
-            </div>
-
-            <div className="border-b-2 border-stone-300"></div>
-
-            {/* Style */}
-
-            <h2 className="text-2xl text-center">Style</h2>
-
-            <div className="grid grid-cols-2 gap-4 text-stone-300">
-
-                <div><strong>Width:</strong> {item.style.width} px</div>
-                <div className="flex align-center gap-4"><strong>Color:</strong>
-                    <div className="w-64 h-6 rounded" style={{ backgroundColor: item.style.color }}/>
-                </div>
-
-            </div>
-
-            <div className="border-b-2 border-stone-300"></div>
-
-            <div className="flex gap-4 h-75">
+            <div className="flex gap-4 h-75 text-gray-500">
 
                 {/* Image */}
 
@@ -234,10 +225,10 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
                     <img
                         src={item.image ? `data:image/png;base64,${item.image}` : undefined}
                         alt={item.name}
-                        className="w-1/2 rounded border-4 border-stone-700"
+                        className="w-1/2 rounded border-2 border-neutral-400"
                     />
                     :
-                    <div className="border-stone-600 border-4 rounded w-1/2 flex items-center justify-center text-gray-500">
+                    <div className="border-neutral-600 border-2 rounded w-1/2 flex items-center justify-center">
                         Image preview not available
                     </div>
                 }
@@ -255,7 +246,7 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
 
                     </div>
                     :
-                    <div className="border-stone-600 border-4 rounded w-1/2 flex items-center justify-center text-gray-500">
+                    <div className="border-neutral-600 border-4 rounded w-1/2 flex items-center justify-center">
                         Model preview not available
                     </div>
                 }
@@ -263,5 +254,68 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
             </div>
 
         </div>
+    )
+}
+
+interface SectionItem
+{
+    name: string
+    value: number | string
+    unit: string
+}
+
+interface SectionProps
+{
+    title: string
+    items: SectionItem[]
+}
+
+/** @function Section */
+function Section(props: Readonly<SectionProps>): react.JSX.Element
+{
+    const isColor = (value: string): boolean =>
+    {
+        const s = new Option().style
+
+        s.color = value
+
+        return s.color !== ''
+    }
+
+    return (
+        <section className="space-y-2">
+
+            <h2 className="text-2xl font-semibold text-center text-orange-300">{props.title}</h2>
+
+            <div className="bg-neutral-700/40 p-4 rounded-lg shadow-inner text-neutral-100">
+
+                <div className="grid grid-cols-[auto_1fr_auto] auto-cols-fr gap-10 items-center">
+
+                {
+                    props.items.map((item: SectionItem) => 
+                        <>
+                        
+                            <span className="font-semibold text-left">{item.name}</span>
+        
+                        {
+                            isColor(String(item.value))
+                            ?
+                            <div className="h-6 rounded" style={{ backgroundColor: String(item.value) }}/>
+                            :
+                            <span className="text-left border-b border-neutral-600 p-1">{item.value}</span>
+                        }
+
+                            <span className="text-right text-orange-300 font-semibold">{item.unit}</span>
+
+                        </>
+                    )
+                    
+                }
+
+                </div>
+
+            </div>
+
+        </section>
     )
 }

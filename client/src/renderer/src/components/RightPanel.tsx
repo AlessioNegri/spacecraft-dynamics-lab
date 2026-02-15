@@ -1,9 +1,10 @@
 import * as react from "react"
 
+import HeaderBar from "./bars/HeaderBar"
+import Console from "./Console"
 import SpacecraftPage from "./pages/SpacecraftPage"
 import OrbitPage from "./pages/OrbitPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
-import Console from "./Console"
 
 interface RightPanelProps
 {
@@ -61,6 +62,10 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
     return (
         <div className="flex-1 flex flex-col min-h-0">
 
+            {/* Header bar */}
+
+            <HeaderBar title={props.activePage} />
+
             {/* Page fills remaining space */}
 
             <div className="flex-1 min-h-1/4 overflow-auto custom-scrollbar">
@@ -76,7 +81,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
 
             <button
                 onMouseDown={onMouseDown}
-                className={`h-2 cursor-row-resize bg-stone-700 hover:bg-stone-600 active:bg-stone-500
+                className={`h-2 cursor-row-resize bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500
                             ${consoleShow ? "" : "hidden"}`}/>
 
             {/* Console with dynamic height */}

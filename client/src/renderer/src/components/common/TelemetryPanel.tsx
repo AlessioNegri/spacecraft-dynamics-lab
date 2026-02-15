@@ -1,6 +1,7 @@
 import * as react from "react"
 import * as cesium from "cesium"
 import * as resium from "resium"
+import * as iconify from "@iconify/react"
 
 interface TelemetryData
 {
@@ -89,7 +90,9 @@ export default function TelemetryPanel(props : Readonly<TelemetryPanelProps>)
     if (!telemetry)
     {
         return (
-            <div className="absolute bottom-2 left-2 bg-stone-800/90 backdrop-blur p-4 rounded shadow-lg w-96 z-2">
+            <div
+                className="absolute bottom-2 left-2 bg-neutral-800/90 backdrop-blur p-4 rounded shadow-lg w-70 z-2
+                            border-2 border-neutral-400">
 
                 <div className="font-semibold text-base pb-2 mb-2 border-b-2">Telemetry</div>
                 
@@ -100,31 +103,45 @@ export default function TelemetryPanel(props : Readonly<TelemetryPanelProps>)
     }
 
     return (
-        <div className="absolute bottom-2 left-2 bg-stone-800/90 backdrop-blur p-4 rounded shadow-lg w-96 z-2">
+        <div
+            className="absolute bottom-2 left-2 bg-neutral-800/90 backdrop-blur p-4 rounded shadow-lg w-70 z-2
+                        border-2 border-neutral-400">
             
             <div className="font-semibold text-base pb-2 mb-2 border-b-2">Telemetry</div>
 
-            <div className="text-sm grid grid-cols-2 space-y-2">
+            <div className="text-sm grid grid-cols-[32px_1fr_1fr] space-y-2 items-center">
 
-                <strong>Latitude</strong>
-                
-                <p>{telemetry.lat.toFixed(4)}°</p>
+                <iconify.Icon icon="mdi:latitude" width={24} />
 
-                <strong>Longitude</strong>
+                <span className="font-bold">Latitude</span>
                 
-                <p>{telemetry.lon.toFixed(4)}°</p>
+                <span>{telemetry.lat.toFixed(4)}°</span>
 
-                <strong>Altitude</strong>
-                
-                <p>{telemetry.alt.toFixed(3)} km</p>
+                <iconify.Icon icon="mdi:longitude" width={24} />
 
-                <strong>Speed</strong>
+                <span className="font-bold">Longitude</span>
                 
-                <p>{telemetry.speed.toFixed(3)} km/s</p>
+                <span>{telemetry.lon.toFixed(4)}°</span>
 
-                <strong>Time</strong>
+                <iconify.Icon icon="mdi:elevation-rise" width={24} />
+
+                <span className="font-bold">Altitude</span>
                 
-                <p>{telemetry.time.toLocaleTimeString()}</p>
+                <span>{telemetry.alt.toFixed(3)} km</span>
+
+                <iconify.Icon icon="mdi:speedometer" width={24} />
+
+                <span className="font-bold">Speed</span>
+                
+                <span>{telemetry.speed.toFixed(3)} km/s</span>
+
+                <iconify.Icon icon="mdi:access-time" width={24} />
+
+                <span className="font-bold">Time</span>
+                
+                <span>{telemetry.time.toLocaleTimeString()}</span>
+
+                <p></p>
 
             </div>
             

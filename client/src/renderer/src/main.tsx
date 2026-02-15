@@ -1,6 +1,8 @@
+(globalThis as any).CESIUM_BASE_URL = new URL('./cesium/', globalThis.location.href).toString()
+
 import './assets/main.css'
 
-import * as react from 'react'
+//import * as react from 'react'
 import * as client from 'react-dom/client'
 
 import App from './App'

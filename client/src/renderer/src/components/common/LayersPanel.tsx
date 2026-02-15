@@ -38,7 +38,7 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
     // --- RENDERING ---
 
     return (
-        <div className="absolute top-2 left-2 w-96 bg-stone-800/90 backdrop-blur border border-gray-300
+        <div className="absolute top-2 left-2 w-96 bg-neutral-800/90 backdrop-blur border-2 border-neutral-400
                         rounded-lg shadow-lg p-3 z-2">
 
             <button
@@ -55,7 +55,8 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                         icon="mdi:show"
                         width={24}
                         className="cursor-pointer hover:text-orange-300"
-                        onClick={handleShowAll} />
+                        onClick={handleShowAll}
+                    />
 
                 </Tooltip>
 
@@ -65,7 +66,8 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                         icon="mdi:hide"
                         width={24}
                         className="cursor-pointer hover:text-orange-300"
-                        onClick={handleHideAll} />
+                        onClick={handleHideAll}
+                    />
 
                 </Tooltip>
 
@@ -80,7 +82,8 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                             e.stopPropagation()
                             
                             props.onStop()
-                        }} />
+                        }}
+                    />
 
                 </Tooltip>
 
@@ -88,7 +91,7 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
             </button>
 
         {
-            open && (
+            open &&
             <div className="flex flex-col gap-2 max-h-64 pt-2 overflow-auto custom-scrollbar">
 
                 {
@@ -96,16 +99,15 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                     <button
                         key={spacecraft._id}
                         className={`flex items-center justify-start gap-2 p-1 cursor-pointer
-                                    hover:bg-stone-600 hover:rounded mr-2
-                                    ${(spacecraft._id === props.selectedId) ? 'bg-stone-500 rounded' : ''}`}
+                                    hover:bg-neutral-600 hover:rounded mr-2
+                                    ${(spacecraft._id === props.selectedId) ? 'bg-neutral-500 rounded' : ''}`}
                         onClick={() => props.onToggle(spacecraft._id!)}>
 
                         <iconify.Icon
                             icon={`${spacecraft.visible ? "mdi:show" : "mdi:hide"}`}
                             width={24}
-                            className={`${spacecraft.visible ? "text-green-500" : "text-red-500"}`} />
-
-                        {/* Optional color preview */}
+                            className={`${spacecraft.visible ? "text-green-300" : "text-red-300"}`}
+                        />
 
                         <div className="w-3 h-3 rounded border" style={{ backgroundColor: spacecraft.style.color }} />
 
@@ -117,13 +119,14 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                                 icon="mdi:camera"
                                 width={24}
                                 className={`cursor-pointer hover:text-orange-300
-                                            ${(spacecraft._id === props.selectedId) ? 'text-green-500' : ''}`}
+                                            ${(spacecraft._id === props.selectedId) ? 'text-green-300' : ''}`}
                                 onClick={(e: react.MouseEvent<SVGSVGElement, MouseEvent>) =>
                                 {
                                     e.stopPropagation()
                                     
                                     props.onTrack(spacecraft._id!)
-                                }} />
+                                }}
+                            />
 
                         </Tooltip>
 
@@ -131,7 +134,7 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                 ))}
 
             </div>
-            )}
+        }
             
         </div>
     )

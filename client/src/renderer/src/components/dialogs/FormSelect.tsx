@@ -1,6 +1,6 @@
 import * as react from "react"
 
-interface OptionProps
+export interface OptionProps
 {
     name: string
     value: string

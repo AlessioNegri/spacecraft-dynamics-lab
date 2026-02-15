@@ -57,7 +57,7 @@ export default function FormInput(props: Readonly<FormInputProps>): react.JSX.El
                 props.type === "color" && 
                 <button
                     onClick={openPicker}
-                    className="w-full h-11 rounded cursor-pointer border
+                    className="w-full h-7.5 rounded cursor-pointer border
                                 border-gray-700 focus:border-orange-500 text-black font-bold uppercase"
                     style={{ backgroundColor: props.value }}>
 

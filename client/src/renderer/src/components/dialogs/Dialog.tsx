@@ -12,11 +12,11 @@ interface DialogProps
 export default function Dialog(props: Readonly<DialogProps>): react.JSX.Element
 {
     return (
-        <div className="fixed inset-0 bg-stone-700/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-neutral-700/50 backdrop-blur-sm flex items-center justify-center z-101">
                 
             {/* Dialog container */}
 
-            <div className="bg-stone-800 text-white rounded-lg shadow-xl w-full max-w-2xl p-6 relative animate-fadeIn">
+            <div className="bg-neutral-800 text-white rounded-lg shadow-xl w-full max-w-2xl p-6 relative animate-fadeIn">
 
                 {/* Close button */}
 
@@ -24,7 +24,8 @@ export default function Dialog(props: Readonly<DialogProps>): react.JSX.Element
                     icon={"mdi:close-box"}
                     width={30}
                     onClick={() => props.onClose()}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-200 cursor-pointer"/>
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-200 cursor-pointer"
+                />
 
                 {/* Title */}
 

@@ -2,13 +2,13 @@ import * as electron from 'electron'
 import * as path from 'node:path'
 import * as utils from '@electron-toolkit/utils'
 
-import icon from '../../resources/icon.jpg?asset'
+import icon from '../../resources/icon.ico?asset'
 
 import Singleton from './Singleton'
 import TCPClient from './TCPClient'
 
 /** @class Main window class */
-export default class MainWindow extends Singleton<MainWindow>
+export default class MainWindow extends Singleton
 {
     // --- MEMBER ---
 
@@ -46,11 +46,14 @@ export default class MainWindow extends Singleton<MainWindow>
             autoHideMenuBar: true,
             frame: false,
             titleBarStyle: 'hidden', // ? For macOs
-            ...(process.platform === 'linux' ? { icon } : {}),
+            icon: icon,
             webPreferences:
             {
                 preload: path.join(__dirname, '../preload/index.js'),
-                sandbox: false
+                sandbox: false,
+                webgl: true,
+                experimentalFeatures: true,
+                devTools: true
             }
         })
 
@@ -83,6 +86,8 @@ export default class MainWindow extends Singleton<MainWindow>
         this.win.setMenuBarVisibility(false);
 
         this.win.maximize()
+
+        this.win.webContents.openDevTools()
 
         this.win.webContents.on("did-finish-load", () => 
         {

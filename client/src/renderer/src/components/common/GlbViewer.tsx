@@ -6,15 +6,15 @@ interface GlbViewerProps
 {
     model: string
     scale?: number
-    cameraPos?: [number, number, number]
+    cameraPos?: [number, number, number] // [0, 0, 1]
 }
 
 /** @function GlbViewer */
-export default function GlbViewer({model, scale = 1.5, cameraPos = [0, 0, 1]}: Readonly<GlbViewerProps>): react.JSX.Element
+export default function GlbViewer({model, scale = 1.5}: Readonly<GlbViewerProps>): react.JSX.Element
 {
     // --- USE STATE ---
 
-    const [centerKey, setCenterKey] = react.useState<number>(0)
+    const [centerKey, _] = react.useState<number>(0)
 
     // --- USE REF ---
 
@@ -25,14 +25,14 @@ export default function GlbViewer({model, scale = 1.5, cameraPos = [0, 0, 1]}: R
     if (!model)
     {
         return (
-        <div className="border-stone-600 border-4 rounded w-full flex items-center justify-center h-full text-gray-500">
+        <div className="border-neutral-400 border-2 rounded w-full flex items-center justify-center text-neutral-500">
             Select a model to preview
         </div>
         )
     }
 
     return (
-        <div className="border-stone-600 border-4 rounded w-full h-full">
+        <div className="border-neutral-400 border-2 rounded w-full h-full">
 
             <fiber.Canvas
                 // camera={{ position: cameraPos, fov: 45 }}
@@ -49,7 +49,7 @@ export default function GlbViewer({model, scale = 1.5, cameraPos = [0, 0, 1]}: R
 
                 <drei.Center key={model + "-" + centerKey}>
 
-                    <Model url={`/models/${model}.glb`} scale={scale} />
+                    <Model url={`./models/${model}.glb`} scale={scale} />
 
                 </drei.Center>
 

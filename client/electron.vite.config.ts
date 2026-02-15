@@ -10,6 +10,7 @@ export default vite.defineConfig(
     preload: {},
     renderer:
     {
+        base: './',
         resolve:
         {
             alias:
@@ -17,6 +18,10 @@ export default vite.defineConfig(
                 '@renderer': path.resolve('src/renderer/src')
             }
         },
-        plugins: [react(), cesium()]
+        plugins:
+        [
+            react(),
+            cesium()
+        ]
     }
 })

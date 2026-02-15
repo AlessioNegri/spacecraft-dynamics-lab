@@ -1,9 +1,9 @@
 import * as react from "react"
 
-import api from "@renderer/common/api"
-import checkError from "@renderer/common/error"
+import http from "@renderer/common/http"
 
 import Dialog from "./Dialog"
+import FormButton from "./FormButton"
 
 interface DeleteSpacecraftDialogProps
 {
@@ -20,13 +20,13 @@ export default function DeleteSpacecraftDialog(props: Readonly<DeleteSpacecraftD
 
     const [axiosError, setAxiosError] = react.useState<string>("")
 
-    // --- GENERIC ---
+    // --- HANDLE ---
 
     const handleDelete = async () =>
     {
         try
         {
-            let response: any = await api.delete(`/spacecraft/${props.id}`)
+            let response: any = await http.api.delete(`/spacecraft/${props.id}`)
 
             globalThis.window.api.info(`[${import.meta.url}] ${JSON.stringify(response.data)}`)
 
@@ -35,7 +35,7 @@ export default function DeleteSpacecraftDialog(props: Readonly<DeleteSpacecraftD
         }
         catch (err)
         {
-            const message: string | null = checkError(import.meta.url, err)
+            const message: string | null = http.checkError(import.meta.url, err)
 
             if (message) setAxiosError(message)
         }
@@ -50,14 +50,11 @@ export default function DeleteSpacecraftDialog(props: Readonly<DeleteSpacecraftD
                 {`Do you want to delete spacecraft`} <strong className="text-orange-300">{props.name}</strong>?
             </p>
 
-            <button
-                onClick={handleDelete}
-                className="px-3 py-1 rounded cursor-pointer
-                            bg-red-700 hover:bg-red-800 border border-red-900 text-white">
+            <div className="flex justify-center">
+            
+                <FormButton text="Delete" color="red" onClick={handleDelete} />
 
-                Delete
-
-            </button>
+            </div>
 
             {
                 axiosError && <p className="text-red-400 text-sm">{axiosError}</p>
