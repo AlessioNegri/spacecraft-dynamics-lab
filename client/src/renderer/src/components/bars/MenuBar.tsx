@@ -3,6 +3,7 @@ import * as menubar from "@radix-ui/react-menubar"
 import * as iconify from "@iconify/react"
 
 import AboutDialog from "../dialogs/AboutDialog"
+import CartesianToOrbitParametersDialog from "../dialogs/CartesianToOrbitParametersDialog"
 import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
@@ -23,6 +24,8 @@ export default function MenuBar(): react.JSX.Element
     const [showConsole, setShowConsole] = react.useState<boolean>(true)
 
     const [openAboutDialog, setOpenAboutDialog] = react.useState<boolean>(false)
+
+    const [openC2OPDialog, setOpenC2OPDialog] = react.useState<boolean>(false)
 
     // --- USE EFFECT ---
 
@@ -49,6 +52,11 @@ export default function MenuBar(): react.JSX.Element
     [
         { checkable: true, checked: showSideBar, label: "Side Bar", shortcut: "Ctrl+B", action: () => globalThis.window.api.triggerSideBar() },
         { checkable: true, checked: showConsole, label: "Console", shortcut: "Ctrl+ò", action: () => globalThis.window.api.triggerConsole() }
+    ]
+
+    const tools: IMenuItem[] =
+    [
+        { label: "Cartesian → Orbit Parameters", action: () => setOpenC2OPDialog(true) }
     ]
 
     const help: IMenuItem[] =
@@ -84,6 +92,8 @@ export default function MenuBar(): react.JSX.Element
                     <Menu label="File" items={file} />
 
                     <Menu label="View" items={view} />
+
+                    <Menu label="Tools" items={tools} />
 
                     <Menu label="Help" items={help} />
 
@@ -145,6 +155,14 @@ export default function MenuBar(): react.JSX.Element
             {
                 openAboutDialog &&
                 <AboutDialog onClose={() => { setOpenAboutDialog(false) }} onOk={() => { setOpenAboutDialog(false) }} />
+            }
+
+            {
+                openC2OPDialog && 
+                <CartesianToOrbitParametersDialog
+                    onClose={() => { setOpenC2OPDialog(false) }}
+                    onOk={() => {}}
+                />
             }
 
         </div>

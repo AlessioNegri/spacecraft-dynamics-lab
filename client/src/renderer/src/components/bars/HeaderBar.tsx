@@ -42,7 +42,7 @@ export default function HeaderBar(props: Readonly<HeaderBarProps>): react.JSX.El
                 <h1 className="text-xl font-semibold capitalize">{props.title}</h1>
 
                 <div
-                    className="w-80 px-2 py-1 bg-neutral-950 text-green-300 rounded-lg shadow-md flex items-start 
+                    className="w-85 px-2 py-1 bg-neutral-950 text-green-300 rounded-lg shadow-md flex items-start 
                                 justify-start text-xl tracking-widest"
                     style={{ fontFamily: "Orbitron" }} >
                 

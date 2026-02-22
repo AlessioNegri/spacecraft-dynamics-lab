@@ -22,6 +22,7 @@ a = Analysis(
     pathex=['.'],
     binaries=[],
     datas=[
+        ('astro', 'astro'),
         ('common', 'common'),
         ('routers', 'routers'),
         ('schemas', 'schemas'),

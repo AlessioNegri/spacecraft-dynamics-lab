@@ -138,3 +138,34 @@ interface IPorkChopData3D
     dvGA: number[][][]
     dv2: number[][][]
 }
+
+interface ICartesianOrbitParametersFormIn
+{
+    attractor: string
+    positionX: number
+    positionY: number
+    positionZ: number
+    velocityX: number
+    velocityY: number
+    velocityZ: number
+}
+
+interface ICartesianOrbitParametersFormOut
+{
+    conicType: string
+    specificAngularMomentum: number
+    specificMechanicalEnergy: number
+    eccentricity: number
+    orbitalPeriod: number
+    apoapsisRadius: number
+    periapsisRadius: number
+    semiMajorAxis: number
+    semiMinorAxis: number
+    escapeVelocity: number
+    infiniteTrueAnomaly: number
+    hyperbolaAsymptoteAngle: number
+    turnAngle: number
+    aimingRadius: number
+    hyperbolicExcessSpeed: number
+    characteristicEnergy: number
+}

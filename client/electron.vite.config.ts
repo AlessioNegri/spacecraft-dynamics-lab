@@ -11,6 +11,10 @@ export default vite.defineConfig(
     renderer:
     {
         base: './',
+        build:
+        {
+            outDir: path.resolve(__dirname, 'out/renderer'),
+        },
         resolve:
         {
             alias:

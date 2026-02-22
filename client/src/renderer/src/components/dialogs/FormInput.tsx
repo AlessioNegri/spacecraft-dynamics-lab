@@ -4,13 +4,15 @@ interface FormInputProps
 {
     label: string
     type: react.HTMLInputTypeAttribute
-    name: string
+    name?: string
     value: any
+    readonly?: boolean
+    disable?: boolean
     placeholder?: string
     error?: string
     min?: number
     max?: number
-    setValue: (e: react.ChangeEvent<HTMLInputElement>) => void
+    setValue?: (e: react.ChangeEvent<HTMLInputElement>) => void
 }
 
 /** @function FormInput */
@@ -72,7 +74,9 @@ export default function FormInput(props: Readonly<FormInputProps>): react.JSX.El
                 name={props.name}
                 onChange={props.setValue}
                 placeholder={props.placeholder}
-                className={css}
+                className={`${css} disabled:bg-red-950/50`}
+                {...(props.readonly ? { readOnly: props.readonly } : {})}
+                {...(props.disable ? { disabled: props.disable } : {})}
                 {...(props.type === "file" ? {} : { value: props.value })}
                 {...(props.min ? { min: props.min} : {})}
                 {...(props.max ? { max: props.max} : {})}

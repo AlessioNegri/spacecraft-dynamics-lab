@@ -1,17 +1,31 @@
-# Spacecraft Dynamics Lab (S.D.L.) 🛰️
+<!-- markdownlint-disable MD033 -->
 
-Spacecraft Dynamics Lab is a desktop application to simulate spacecraft dynamics.
+# 🛰️ Spacecraft Dynamics Lab (S.D.L.)
 
-<p align="center"><img src="./docs/images/about.png"></p>
+Spacecraft Dynamics Lab is an Electron desktop application to simulate spacecraft dynamics.
 
-[▶️ Tutorial](./docs/videos/spacecraft.mp4)
+<p align="center">
+    <img src="./docs/images/about.png" width="50%" alt="about">
+</p>
 
-## Images
+## 📋 Table Of Contents
 
-<p align="center"><img src="./docs/images/spacecraft.png" width="100%"></p>
+➡️ [DEPENDENCIES](docs/github/dependencies.md)
 
-<p align="center"><img src="./docs/images/orbit.png" width="100%"></p>
+➡️ [SCRIPTS](docs/github/scripts.md)
 
-<p align="center"><img src="./docs/images/interplanetary.png" width="100%"></p>
+➡️ [STRUCTURE](docs/github/structure.md)
 
-<p align="center"><img src="./docs/images/interplanetary-flyby.png" width="100%"></p>
+➡️ [TOOLS](docs/github/tools.md)
+
+➡️ [SPACECRAFT](docs/github/spacecraft.md)
+
+➡️ [ORBIT](docs/github/orbit.md)
+
+➡️ [INTERPLANETARY](docs/github/interplanetary.md)
+
+## 🖼️ Images
+
+<p align="center">
+  <img src="./docs/images/orbit.png" width="100%" alt="orbit">
+</p>
