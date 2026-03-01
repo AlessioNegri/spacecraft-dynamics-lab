@@ -1,1 +1,4 @@
 .backup
+.pytest_cache/
+astro.egg-info/
+__pycache__/

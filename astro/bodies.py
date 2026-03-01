@@ -1,6 +1,20 @@
 import astropy.units as u
 import dataclasses as dc
+import enum
 import numpy as np
+
+class Attractor(enum.Enum):
+    SUN     = "sun"
+    MERCURY = "mercury"
+    VENUS   = "venus"
+    EARTH   = "earth"
+    MOON    = "moon"
+    MARS    = "mars"
+    JUPITER  = "jupiter"
+    SATURN   = "saturn"
+    URANUS   = "uranus"
+    NEPTUNE  = "neptune"
+    PLUTO    = "pluto"
 
 @dc.dataclass(frozen=True)
 class Body:
@@ -13,10 +27,10 @@ class Body:
     omega   : u.Quantity    # ? Rotation rate [rad/s]
     M       : u.Quantity    # ? Mass [kg]
 
-BODIES: dict[str, Body] = {}
+BODIES: dict[Attractor, Body] = {}
 
-BODIES["sun"] = Body(
-    name="Sun",
+BODIES[Attractor.SUN] = Body(
+    name=Attractor.SUN,
     mu=132712440041.93938 * u.km**3 / u.s**2,
     R_E=695700.0 * u.km,
     J2=None,
@@ -25,8 +39,8 @@ BODIES["sun"] = Body(
     M=1.98847e30 * u.kg
 )
 
-BODIES["mercury"] = Body(
-    name="Mercury",
+BODIES[Attractor.MERCURY] = Body(
+    name=Attractor.MERCURY,
     mu=22031.86855 * u.km**3 / u.s**2,
     R_E=2439.7 * u.km,
     J2=None,
@@ -35,8 +49,8 @@ BODIES["mercury"] = Body(
     M=3.3011e23 * u.kg
 )
 
-BODIES["venus"] = Body(
-    name="Venus",
+BODIES[Attractor.VENUS] = Body(
+    name=Attractor.VENUS,
     mu=324858.592 * u.km**3 / u.s**2,
     R_E=6051.8 * u.km,
     J2=None,
@@ -45,8 +59,8 @@ BODIES["venus"] = Body(
     M=4.8675e24 * u.kg
 )
 
-BODIES["earth"] = Body(
-    name="Earth",
+BODIES[Attractor.EARTH] = Body(
+    name=Attractor.EARTH,
     mu=398600.4418 * u.km**3 / u.s**2,
     R_E=6378.1363 * u.km,
     J2=1.08262668e-3,
@@ -55,8 +69,8 @@ BODIES["earth"] = Body(
     M=5.972168e24 * u.kg
 )
 
-BODIES["moon"] = Body(
-    name="Moon",
+BODIES[Attractor.MOON] = Body(
+    name=Attractor.MOON,
     mu=4902.800066 * u.km**3 / u.s**2,
     R_E=1737.4 * u.km,
     J2=2.03263e-4,
@@ -65,8 +79,8 @@ BODIES["moon"] = Body(
     M=7.34767309e22 * u.kg
 )
 
-BODIES["mars"] = Body(
-    name="Mars",
+BODIES[Attractor.MARS] = Body(
+    name=Attractor.MARS,
     mu=42828.375214 * u.km**3 / u.s**2,
     R_E=3396.19 * u.km,
     J2=1.96045e-3,
@@ -75,8 +89,8 @@ BODIES["mars"] = Body(
     M=6.4171e23 * u.kg
 )
 
-BODIES["jupiter"] = Body(
-    name="Jupiter",
+BODIES[Attractor.JUPITER] = Body(
+    name=Attractor.JUPITER,
     mu=126686511.0 * u.km**3 / u.s**2,
     R_E=71492.0 * u.km,
     J2=1.4697e-2,
@@ -85,8 +99,9 @@ BODIES["jupiter"] = Body(
     M=1.8982e27 * u.kg
 )
 
-BODIES["saturn"] = Body(
-    name="Saturn",
+BODIES[Attractor.SATURN] = Body(
+    name=Attractor.SATURN,
+
     mu=37931207.8 * u.km**3 / u.s**2,
     R_E=60268.0 * u.km,
     J2=1.6298e-2,
@@ -95,8 +110,8 @@ BODIES["saturn"] = Body(
     M=5.6834e26 * u.kg
 )
 
-BODIES["uranus"] = Body(
-    name="Uranus",
+BODIES[Attractor.URANUS] = Body(
+    name=Attractor.URANUS,
     mu=5793951.0 * u.km**3 / u.s**2,
     R_E=25559.0 * u.km,
     J2=3.34343e-3,
@@ -105,8 +120,8 @@ BODIES["uranus"] = Body(
     M=8.6810e25 * u.kg
 )
 
-BODIES["neptune"] = Body(
-    name="Neptune",
+BODIES[Attractor.NEPTUNE] = Body(
+    name=Attractor.NEPTUNE,
     mu=6836529.0 * u.km**3 / u.s**2,
     R_E=24764.0 * u.km,
     J2=3.411e-3,
@@ -115,8 +130,8 @@ BODIES["neptune"] = Body(
     M=1.02413e26 * u.kg
 )
 
-BODIES["pluto"] = Body(
-    name="Pluto",
+BODIES[Attractor.PLUTO] = Body(
+    name=Attractor.PLUTO,
     mu=872.4 * u.km**3 / u.s**2,
     R_E=1188.3 * u.km,
     J2=None,
@@ -125,4 +140,4 @@ BODIES["pluto"] = Body(
     M=1.303e22 * u.kg
 )
 
-def get_body(name: str) -> Body: return BODIES[name.lower()]
+def get_body(attractor: Attractor) -> Body: return BODIES[attractor]

@@ -84,3 +84,6 @@ pyinstaller==6.19.0
 #pefile-2024.8.26
 #pyinstaller-hooks-contrib-2026.0
 #setuptools-82.0.0
+pytest==9.0.2
+#iniconfig-2.3.0
+#pluggy-1.6.0 

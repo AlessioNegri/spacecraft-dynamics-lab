@@ -3,20 +3,20 @@ import numpy as np
 
 import astro.bodies as bodies
 
-def check_attractor(attractor: str) -> None:
+def check_attractor(attractor: bodies.Attractor) -> None:
     """Check the validity of the attractor
 
     Args:
-        attractor (str): Main attractor
+        attractor (bodies.Attractor): Main attractor
 
     Raises:
         TypeError: Wrong type
         ValueError: Wrong name
     """
     
-    if not isinstance(attractor, str): raise TypeError("'attractor' must be of type 'str'")
+    if not isinstance(attractor, bodies.Attractor): raise TypeError("'attractor' must be of type 'astro.bodies.Attractor'")
         
-    if attractor.lower() not in bodies.BODIES: raise ValueError(f"'attractor' must be one of {bodies.BODIES.keys()}")
+    if attractor not in bodies.BODIES: raise ValueError(f"'attractor' must be one of {list(bodies.BODIES.keys())}")
 
 def check_position_vector(r: np.ndarray) -> None:
     """Check the validity of the position vector
@@ -72,33 +72,33 @@ def check_time_delta(delta: time.TimeDelta) -> None:
     
     if not isinstance(delta, time.TimeDelta): raise TypeError("'delta' must be of type 'astropy.time.TimeDelta'")
     
-def check_keplerian_parameters(a: float, ecc: float, inc: float, raan: float, argp: float, nu: float) -> None:
+def check_keplerian_parameters(a: float | int, ecc: float | int, inc: float | int, raan: float | int, argp: float | int, nu: float | int) -> None:
     """Check the validity of the keplerian parameters
 
     Args:
-        a (float): Semi-major axis
-        ecc (float): Eccentricity
-        inc (float): Inclination [deg]
-        raan (float): Right ascension of the ascending node [deg]
-        argp (float): Argument of periapsis [deg]
-        nu (float): True anomaly [deg]
+        a (float | int): Semi-major axis
+        ecc (float | int): Eccentricity
+        inc (float | int): Inclination [deg]
+        raan (float | int): Right ascension of the ascending node [deg]
+        argp (float | int): Argument of periapsis [deg]
+        nu (float | int): True anomaly [deg]
         
     Raises:
         TypeError: Wrong type
         ValueError: Wrong value
     """
     
-    if not isinstance(a, float): raise TypeError("'a' must be of type 'float'")
+    if not isinstance(a, float | int): raise TypeError("'a' must be of type 'float' or 'int'")
         
-    if not isinstance(ecc, float): raise TypeError("'ecc' must be of type 'float'")
+    if not isinstance(ecc, float | int): raise TypeError("'ecc' must be of type 'float' or 'int'")
     
-    if not isinstance(inc, float): raise TypeError("'inc' must be of type 'float'")
+    if not isinstance(inc, float | int): raise TypeError("'inc' must be of type 'float' or 'int'")
     
-    if not isinstance(raan, float): raise TypeError("'raan' must be of type 'float'")
+    if not isinstance(raan, float | int): raise TypeError("'raan' must be of type 'float' or 'int'")
     
-    if not isinstance(argp, float): raise TypeError("'argp' must be of type 'float'")
+    if not isinstance(argp, float | int): raise TypeError("'argp' must be of type 'float' or 'int'")
     
-    if not isinstance(nu, float): raise TypeError("'nu' must be of type 'float'")
+    if not isinstance(nu, float | int): raise TypeError("'nu' must be of type 'float' or 'int'")
     
     if ecc < 1 and a < 0: raise ValueError("'a' must be positive for ellitical orbits")
     
@@ -114,17 +114,34 @@ def check_keplerian_parameters(a: float, ecc: float, inc: float, raan: float, ar
     
     if not (-180 <= nu <= 180): raise ValueError("'nu' must be in [-180, 180] deg")
     
-def check_angle(angle: float) -> None:
+def check_angle(angle: float | int) -> None:
     """Check the validity of the angle
 
     Args:
-        angle (float): Angle [deg]
+        angle (float | int): Angle [deg]
 
     Raises:
         TypeError: Wrong type
         ValueError: Wrong value
     """
     
-    if not isinstance(angle, float): raise TypeError("'angle' must be of type 'float'")
+    if not isinstance(angle, (float, int)): raise TypeError("'angle' must be of type 'float' or 'int'")
     
     if not (-360 <= angle <= 360): raise ValueError("'angle' must be in [-360, +360] deg")
+
+def wrap_angle(angle: float | int, low: float | int = 0, high: float | int = 360) -> float:
+    """Wrap the angle in the range [low, high) deg
+
+    Args:
+        low (float | int): Lower bound of the range [deg]
+        high (float | int): Upper bound of the range [deg]
+
+    Returns:
+        float: Wrapped angle [deg]
+    """
+    
+    check_angle(angle)
+    
+    wrapped_angle: float = ((angle - low) % (high - low)) + low
+    
+    return wrapped_angle

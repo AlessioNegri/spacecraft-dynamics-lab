@@ -19,6 +19,7 @@ import astropy.units as u
 import dataclasses
 import numpy as np
 import scipy.integrate as ode
+import typing
 
 import astro.bodies as bodies
 import astro.common as common
@@ -38,25 +39,25 @@ class Result:
     
 @dataclasses.dataclass
 class OrbitParameters:
-    """Orbit parameters based on orbit geometry (circular - elliptical - parabolic - hyperbolic)
+    """Orbit parameters based on orbit geometry (linear - circular - elliptical - parabolic - hyperbolic)
     """
     
-    conic_type  : str   = "" # ? Type of conic section
-    h           : float = 0.0 # ? Specific Angular Momentum     [ km^2 / s ]
-    epsilon     : float = 0.0 # ? Specific Mechanical Energy    [ km^2 / s^2 ]
-    e           : float = 0.0 # ? Eccentricity                  [ ]
-    T           : float = 0.0 # ? Orbital Period                [ s ]
-    r_a         : float = 0.0 # ? Apoapsis Radius               [ km ]
-    r_p         : float = 0.0 # ? Periapsis Radius              [ km ]
-    a           : float = 0.0 # ? Semi-Major Axis               [ km ]
-    b           : float = 0.0 # ? Semi-Minor Axis               [ km ]
-    v_esc       : float = 0.0 # ? Escape Velocity               [ km / s ]
-    theta_inf   : float = 0.0 # ? Infinite True Anomaly         [ deg ]
-    beta        : float = 0.0 # ? Hyperbola Asymptote Angle     [ deg ]
-    delta_ta    : float = 0.0 # ? Turn Angle                    [ deg ]
-    delta_ar    : float = 0.0 # ? Aiming Radius                 [ km ]
-    v_inf       : float = 0.0 # ? Hyperbolic Excess Speed       [ km / s ]
-    C_3         : float = 0.0 # ? Characteristic Energy         [ km^2 / s^2 ]
+    conic_type  : str = ""                              # ? Type of conic section
+    h           : u.Quantity = 0.0 * u.km**2 / u.s      # ? Specific Angular Momentum
+    epsilon     : u.Quantity = 0.0 * u.km**2 / u.s**2   # ? Specific Mechanical Energy
+    e           : float = 0.0                           # ? Eccentricity
+    T           : u.Quantity = 0.0 * u.s                # ? Orbital Period
+    r_a         : u.Quantity = 0.0 * u.km               # ? Apoapsis Radius
+    r_p         : u.Quantity = 0.0 * u.km               # ? Periapsis Radius
+    a           : u.Quantity = 0.0 * u.km               # ? Semi-Major Axis
+    b           : u.Quantity = 0.0 * u.km               # ? Semi-Minor Axis
+    v_esc       : u.Quantity = 0.0 * u.km / u.s         # ? Escape Velocity
+    theta_inf   : u.Quantity = 0.0 * u.deg              # ? Infinite True Anomaly
+    beta        : u.Quantity = 0.0 * u.deg              # ? Hyperbola Asymptote Angle
+    delta_ta    : u.Quantity = 0.0 * u.deg              # ? Turn Angle
+    delta_ar    : u.Quantity = 0.0 * u.km               # ? Aiming Radius
+    v_inf       : u.Quantity = 0.0 * u.km / u.s         # ? Hyperbolic Excess Speed
+    C_3         : u.Quantity = 0.0 * u.km**2 / u.s**2   # ? Characteristic Energy
 
 class Orbit:
     """Generic orbit in 2 Body Problem
@@ -81,24 +82,28 @@ class Orbit:
     # --- STATIC ---
     
     @staticmethod
-    def cartesian_to_orbit_parameter(attractor: str, r: np.ndarray, v: np.ndarray) -> OrbitParameters:
+    def cartesian_to_orbit_parameters(attractor: bodies.Attractor, r: u.Quantity, v: u.Quantity) -> OrbitParameters:
         """Convert the given cartesian parameters in orbit ones
 
         Args:
-            r (np.ndarray): Position vector [km]
-            v (np.ndarray): Velocity vector [km/s]
+            attractor (bodies.Attractor): Main attractor
+            r (u.Quantity): Position vector
+            v (u.Quantity): Velocity vector
 
         Returns:
             OrbitParameters: Orbit parameters
         """
         
         common.check_attractor(attractor)
-        common.check_position_vector(r)
-        common.check_velocity_vector(v)
+        common.check_position_vector(r.to_value(u.km))
+        common.check_velocity_vector(v.to_value(u.km / u.s))
         
-        attractor: bodies.Body = bodies.get_body(attractor.lower())
+        r: np.ndarray = typing.cast(np.ndarray, r.to(u.km).to_value())
+        v: np.ndarray = typing.cast(np.ndarray, v.to(u.km / u.s).to_value())
         
-        mu: float = attractor.mu.to_value() # ? Gravitational constant [km^3 / s^2]
+        body: bodies.Body = bodies.BODIES[attractor]
+        
+        mu: float = body.mu.to(u.km**3 / u.s**2).to_value()
 
         parameters: OrbitParameters = OrbitParameters()
         
@@ -106,17 +111,23 @@ class Orbit:
         
         h: np.ndarray = np.cross(r, v)
         
-        parameters.h = float(np.linalg.norm(h))
+        h_m: float = float(np.linalg.norm(h))
+        
+        parameters.h = h_m * u.km**2 / u.s
         
         # >>> Energy
         
-        parameters.epsilon = float(np.linalg.norm(v)**2 / 2 - mu / np.linalg.norm(r))
+        epsilon: float = float(np.linalg.norm(v)**2 / 2 - mu / np.linalg.norm(r))
+        
+        parameters.epsilon = epsilon * u.km**2 / u.s**2
         
         # >>> Eccentricity
         
-        parameters.e = float(np.sqrt((2 * np.linalg.norm(h)**2 * parameters.epsilon) / (mu **2) + 1))
+        e: float = float(np.sqrt((2 * np.linalg.norm(h)**2 * epsilon) / (mu **2) + 1))
         
-        if parameters.h == 0:
+        parameters.e = e
+        
+        if parameters.h.to_value() == 0:
             
             parameters.conic_type = "line"
             
@@ -128,49 +139,49 @@ class Orbit:
         if parameters.e == 0:
             
             parameters.conic_type   = "circle"
-            parameters.r_p          = float(np.linalg.norm(r))
-            parameters.r_a          = float(np.linalg.norm(r))
-            parameters.a            = float(np.linalg.norm(r))
-            parameters.b            = float(np.linalg.norm(r))
-            parameters.T            = float((2 * np.pi) /  np.sqrt(mu) * np.linalg.norm(r) ** (3 / 2))
+            parameters.r_p          = float(np.linalg.norm(r)) * u.km
+            parameters.r_a          = float(np.linalg.norm(r)) * u.km
+            parameters.a            = float(np.linalg.norm(r)) * u.km
+            parameters.b            = float(np.linalg.norm(r)) * u.km
+            parameters.T            = float((2 * np.pi) /  np.sqrt(mu) * np.linalg.norm(r) ** (3 / 2)) * u.s
         
         # * Elliptical Orbit
         elif parameters.e > 0 and parameters.e < 1:
             
             parameters.conic_type   = "ellipse"
-            parameters.r_p          = float(parameters.h ** 2 / mu * 1 / (1 + parameters.e))
-            parameters.r_a          = float(parameters.h ** 2 / mu * 1 / (1 - parameters.e))
-            parameters.a            = float((parameters.r_p + parameters.r_a) / 2)
-            parameters.b            = float(parameters.a * np.sqrt(1 - parameters.e ** 2))
-            parameters.T            = float((2 * np.pi) /  np.sqrt(mu) * parameters.a ** (3 / 2))
+            parameters.r_p          = float(h_m ** 2 / mu * 1 / (1 + e)) * u.km
+            parameters.r_a          = float(h_m ** 2 / mu * 1 / (1 - e)) * u.km
+            parameters.a            = float((parameters.r_p.to_value() + parameters.r_a.to_value()) / 2) * u.km
+            parameters.b            = float(parameters.a.to_value() * np.sqrt(1 - e ** 2)) * u.km
+            parameters.T            = float((2 * np.pi) /  np.sqrt(mu) * parameters.a.to_value() ** (3 / 2)) * u.s
         
         # * Parabolic Orbit
         elif parameters.e == 1:
             
             parameters.conic_type   = "parabola"
-            parameters.r_p          = float(parameters.h ** 2 / mu * 1 / (1 + 1))
-            parameters.r_a          = float(-1)
-            parameters.a            = float(-1)
-            parameters.b            = float(0)
-            parameters.T            = float(-1)
-            parameters.v_esc        = float(np.sqrt(2 * mu / parameters.r_p))
+            parameters.r_p          = float(h_m ** 2 / mu * 1 / (1 + 1)) * u.km
+            parameters.r_a          = float(-1) * u.km
+            parameters.a            = float(-1) * u.km
+            parameters.b            = float(0) * u.km
+            parameters.T            = float(-1) * u.s
+            parameters.v_esc        = float(np.sqrt(2 * mu / parameters.r_p.to_value())) * u.km / u.s
         
         # * Hyperbolic Orbit
         elif parameters.e > 1:
             
             parameters.conic_type   = "hyperbola"
-            parameters.r_p          = float(parameters.h ** 2 / mu * 1 / (1 + parameters.e))
-            parameters.r_a          = float(parameters.h ** 2 / mu * 1 / (1 - parameters.e))
-            parameters.a            = float((np.abs(parameters.r_a) - parameters.r_p) / 2)
-            parameters.b            = float(parameters.a * np.sqrt(parameters.e ** 2 - 1))
-            parameters.T            = float(-1)
-            parameters.v_esc        = float(np.sqrt(2 * mu  / parameters.r_p))
-            parameters.theta_inf    = float(np.rad2deg(np.arccos(-1 / parameters.e)))
-            parameters.beta         = float(np.rad2deg(np.arccos(1 / parameters.e)))
-            parameters.delta_ta     = float(np.rad2deg(2 * np.arcsin(1 / parameters.e)))
-            parameters.delta_ar     = float(parameters.a * np.sqrt(parameters.e ** 2 - 1))
-            parameters.v_inf        = float(np.sqrt(mu / parameters.a))
-            parameters.C_3          = float(parameters.v_inf ** 2)
+            parameters.r_p          = float(h_m ** 2 / mu * 1 / (1 + e)) * u.km
+            parameters.r_a          = float(h_m ** 2 / mu * 1 / (1 - e)) * u.km
+            parameters.a            = float((np.abs(parameters.r_a.to_value()) - parameters.r_p.to_value()) / 2) * u.km
+            parameters.b            = float(parameters.a.to_value() * np.sqrt(e ** 2 - 1)) * u.km
+            parameters.T            = float(-1) * u.s
+            parameters.v_esc        = float(np.sqrt(2 * mu  / parameters.r_p.to_value())) * u.km / u.s
+            parameters.theta_inf    = float(np.rad2deg(np.arccos(-1 / e))) * u.deg
+            parameters.beta         = float(np.rad2deg(np.arccos(1 / e))) * u.deg
+            parameters.delta_ta     = float(np.rad2deg(2 * np.arcsin(1 / e))) * u.deg
+            parameters.delta_ar     = float(parameters.a.to_value() * np.sqrt(e ** 2 - 1)) * u.km
+            parameters.v_inf        = float(np.sqrt(mu / parameters.a.to_value())) * u.km / u.s
+            parameters.C_3          = float(parameters.v_inf.to_value() ** 2) * u.km**2 / u.s**2
         
         # NOTE -1 is np.inf
         
