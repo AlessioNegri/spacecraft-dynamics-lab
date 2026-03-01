@@ -29,13 +29,13 @@ class Result:
     """
     
     success: bool
-    t: np.ndarray
-    r_x: np.ndarray
-    r_y: np.ndarray
-    r_z: np.ndarray
-    v_x: np.ndarray
-    v_y: np.ndarray
-    v_z: np.ndarray
+    t: u.Quantity
+    r_x: u.Quantity
+    r_y: u.Quantity
+    r_z: u.Quantity
+    v_x: u.Quantity
+    v_y: u.Quantity
+    v_z: u.Quantity
     
 @dataclasses.dataclass
 class OrbitParameters:
@@ -68,7 +68,7 @@ class Orbit:
         """
         
         self.ready      : bool = False
-        self.attractor  : bodies.Body = bodies.get_body("earth")
+        self.attractor  : bodies.Body = bodies.get_body(bodies.Attractor.EARTH)
         self.a          : float = 0.0
         self.ecc        : float = 0.0
         self.inc        : float = 0.0
@@ -189,53 +189,66 @@ class Orbit:
     
     # --- PUBLIC ---
     
-    def from_cartesian(self, attractor: str, r: np.ndarray, v: np.ndarray, epoch: time.Time) -> None:
+    def from_cartesian(self, attractor: str, r: u.Quantity, v: u.Quantity, epoch: time.Time) -> None:
         """Initialize the orbit based on cartesian orbit parameters
 
         Args:
             attractor (str): Main attractor name
-            r (np.ndarray): Position vector [km]
-            v (np.ndarray): Velocity vector [km/s]
+            r (u.Quantity): Position vector
+            v (u.Quantity): Velocity vector
             epoch (time.Time): Epoch of orbit position
         """
         
         common.check_attractor(attractor)
-        common.check_position_vector(r)
-        common.check_velocity_vector(v)
+        common.check_position_vector(r.to_value(u.km))
+        common.check_velocity_vector(v.to_value(u.km / u.s))
         common.check_time(epoch)
         
         self.ready      = True
         self.attractor  = bodies.get_body(attractor.lower())
-        self.r          = r
-        self.v          = v
+        self.r          = r.to(u.km).to_value()
+        self.v          = v.to(u.km / u.s).to_value()
         self.epoch      = epoch
     
-    def from_keplerian(self, attractor: str, a: float, ecc: float, inc: float, raan: float, argp: float, nu: float, epoch: time.Time) -> None:
+    def from_keplerian(self,
+                       attractor: str,
+                       a: u.Quantity,
+                       ecc: float | int,
+                       inc: u.Quantity,
+                       raan: u.Quantity,
+                       argp: u.Quantity,
+                       nu: u.Quantity,
+                       epoch: time.Time) -> None:
         """Initialize the orbit based on keplerian orbit parameters
 
         Args:
             attractor (str): Main attractor name
-            a (float): Semi-major axis [km]
-            ecc (float): Eccentricity
-            inc (float): Inclination [deg]
-            raan (float): Right Ascension of the Ascending Node [deg]
-            argp (float): Argumento of Periapsis [deg]
-            nu (float): True anomaly [deg]
+            a (u.Quantity): Semi-major axis
+            ecc (u.Quantity): Eccentricity
+            inc (u.Quantity): Inclination
+            raan (u.Quantity): Right Ascension of the Ascending Node
+            argp (u.Quantity): Argumento of Periapsis
+            nu (u.Quantity): True anomaly
             epoch (time.Time): Epoch of orbit position
         """
         
         common.check_attractor(attractor)
+        common.check_keplerian_parameters(a.to_value(u.km),
+                                          ecc,
+                                          inc.to_value(u.deg),
+                                          raan.to_value(u.deg),
+                                          argp.to_value(u.deg),
+                                          nu.to_value(u.deg))
         common.check_time(epoch)
-        common.check_keplerian_parameters(a, ecc, inc, raan, argp, nu)
         
         self.ready      = True
         self.attractor  = bodies.get_body(attractor)
-        self.a          = a
+        self.a          = a.to_value(u.km)
         self.ecc        = ecc
-        self.inc        = inc
-        self.raan       = raan
-        self.argp       = argp
-        self.nu         = nu
+        self.inc        = inc.to_value(u.deg)
+        self.raan       = raan.to_value(u.deg)
+        self.argp       = argp.to_value(u.deg)
+        self.nu         = nu.to_value(u.deg)
         self.epoch      = epoch
         
     def propagate_until(self, end_epoch: time.Time) -> Result:
@@ -265,13 +278,13 @@ class Orbit:
         result: Result = Result()
         
         result.success = solution['success']
-        result.t = solution['t']
-        result.r_x = solution['y'][0, :]
-        result.r_y = solution['y'][1, :]
-        result.r_z = solution['y'][2, :]
-        result.v_x = solution['y'][3, :]
-        result.v_y = solution['y'][4, :]
-        result.v_z = solution['y'][5, :]
+        result.t = solution['t'] * u.s
+        result.r_x = solution['y'][0, :] * u.km
+        result.r_y = solution['y'][1, :] * u.km
+        result.r_z = solution['y'][2, :] * u.km
+        result.v_x = solution['y'][3, :] * u.km / u.s
+        result.v_y = solution['y'][4, :] * u.km / u.s
+        result.v_z = solution['y'][5, :] * u.km / u.s
         
         return result
     
@@ -300,13 +313,13 @@ class Orbit:
         result: Result = Result()
         
         result.success = solution['success']
-        result.t = solution['t']
-        result.r_x = solution['y'][0, :]
-        result.r_y = solution['y'][1, :]
-        result.r_z = solution['y'][2, :]
-        result.v_x = solution['y'][3, :]
-        result.v_y = solution['y'][4, :]
-        result.v_z = solution['y'][5, :]
+        result.t = solution['t'] * u.s
+        result.r_x = solution['y'][0, :] * u.km
+        result.r_y = solution['y'][1, :] * u.km
+        result.r_z = solution['y'][2, :] * u.km
+        result.v_x = solution['y'][3, :] * u.km / u.s
+        result.v_y = solution['y'][4, :] * u.km / u.s
+        result.v_z = solution['y'][5, :] * u.km / u.s
         
         return result
         

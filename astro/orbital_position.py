@@ -12,6 +12,7 @@ __author__      = "Alessio Negri"
 __license__     = "LGPL v3"
 __maintainer__  = "Alessio Negri"
 
+import astropy.units as u
 import numpy as np
 import scipy.optimize as optimize
 
@@ -29,76 +30,76 @@ class OrbitalPosition():
         pass
     
     @staticmethod
-    def circular_orbit_time(nu: float | int, T: float | int) -> float:
+    def circular_orbit_time(nu: u.Quantity, T: u.Quantity) -> u.Quantity:
         """Calculate the time on a circular orbit at given true anomaly
 
         Args:
-            nu (float): True anomaly [deg]
-            T (float): Period [s]
+            nu (u.Quantity): True anomaly
+            T (u.Quantity): Period
 
         Returns:
-            float: Time [s]
+            u.Quantity: Time
         """
         
-        common.check_angle(nu)
+        common.check_angle(nu.to_value(u.deg))
         
-        t: float = np.deg2rad(nu) / (2 * np.pi) * T
+        t: float = nu.to_value(u.rad) / (2 * np.pi) * T.to_value(u.s)
         
-        return t
+        return t * u.s
     
     @staticmethod
-    def circular_orbit_true_anomaly(t: float | int, T: float | int) -> float:
+    def circular_orbit_true_anomaly(t: u.Quantity, T: u.Quantity) -> u.Quantity:
         """Calculate the true anomaly on a circular orbit at given time
 
         Args:
-            t (float): Time on orbit [s]
-            T (float): Period [s]
+            t (u.Quantity): Time on orbit
+            T (u.Quantity): Period
 
         Returns:
-            float: True anomaly [deg]
+            u.Quantity: True anomaly
         """
         
-        nu: float = np.rad2deg((2 * np.pi / T) * t)
+        nu: float = np.rad2deg((2 * np.pi / T.to_value(u.s)) * t.to_value(u.s))
         
-        return common.wrap_angle(nu, low=0, high=360)
+        return common.wrap_angle(nu, low=0, high=360) * u.deg
     
     @staticmethod
-    def elliptical_orbit_time(nu: float | int, T: float | int, e: float | int) -> float:
+    def elliptical_orbit_time(nu: u.Quantity, T: u.Quantity, e: float | int) -> u.Quantity:
         """Calculate the time on an elliptical orbit at given true anomaly
 
         Args:
-            nu (float): True anomaly [deg]
-            T (float): Period [s]
+            nu (u.Quantity): True anomaly
+            T (u.Quantity): Period
             e (float): Eccentricity
 
         Returns:
-            float: Time [s]
+            u.Quantity: Time
         """
         
-        common.check_angle(nu)
+        common.check_angle(nu.to_value(u.deg))
         
-        E: float = 2 * np.arctan(np.sqrt((1 - e) / (1 + e)) * np.tan(np.deg2rad(nu) / 2))
+        E: float = 2 * np.arctan(np.sqrt((1 - e) / (1 + e)) * np.tan(nu.to_value(u.rad) / 2))
         
         M_e: float = E - e * np.sin(E) # ? Mean anomaly
         
-        t: float = M_e / (2 * np.pi) * T
+        t: float = M_e / (2 * np.pi) * T.to_value(u.s)
         
-        return t
+        return t * u.s
     
     @staticmethod
-    def elliptical_orbit_true_anomaly(t: float | int, T: float | int, e: float | int) -> float:
+    def elliptical_orbit_true_anomaly(t: u.Quantity, T: u.Quantity, e: float | int) -> u.Quantity:
         """Calculate the true anomaly on an elliptical orbit at given time
 
         Args:
-            t (float): Time on orbit [s]
-            T (float): Period [s]
+            t (u.Quantity): Time on orbit
+            T (u.Quantity): Period
             e (float): Eccentricity
 
         Returns:
-            float: True anomaly [deg]
+            u.Quantity: True anomaly
         """
         
-        M_e: float = (2 * np.pi / T) * t # ? Mean anomaly
+        M_e: float = (2 * np.pi / T.to_value(u.s)) * t.to_value(u.s) # ? Mean anomaly
         
         f: callable = lambda E: E - e * np.sin(E) - M_e
         
@@ -110,107 +111,107 @@ class OrbitalPosition():
         
         nu: float = 2 * np.arctan(np.sqrt((1 + e) / (1 - e)) * np.tan(E / 2))
         
-        return common.wrap_angle(np.rad2deg(nu), low=0, high=360)
+        return common.wrap_angle(np.rad2deg(nu), low=0, high=360) * u.deg
     
     @staticmethod
-    def parabolic_orbit_time(nu: float | int, h: float | int, attractor: str) -> float:
+    def parabolic_orbit_time(nu: u.Quantity, h: u.Quantity, attractor: bodies.Attractor) -> u.Quantity:
         """Calculate the time on a parabolic orbit at given true anomaly
 
         Args:
-            nu (float): True anomaly [deg]
-            h (float): Specific angular momentum [km^2/s]
-            attractor (str): Main attractor name
+            nu (u.Quantity): True anomaly
+            h (u.Quantity): Specific angular momentum
+            attractor (bodies.Attractor): Main attractor
 
         Returns:
-            float: Time [s]
+            u.Quantity: Time
         """
         
-        common.check_angle(nu)
+        common.check_angle(nu.to_value(u.deg))
         common.check_attractor(attractor)
         
-        body: bodies.Body = bodies.get_body(attractor.lower())
+        body: bodies.Body = bodies.BODIES[attractor]
         
-        D: float = np.tan(np.deg2rad(nu) / 2) # ? Parabolic eccentric anomaly
+        D: float = np.tan(nu.to_value(u.rad) / 2) # ? Parabolic eccentric anomaly
         
         M_p: float = 1/2 * D + 1/6 * D**3 # ? Mean anomaly
         
-        t: float = M_p * h**3 / body.mu.to_value()**2
+        t: float = M_p * h.to_value(u.km**2 / u.s)**3 / body.mu.to_value(u.km**3 / u.s**2)**2
         
-        return t
+        return t * u.s
     
     @staticmethod
-    def parabolic_orbit_true_anomaly(t: float | int, h: float | int, attractor: str) -> float:
+    def parabolic_orbit_true_anomaly(t: u.Quantity, h: u.Quantity, attractor: bodies.Attractor) -> u.Quantity:
         """Calculate the true anomaly on a parabolic orbit at given time
 
         Args:
-            t (float): Time on orbit [s]
-            h (float): Specific angular momentum [km^2/s]
-            attractor (str): Main attractor name
+            t (u.Quantity): Time on orbit
+            h (u.Quantity): Specific angular momentum
+            attractor (bodies.Attractor): Main attractor
 
         Returns:
-            float: True anomaly [deg]
+            u.Quantity: True anomaly
         """
         
         common.check_attractor(attractor)
         
-        body: bodies.Body = bodies.get_body(attractor.lower())
+        body: bodies.Body = bodies.BODIES[attractor]
         
-        M_p: float = t * body.mu.to_value()**2 / h**3 # ? Mean anomaly
+        M_p: float = t.to_value(u.s) * body.mu.to_value(u.km**3 / u.s**2)**2 / h.to_value(u.km**2 / u.s)**3 # ? Mean anomaly
         
         nu: float = 2 * np.arctan( (3 * M_p + np.sqrt((3 * M_p)**2 + 1))**(1/3) - (3 * M_p + np.sqrt((3 * M_p)**2 + 1))**(-1/3) )
         
-        return common.wrap_angle(np.rad2deg(nu), low=0, high=360)
+        return common.wrap_angle(np.rad2deg(nu), low=0, high=360) * u.deg
     
     @staticmethod
-    def hyperbolic_orbit_time(nu: float | int, h: float | int, e: float | int, attractor: str) -> float:
+    def hyperbolic_orbit_time(nu:  u.Quantity, h: u.Quantity, e: float | int, attractor: bodies.Attractor) -> u.Quantity:
         """Calculate the time on a hyperbolic orbit at given true anomaly
 
         Args:
-            nu (float): True anomaly [deg]
-            h (float): Specific angular momentum [km^2/s]
-            e (float): Eccentricity
-            attractor (str): Main attractor name
+            nu (u.Quantity): True anomaly
+            h (u.Quantity): Specific angular momentum
+            e (float | int): Eccentricity
+            attractor (bodies.Attractor): Main attractor
 
         Returns:
-            float: Time [s]
+            u.Quantity: Time
         """
         
-        common.check_angle(nu)
+        common.check_angle(nu.to_value(u.deg))
         common.check_attractor(attractor)
         
         if e <= 1: raise ValueError("'e' must be greater than 1 for hyperbolic orbits")
         
-        body: bodies.Body = bodies.get_body(attractor.lower())
+        body: bodies.Body = bodies.BODIES[attractor]
         
-        F: float = 2 * np.arctanh(np.sqrt((e - 1) / (e + 1)) * np.tan(np.deg2rad(nu) / 2)) # ? Hyperbolic eccentric anomaly
+        F: float = 2 * np.arctanh(np.sqrt((e - 1) / (e + 1)) * np.tan(nu.to_value(u.rad) / 2)) # ? Hyperbolic eccentric anomaly
         
         M_h: float = e * np.sinh(F) - F # ? Mean anomaly
         
-        t: float = M_h * h**3 / body.mu.to_value()**2 * (e**2 - 1)**(-3/2)
+        t: float = M_h * h.to_value(u.km**2 / u.s)**3 / body.mu.to_value(u.km**3 / u.s**2)**2 * (e**2 - 1)**(-3/2)
         
-        return t
+        return t * u.s
     
     @staticmethod
-    def hyperbolic_orbit_true_anomaly(t: float | int, h: float | int, e: float | int, attractor: str) -> float:
+    def hyperbolic_orbit_true_anomaly(t: u.Quantity, h: u.Quantity, e: float | int, attractor: bodies.Attractor) -> u.Quantity:
         """Calculate the true anomaly on a hyperbolic orbit at given time
 
         Args:
-            t (float): Time on orbit [s]
-            h (float): Specific angular momentum [km^2/s]
-            e (float): Eccentricity
-            attractor (str): Main attractor name
+            t (u.Quantity): Time on orbit
+            h (u.Quantity): Specific angular momentum
+            e (float | int): Eccentricity
+            attractor (bodies.Attractor): Main attractor
 
         Returns:
-            float: True anomaly [deg]
+            u.Quantity: True anomaly
         """
         
         common.check_attractor(attractor)
         
         if e <= 1: raise ValueError("'e' must be greater than 1 for hyperbolic orbits")
         
-        body: bodies.Body = bodies.get_body(attractor.lower())
+        body: bodies.Body = bodies.BODIES[attractor]
         
-        M_h: float = t * body.mu.to_value()**2 / h**3 * (e**2 - 1)**(3/2) # ? Mean anomaly
+        M_h: float = t.to_value(u.s) * body.mu.to_value(u.km**3 / u.s**2)**2 / h.to_value(u.km**2 / u.s)**3 * (e**2 - 1)**(3/2) # ? Mean anomaly
         
         F_0: float = np.arcsinh(M_h / e) # np.log(2 * M_h / e + 1.8) if M_h > 0 else -np.log(-2 * M_h / e + 1.8)
         
@@ -222,4 +223,4 @@ class OrbitalPosition():
         
         nu: float = 2 * np.arctan(np.sqrt((e + 1) / (e - 1)) * np.tanh(F / 2))
         
-        return common.wrap_angle(np.rad2deg(nu), low=0, high=360)
+        return common.wrap_angle(np.rad2deg(nu), low=0, high=360) * u.deg
