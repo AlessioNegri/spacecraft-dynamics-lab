@@ -17,7 +17,7 @@ interface FormButtonProps
     disabled?: boolean
     type?: "button" | "submit" | "reset"
     form?: string
-    onClick: (e: react.MouseEvent<HTMLButtonElement, MouseEvent>) => void
+    onClick?: (e: react.MouseEvent<HTMLButtonElement, MouseEvent>) => void
 }
 
 /** @function FormButton */

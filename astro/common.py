@@ -72,7 +72,12 @@ def check_time_delta(delta: time.TimeDelta) -> None:
     
     if not isinstance(delta, time.TimeDelta): raise TypeError("'delta' must be of type 'astropy.time.TimeDelta'")
     
-def check_keplerian_parameters(a: float | int, ecc: float | int, inc: float | int, raan: float | int, argp: float | int, nu: float | int) -> None:
+def check_keplerian_parameters(a: float | int,
+                               ecc: float | int,
+                               inc: float | int,
+                               raan: float | int,
+                               argp: float | int,
+                               nu: float | int) -> None:
     """Check the validity of the keplerian parameters
 
     Args:
@@ -112,7 +117,7 @@ def check_keplerian_parameters(a: float | int, ecc: float | int, inc: float | in
     
     if not (0 <= argp <= 360): raise ValueError("'argp' must be in [-180, 180] deg")
     
-    if not (-180 <= nu <= 180): raise ValueError("'nu' must be in [-180, 180] deg")
+    if not (-180 <= nu <= 360): raise ValueError("'nu' must be in [-180, 360] deg")
     
 def check_angle(angle: float | int) -> None:
     """Check the validity of the angle
@@ -140,7 +145,7 @@ def wrap_angle(angle: float | int, low: float | int = 0, high: float | int = 360
         float: Wrapped angle [deg]
     """
     
-    check_angle(angle)
+    if not isinstance(angle, (float, int)): raise TypeError("'angle' must be of type 'float' or 'int'")
     
     wrapped_angle: float = ((angle - low) % (high - low)) + low
     

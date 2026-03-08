@@ -3,7 +3,7 @@ import pydantic
 
 # * "tools" actions
     
-class CartesianOrbitParametersInModelInfo(pydantic.BaseModel):
+class CartesianInModelInfo(pydantic.BaseModel):
     
     attractor: str
     r_x: float
@@ -34,8 +34,41 @@ class CartesianOrbitParametersInModelInfo(pydantic.BaseModel):
             v_z=v_z
         )
 
+class KeplerianInModelInfo(pydantic.BaseModel):
     
-class CartesianOrbitParametersOutModelInfo(pydantic.BaseModel):
+    attractor: str
+    a: float
+    ecc: float
+    inc: float
+    raan: float
+    argp: float
+    nu: float
+    dt: float | None = None
+    
+    @classmethod
+    def as_form(cls,
+                attractor: str = fastapi.Form(...),
+                a: float = fastapi.Form(..., alias="semiMajorAxis"),
+                ecc: float = fastapi.Form(..., alias="eccentricity"),
+                inc: float = fastapi.Form(..., alias="inclination"),
+                raan: float = fastapi.Form(..., alias="rightAscensionOfAscendingNode"),
+                argp: float = fastapi.Form(..., alias="argumentOfPeriapsis"),
+                nu: float = fastapi.Form(..., alias="trueAnomaly"),
+                dt: float | None = fastapi.Form(None, alias="deltaTime")):
+        
+        return cls \
+        (
+            attractor=attractor,
+            a=a,
+            ecc=ecc,
+            inc=inc,
+            raan=raan,
+            argp=argp,
+            nu=nu,
+            dt=dt
+        )
+    
+class OrbitParametersOutModelInfo(pydantic.BaseModel):
     
     conicType: str
     specificAngularMomentum: float
@@ -53,3 +86,38 @@ class CartesianOrbitParametersOutModelInfo(pydantic.BaseModel):
     aimingRadius: float
     hyperbolicExcessSpeed: float
     characteristicEnergy: float
+    rightAscension: float
+    declination: float
+
+class KeplerianOutModelInfo(pydantic.BaseModel):
+    
+    specificAngularMomentum: float
+    semiMajorAxis: float
+    eccentricity: float
+    inclination: float
+    rightAscensionOfAscendingNode: float
+    argumentOfPeriapsis: float
+    trueAnomaly: float
+
+class PerifocalOutModelInfo(pydantic.BaseModel):
+    
+    positionX: float
+    positionY: float
+    velocityX: float
+    velocityY: float
+
+class GeocentricEquatorialOutModelInfo(pydantic.BaseModel):
+    
+    positionX: float
+    positionY: float
+    positionZ: float
+    velocityX: float
+    velocityY: float
+    velocityZ: float
+
+class GroundTrackOutModelInfo(pydantic.BaseModel):
+    
+    rightAscensionOfAscendingNodeVariation: float
+    argumentOfPeriapsisVariation: float
+    rightAscension: float
+    declination: float

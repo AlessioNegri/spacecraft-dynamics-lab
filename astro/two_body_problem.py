@@ -189,11 +189,11 @@ class Orbit:
     
     # --- PUBLIC ---
     
-    def from_cartesian(self, attractor: str, r: u.Quantity, v: u.Quantity, epoch: time.Time) -> None:
+    def from_cartesian(self, attractor: bodies.Attractor, r: u.Quantity, v: u.Quantity, epoch: time.Time) -> None:
         """Initialize the orbit based on cartesian orbit parameters
 
         Args:
-            attractor (str): Main attractor name
+            attractor (bodies.Attractor): Main attractor
             r (u.Quantity): Position vector
             v (u.Quantity): Velocity vector
             epoch (time.Time): Epoch of orbit position
@@ -205,13 +205,13 @@ class Orbit:
         common.check_time(epoch)
         
         self.ready      = True
-        self.attractor  = bodies.get_body(attractor.lower())
+        self.attractor  = bodies.BODIES[attractor]
         self.r          = r.to(u.km).to_value()
         self.v          = v.to(u.km / u.s).to_value()
         self.epoch      = epoch
     
     def from_keplerian(self,
-                       attractor: str,
+                       attractor: bodies.Attractor,
                        a: u.Quantity,
                        ecc: float | int,
                        inc: u.Quantity,
@@ -222,7 +222,7 @@ class Orbit:
         """Initialize the orbit based on keplerian orbit parameters
 
         Args:
-            attractor (str): Main attractor name
+            attractor (bodies.Attractor): Main attractor
             a (u.Quantity): Semi-major axis
             ecc (u.Quantity): Eccentricity
             inc (u.Quantity): Inclination
@@ -242,7 +242,7 @@ class Orbit:
         common.check_time(epoch)
         
         self.ready      = True
-        self.attractor  = bodies.get_body(attractor)
+        self.attractor  = bodies.BODIES[attractor]
         self.a          = a.to_value(u.km)
         self.ecc        = ecc
         self.inc        = inc.to_value(u.deg)

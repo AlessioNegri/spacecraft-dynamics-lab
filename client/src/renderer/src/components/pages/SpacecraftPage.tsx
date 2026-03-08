@@ -293,7 +293,7 @@ function Section(props: Readonly<SectionProps>): react.JSX.Element
 
                 {
                     props.items.map((item: SectionItem) => 
-                        <>
+                        <react.Fragment key={item.name}>
                         
                             <span className="font-semibold text-left">{item.name}</span>
         
@@ -307,7 +307,7 @@ function Section(props: Readonly<SectionProps>): react.JSX.Element
 
                             <span className="text-right text-orange-300 font-semibold">{item.unit}</span>
 
-                        </>
+                        </react.Fragment>
                     )
                     
                 }

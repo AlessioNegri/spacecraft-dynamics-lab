@@ -3,7 +3,7 @@ import * as menubar from "@radix-ui/react-menubar"
 import * as iconify from "@iconify/react"
 
 import AboutDialog from "../dialogs/AboutDialog"
-import CartesianToOrbitParametersDialog from "../dialogs/CartesianToOrbitParametersDialog"
+import OrbitRepresentationDialog from "../dialogs/OrbitRepresentationDialog"
 import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
@@ -25,7 +25,7 @@ export default function MenuBar(): react.JSX.Element
 
     const [openAboutDialog, setOpenAboutDialog] = react.useState<boolean>(false)
 
-    const [openC2OPDialog, setOpenC2OPDialog] = react.useState<boolean>(false)
+    const [openOrbitRepresentationDialog, setOpenOrbitRepresentationDialog] = react.useState<boolean>(false)
 
     // --- USE EFFECT ---
 
@@ -44,7 +44,7 @@ export default function MenuBar(): react.JSX.Element
 
     const file: IMenuItem[] =
     [
-        { separator: true },
+        { label: "Sep-1", separator: true },
         { label: "Exit", shortcut: "Ctrl+E", action: () => globalThis.window.api.closeApp() }
     ]
 
@@ -56,7 +56,7 @@ export default function MenuBar(): react.JSX.Element
 
     const tools: IMenuItem[] =
     [
-        { label: "Cartesian → Orbit Parameters", action: () => setOpenC2OPDialog(true) }
+        { label: "Orbit Representation", action: () => setOpenOrbitRepresentationDialog(true) }
     ]
 
     const help: IMenuItem[] =
@@ -158,9 +158,9 @@ export default function MenuBar(): react.JSX.Element
             }
 
             {
-                openC2OPDialog && 
-                <CartesianToOrbitParametersDialog
-                    onClose={() => { setOpenC2OPDialog(false) }}
+                openOrbitRepresentationDialog && 
+                <OrbitRepresentationDialog
+                    onClose={() => { setOpenOrbitRepresentationDialog(false) }}
                     onOk={() => {}}
                 />
             }
