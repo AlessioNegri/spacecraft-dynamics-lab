@@ -17,6 +17,7 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 import scipy.optimize as optimize
+import typing
 
 import astro.bodies as bodies
 import astro.common as common
@@ -34,7 +35,10 @@ class LagrangeCoefficients():
     # --- STATIC ---
     
     @staticmethod
-    def propagate_of_angle(attractor: bodies.Attractor, r_0 : u.Quantity, v_0 : u.Quantity, delta : u.Quantity) -> list:
+    def propagate_of_angle(attractor: bodies.Attractor,
+                           r_0 : u.Quantity,
+                           v_0 : u.Quantity,
+                           delta : u.Quantity) -> typing.List[u.Quantity]:
         """Given r_0 and v_0, find r and v after true anomaly changes by delta
 
         Args:
@@ -43,7 +47,7 @@ class LagrangeCoefficients():
             delta (u.Quantity): True anomaly variation
 
         Returns:
-            list: [ r, v ]
+            list: [Position, Velocity]
         """
         
         common.check_attractor(attractor)
@@ -162,7 +166,11 @@ class LagrangeCoefficients():
         return optimize.newton(f, x0=chi_0, fprime=df, maxiter=100, tol=1e-8) * u.km**0.5
     
     @staticmethod
-    def lagrange_coefficients(attractor: bodies.Attractor, r_0 : u.Quantity, alpha : float, dt : time.TimeDelta, chi : float) -> list:
+    def lagrange_coefficients(attractor: bodies.Attractor,
+                              r_0 : u.Quantity,
+                              alpha : float,
+                              dt : time.TimeDelta,
+                              chi : float) -> typing.List[u.Quantity]:
         """Calculates the Lagrange coefficients f and g
 
         Args:
@@ -173,7 +181,7 @@ class LagrangeCoefficients():
             chi (float): Universal anomaly
 
         Returns:
-            list: [f, g]
+            typing.List[u.Quantity]: [f, g]
         """
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
@@ -182,10 +190,13 @@ class LagrangeCoefficients():
         
         g: float = dt.to_value(u.s) - 1 / np.sqrt(mu) * chi**3 * LagrangeCoefficients.S(alpha * chi**2)
         
-        return [f, g]
+        return [f * u.dimensionless_unscaled, g * u.s]
     
     @staticmethod
-    def propagate_position_velocity(attractor: bodies.Attractor, r_0 : u.Quantity, v_0 : u.Quantity, dt : time.TimeDelta) -> list:
+    def propagate_position_velocity(attractor: bodies.Attractor,
+                                    r_0 : u.Quantity,
+                                    v_0 : u.Quantity,
+                                    dt : time.TimeDelta) -> typing.List[u.Quantity]:
         """Evaluates the position and velocity after delta time from the initial state
 
         Args:
@@ -194,7 +205,7 @@ class LagrangeCoefficients():
             dt (time.TimeDelta): Time variation
 
         Returns:
-            list: [r, v]
+            typing.List[u.Quantity]: [Position, Velocity]
         """
         
         common.check_attractor(attractor)
