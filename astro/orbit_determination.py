@@ -12,12 +12,14 @@ __author__      = "Alessio Negri"
 __license__     = "LGPL v3"
 __maintainer__  = "Alessio Negri"
 
-import astropy.units as u
 import astropy.time as time
+import astropy.units as u
 import enum
+import erfa
 import numpy as np
 import scipy.optimize as opt
 import typing
+import warnings
 
 import astro.bodies as bd
 import astro.common as cm
@@ -165,22 +167,37 @@ class OrbitDetermination():
         
         z_0: float = -4.0
         
-        while OrbitDetermination._lambert_equation(mu, z_0, r_1_m, r_2_m, A, dt) < 0:
+        while OrbitDetermination._lambert_equation(z_0, mu, r_1_m, r_2_m, A, dt) < 0:
             
             z_0 = z_0 + 0.1
         
         z: float = 0.0
         
+        # with warnings.catch_warnings():
+            
+            # warnings.filterwarnings("error", category=RuntimeWarning)
+            # warnings.simplefilter("ignore", category=RuntimeWarning)
+            # warnings.simplefilter("ignore", category=erfa.ErfaWarning)
+            
+        failed_result: np.ndarray = [np.ones(r_1.shape) * 100.0 * u.km / u.s,
+                                     np.ones(r_2.shape) * 100.0 * u.km / u.s,
+                                     o3d.OrbitalElements(),
+                                     0.0 * u.deg]
+
         try:
             
             z = opt.newton(func=OrbitDetermination._lambert_equation,
-                           x0=z_0,
-                           fprime=OrbitDetermination._lambert_equation_first_derivative,
-                           args=(mu, r_1_m, r_2_m, A, dt))
+                            x0=z_0,
+                            fprime=OrbitDetermination._lambert_equation_first_derivative,
+                            args=(mu, r_1_m, r_2_m, A, dt))
+        
+        # except Warning:
             
-        except Exception as _:
+        #     return failed_result
+        
+        except Exception:
             
-            return [np.zeros(r_1.shape) * u.km, np.zeros(r_2.shape) * u.km / u.s, o3d.OrbitalElements(), 0.0 * u.deg]
+            return failed_result
         
         # >>> 5. Parameter y
         
@@ -523,7 +540,7 @@ class OrbitDetermination():
         
         A: float = np.arctan2(rho_h[0] / np.cos(a), rho_h[1] / np.cos(a)) # ? Azimuth
         
-        return [rho * u.km, A * u.rad, a * u.rad]
+        return [rho * u.km, (A * u.rad).to(u.deg), (a * u.rad).to(u.deg)]
     
     @staticmethod
     def topocentric_equatorial_right_ascension_declination(attractor: bd.Attractor,
@@ -1018,7 +1035,7 @@ class OrbitDetermination():
         S_z: float = lc.LagrangeCoefficients.S(z)
         C_z: float = lc.LagrangeCoefficients.C(z)
         
-        y: float = r_1 + r_2 + A * (z * S_z - 1) / np.sqrt(C_z)
+        y: float = max(r_1 + r_2 + A * (z * S_z - 1) / np.sqrt(C_z), 0)
         
         return (y / C_z)**(3/2) * S_z + A * np.sqrt(y) - np.sqrt(mu) * dt
     

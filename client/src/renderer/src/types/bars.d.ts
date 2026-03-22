@@ -5,6 +5,7 @@ interface IMenuItem
     label?: string
     shortcut?: string
     separator?: boolean
+    children?: IMenuItem[]
     action?: () => void
 }
 

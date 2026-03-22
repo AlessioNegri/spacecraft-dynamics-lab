@@ -1,17 +1,19 @@
-import asyncio
 import astropy.coordinates as coordinates
+import astropy.time as time
 import astropy.units as units
-import astrora.bodies as bodies
-import astrora.util as util
+import asyncio
 import numpy as np
-import schemas.common as common
-import schemas.interplanetary_schema as schema
 import scipy.optimize as optimize
 import typing
 
+import schemas.common as common
+import schemas.interplanetary_schema as schema
+
 from common.app_data import AppData
-from hapsira.maneuver import lambert_izzo
 from common.web_socket_manager import WebSocketManager
+
+from astro.bodies import Attractor, BODIES
+from astro.orbit_determination import OrbitDetermination
 
 async def pork_chop_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of pork-chop analysis
@@ -83,10 +85,14 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
     
     # >>> 1. Define departure and arrival windows
     
-    spacing: units.Quantity = units.Quantity(payload.gridSize, units.day)
+    lws: time.Time = time.Time(payload.launchWindowStart, scale="utc")
+    lwe: time.Time = time.Time(payload.launchWindowEnd, scale="utc")
     
-    t_launch: util.Time = util.time_range(payload.launchWindowStart, end=payload.launchWindowEnd, spacing=spacing)
-    t_arrive: util.Time = util.time_range(payload.arrivalWindowStart, end=payload.arrivalWindowEnd, spacing=spacing)
+    aws: time.Time = time.Time(payload.arrivalWindowStart, scale="utc")
+    awe: time.Time = time.Time(payload.arrivalWindowEnd, scale="utc")
+
+    t_launch: time.Time = lws + np.arange(start=0, stop=(lwe - lws).value, step=payload.gridSize)
+    t_arrive: time.Time = aws + np.arange(start=0, stop=(awe - aws).value, step=payload.gridSize)
     
     info_data: common.InfoModel = common.InfoModel(source="interplanetary", counter=0, total=len(t_launch))
     
@@ -103,8 +109,6 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
     TOF : np.ndarray = np.zeros_like(size)
     
     # >>> 3. Loop over all date pairs
-    
-    mu_sun: units.Quantity = (bodies.Sun.mu * units.m**3 / units.s**2).to(units.km**3 / units.s**2)
     
     # >>> 3-1. Launch
     
@@ -144,13 +148,13 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
             TOF[i, j] = (ta - tl).to(units.day).to_value()
 
             # * Lambert solution
-                
-            lambert: tuple = lambert_izzo(mu_sun, r1, r2, tof)
+            
+            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=r1, r_2=r2, dt=time.TimeDelta(tof))
             
             # * Solution
             
-            dv_1: float = np.linalg.norm((lambert[0] - v1).to_value())
-            dv_2: float = np.linalg.norm((v2 - lambert[1]).to_value())
+            dv_1: float = np.linalg.norm((v_1_l - v1).to_value())
+            dv_2: float = np.linalg.norm((v2 - v_2_l).to_value())
             
             if dv_1 > 100: dv_1 = 100
             if dv_2 > 100: dv_2 = 100
@@ -195,11 +199,18 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
     
     # >>> 1. Define departure, flyby, and arrival windows
     
-    spacing: units.Quantity = units.Quantity(payload.gridSize, units.day)
+    lws: time.Time = time.Time(payload.launchWindowStart, scale="utc")
+    lwe: time.Time = time.Time(payload.launchWindowEnd, scale="utc")
     
-    t_launch: util.Time = util.time_range(payload.launchWindowStart, end=payload.launchWindowEnd, spacing=spacing)
-    t_flyby : util.Time = util.time_range(payload.flybyWindowStart, end=payload.flybyWindowEnd, spacing=spacing)
-    t_arrive: util.Time = util.time_range(payload.arrivalWindowStart, end=payload.arrivalWindowEnd, spacing=spacing)
+    fws: time.Time = time.Time(payload.flybyWindowStart, scale="utc")
+    fwe: time.Time = time.Time(payload.flybyWindowEnd, scale="utc")
+    
+    aws: time.Time = time.Time(payload.arrivalWindowStart, scale="utc")
+    awe: time.Time = time.Time(payload.arrivalWindowEnd, scale="utc")
+    
+    t_launch: time.Time = lws + np.arange(start=0, stop=(lwe - lws).value, step=payload.gridSize)
+    t_flyby: time.Time = fws + np.arange(start=0, stop=(fwe - fws).value, step=payload.gridSize)
+    t_arrive: time.Time = aws + np.arange(start=0, stop=(awe - aws).value, step=payload.gridSize)
     
     info_data: common.InfoModel = common.InfoModel(source="interplanetary", counter=0, total=len(t_launch))
     
@@ -220,8 +231,6 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
     TOF_2: np.ndarray = np.zeros_like(size)
     
     # >>> 3. Loop over all date pairs
-    
-    mu_sun: units.Quantity = (bodies.Sun.mu * units.m**3 / units.s**2).to(units.km**3 / units.s**2)
     
     # >>> 3-1. Launch
     
@@ -251,11 +260,11 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
             
             # * Lambert solution
             
-            lambert_1: tuple = lambert_izzo(mu_sun, r1, rfb, tof_1)
+            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=r1, r_2=rfb, dt=time.TimeDelta(tof_1))
             
             # * Incoming hyperbola excess velocity
             
-            v_inf_1: float = (lambert_1[1] - vfb).to_value()
+            v_inf_1: float = (v_2_l - vfb).to_value()
             
             # >>> 3-3. Arrival
         
@@ -285,18 +294,18 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
                 TOF_2[i, j, k] = tof_2.to(units.day).to_value()
                 
                 # * Lambert solution
-                    
-                lambert_2: tuple = lambert_izzo(mu_sun, rfb, r2, tof_2)
+                
+                v_2_l, v_3_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=rfb, r_2=r2, dt=time.TimeDelta(tof_2))
                 
                 # * Outgoing hyperbola excess velocity
                 
-                v_inf_2: float = (lambert_2[0] - vfb).to_value()
+                v_inf_2: float = (v_2_l - vfb).to_value()
                 
                 # * Solution
                 
-                dv_1: float = np.linalg.norm((lambert_1[0] - v1).to_value())
+                dv_1: float = np.linalg.norm((v_1_l - v1).to_value())
                 dv_ga: float = gravity_assist_maneuver(v_inf_1, v_inf_2, payload.flybyBody)
-                dv_2: float = np.linalg.norm((v2 - lambert_2[1]).to_value())
+                dv_2: float = np.linalg.norm((v2 - v_3_l).to_value())
                 
                 if dv_1 > 100: dv_1 = 100
                 if dv_ga > 100: dv_ga = 100
@@ -344,58 +353,9 @@ def gravity_assist_maneuver(v_inf_1: np.ndarray, v_inf_2: np.ndarray, flyby_body
     
     # >>> 1. Choose flyby body parameters
     
-    mu: float = 0
+    mu: float = BODIES[Attractor(flyby_body)].mu.to_value(units.km**3 / units.s**2)
     
-    r: float = 0
-    
-    match (flyby_body):
-        
-        case "mercury":
-            
-            mu = bodies.Mercury.mu
-            r  = bodies.Mercury.R_mean * 1e3
-            
-        case "venus":
-            
-            mu = bodies.Venus.mu
-            r = bodies.Venus.R_mean * 1e3
-            
-        case "earth":
-            
-            mu = bodies.Earth.mu
-            r = bodies.Earth.R_mean * 1e3
-            
-        case "mars":
-            
-            mu = bodies.Mars.mu
-            r = bodies.Mars.R_mean * 1e3
-        
-        case "jupiter":
-            
-            mu = bodies.Jupiter.mu
-            r = bodies.Jupiter.R_mean * 1e3
-            
-        case "saturn":
-            
-            mu = bodies.Saturn.mu
-            r = bodies.Saturn.R_mean * 1e3
-            
-        case "uranus":
-            
-            mu = bodies.Uranus.mu
-            r = bodies.Uranus.R_mean * 1e3
-            
-        case "neptune":
-            
-            mu = bodies.Neptune.mu
-            r = bodies.Neptune.R_mean * 1e3
-            
-        case "pluto":
-            
-            mu = bodies.Pluto.mu
-            r = bodies.Pluto.R_mean * 1e3
-        
-    mu = (mu * units.m**3 / units.s**2).to(units.km**3 / units.s**2).to_value()
+    R_E: float = BODIES[Attractor(flyby_body)].R_E.to_value(units.km)
     
     # >>> 2. Calculate total deviation angle
     
@@ -410,7 +370,7 @@ def gravity_assist_maneuver(v_inf_1: np.ndarray, v_inf_2: np.ndarray, flyby_body
         
         return delta - a - b
     
-    rp_ga = optimize.fsolve(f, r + 100.0 - 20.0, xtol=1e-14)[0]
+    rp_ga = optimize.fsolve(f, R_E + 100.0 - 20.0, xtol=1e-14)[0]
 
     #rp_ga = optimize.root_scalar(f, bracket=[rp0, rp0*2], method="bisect").root
     

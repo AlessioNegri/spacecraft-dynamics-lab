@@ -3,7 +3,18 @@ import * as menubar from "@radix-ui/react-menubar"
 import * as iconify from "@iconify/react"
 
 import AboutDialog from "../dialogs/AboutDialog"
-import OrbitRepresentationDialog from "../dialogs/OrbitRepresentationDialog"
+
+import OrbitRepresentationDialog from "../dialogs/tools/OrbitRepresentationDialog"
+import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representation/CartesianOrbitParametersDialog"
+import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/CartesianKeplerianDialog"
+import CartesianPerifocalDialog from "../dialogs/tools/orbit_representation/CartesianPerifocalDialog"
+
+import GibbsMethodDialog from "../dialogs/tools/orbit_determination/GibbsMethodDialog"
+import JulianDayDialog from "../dialogs/tools/orbit_determination/JulianDayDialog"
+import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/TopocentricFrameDialog"
+import AngleRangeDialog from "../dialogs/tools/orbit_determination/AngleRangeDialog"
+import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
+
 import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
@@ -26,6 +37,22 @@ export default function MenuBar(): react.JSX.Element
     const [openAboutDialog, setOpenAboutDialog] = react.useState<boolean>(false)
 
     const [openOrbitRepresentationDialog, setOpenOrbitRepresentationDialog] = react.useState<boolean>(false)
+
+    const [openCartesianOrbitParametersDialog, setOpenCartesianOrbitParametersDialog] = react.useState<boolean>(false)
+
+    const [openCartesianKeplerianDialog, setOpenCartesianKeplerianDialog] = react.useState<boolean>(false)
+
+    const [openCartesianPerifocalDialog, setOpenCartesianPerifocalDialog] = react.useState<boolean>(false)
+
+    const [openGibbsMethodDialog, setOpenGibbsMethodDialog] = react.useState<boolean>(false)
+
+    const [openJulianDayDialog, setOpenJulianDayDialog] = react.useState<boolean>(false)
+
+    const [openTopocentricFrameDialog, setOpenTopocentricFrameDialog] = react.useState<boolean>(false)
+
+    const [openAngleRangeDialog, setOpenAngleRangeDialog] = react.useState<boolean>(false)
+
+    const [openGaussMethodDialog, setOpenGaussMethodDialog] = react.useState<boolean>(false)
 
     // --- USE EFFECT ---
 
@@ -56,7 +83,29 @@ export default function MenuBar(): react.JSX.Element
 
     const tools: IMenuItem[] =
     [
-        { label: "Orbit Representation", action: () => setOpenOrbitRepresentationDialog(true) }
+        { label: "Orbit Representation", action: () => setOpenOrbitRepresentationDialog(true) },
+        {
+            label: "Orbit Representation",
+            children:
+            [
+                { label: "Cartesian → Orbit Parameters", action: () => setOpenCartesianOrbitParametersDialog(true) },
+                { label: "Cartesian → Keplerian", action: () => setOpenCartesianKeplerianDialog(true) },
+                { label: "Cartesian → Perifocal", action: () => setOpenCartesianPerifocalDialog(true) },
+                { label: "Perifocal → Geocentric Equatorial", action: () => {} },
+                { label: "Ground Track Propagation", action: () => {} }
+            ]
+        },
+        {
+            label: "Orbit Determination",
+            children:
+            [
+                { label: "Gibbs Method", action: () => setOpenGibbsMethodDialog(true) },
+                { label: "Julian Day", action: () => setOpenJulianDayDialog(true) },
+                { label: "Topocentric Frame", action: () => setOpenTopocentricFrameDialog(true) },
+                { label: "Angle Range", action: () => setOpenAngleRangeDialog(true) },
+                { label: "Gauss Method", action: () => setOpenGaussMethodDialog(true) }
+            ]
+        }
     ]
 
     const help: IMenuItem[] =
@@ -165,6 +214,70 @@ export default function MenuBar(): react.JSX.Element
                 />
             }
 
+            {
+                openCartesianOrbitParametersDialog && 
+                <CartesianOrbitParametersDialog
+                    opened={openCartesianOrbitParametersDialog}
+                    setOpened={setOpenCartesianOrbitParametersDialog}
+                />
+            }
+
+            {
+                openCartesianKeplerianDialog && 
+                <CartesianKeplerianDialog
+                    opened={openCartesianKeplerianDialog}
+                    setOpened={setOpenCartesianKeplerianDialog}
+                />
+            }
+
+            {
+                openCartesianPerifocalDialog && 
+                <CartesianPerifocalDialog
+                    opened={openCartesianPerifocalDialog}
+                    setOpened={setOpenCartesianPerifocalDialog}
+                />
+            }
+
+            {
+                openGibbsMethodDialog && 
+                <GibbsMethodDialog
+                    opened={openGibbsMethodDialog}
+                    setOpened={setOpenGibbsMethodDialog}
+                />
+            }
+
+            {
+                openJulianDayDialog &&
+                <JulianDayDialog
+                    opened={openJulianDayDialog}
+                    setOpened={(opened: boolean) => setOpenJulianDayDialog(opened)}
+                />
+            }
+
+            {
+                openTopocentricFrameDialog &&
+                <TopocentricFrameDialog
+                    opened={openTopocentricFrameDialog}
+                    setOpened={(opened: boolean) => setOpenTopocentricFrameDialog(opened)}
+                />
+            }
+
+            {
+                openAngleRangeDialog &&
+                <AngleRangeDialog
+                    opened={openAngleRangeDialog}
+                    setOpened={(opened: boolean) => setOpenAngleRangeDialog(opened)}
+                />
+            }
+
+            {
+                openGaussMethodDialog &&
+                <GaussMethodDialog
+                    opened={openGaussMethodDialog}
+                    setOpened={(opened: boolean) => setOpenGaussMethodDialog(opened)}
+                />
+            }
+
         </div>
     )
 }
@@ -181,7 +294,7 @@ function Menu(menu: Readonly<IMenu>): react.JSX.Element
         <menubar.Menu>
 
             <menubar.Trigger
-                className="text-base px-2 rounded cursor-autotext-neutral-500
+                className="text-base px-2 z-110 rounded cursor-autotext-neutral-500
                             hover:bg-neutral-500 hover:text-neutral-400
                             data-[state=open]:bg-neutral-700 text-neutral-400">
                 
@@ -193,42 +306,12 @@ function Menu(menu: Readonly<IMenu>): react.JSX.Element
                 
                 <menubar.Content
                     align="start"
-                    className="min-w-80 border rounded shadow-lg py-1 z-2
+                    className="min-w-80 border rounded shadow-lg p-1 z-2
                                 bg-neutral-600 text-white border-neutral-950">
 
                 {
                     menu.items.map((item: IMenuItem) =>
-                    
-                    item.separator
-
-                    ?
-                    
-                    <menubar.Separator key={item.label} className="h-px bg-neutral-950 my-1"/>
-                    
-                    :
-                    
-                    <menubar.Item
-                        key={(item.label ?? '') + (item.checked ?? '')}
-                        onClick={item.action}
-                        className="px-5 py-1.5 text-base flex justify-start items-center cursor-pointer
-                                    hover:bg-neutral-500 hover:text-white">
-
-                        <div className="w-6">
-                        
-                        {
-                            item.checkable && item.checked && <iconify.Icon icon={"mdi:check"} width={20} />
-                        }
-
-                        </div>
-
-                        <span className="flex-1 ps-4">{item.label}</span>
-
-                        {
-                            item.shortcut && <span className="text-base text-white/50">{item.shortcut}</span>
-                        }
-
-                    </menubar.Item>
-                    
+                        <MenuItem key={(item.label ?? '') + (item.checked ?? '')} item={item} />
                 )}
 
                 </menubar.Content>
@@ -236,5 +319,79 @@ function Menu(menu: Readonly<IMenu>): react.JSX.Element
             </menubar.Portal>
 
         </menubar.Menu>
+    )
+}
+
+interface MenuItemProps
+{
+    item: IMenuItem
+}
+
+/** @function MenuItem */
+function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
+{
+    if (props.item.separator)
+    {
+        return <menubar.Separator className="h-px bg-neutral-950 my-1"/>
+    }
+
+    if (props.item.children)
+    {
+        return (
+            <menubar.Sub>
+
+                <menubar.SubTrigger
+                    className="px-2 py-1.5 text-base flex justify-between items-center cursor-pointer rounded
+                               hover:bg-neutral-500 hover:text-white"
+                >
+                    <div className="w-2"></div>
+
+                    <span className="flex-1 ps-4">{props.item.label}</span>
+
+                    <iconify.Icon icon="mdi:chevron-right" width={16} />
+
+                </menubar.SubTrigger>
+
+                <menubar.Portal>
+
+                    <menubar.SubContent
+                        sideOffset={5}
+                        className="min-w-60 border rounded shadow-lg p-1 bg-neutral-600 text-white border-neutral-950"
+                    >
+
+                        {
+                            props.item.children.map((item: IMenuItem) =>
+                                <MenuItem key={(item.label ?? '') + (item.checked ?? '')} item={item} />)
+                        }
+
+                    </menubar.SubContent>
+
+                </menubar.Portal>
+
+            </menubar.Sub>
+        )
+    }
+
+    return (
+        <menubar.Item
+            onClick={props.item.action}
+            className="px-2 py-1.5 text-base flex justify-start items-center cursor-pointer rounded
+                        hover:bg-neutral-500 hover:text-white">
+
+            <div className="w-2">
+            
+            {
+                props.item.checkable && props.item.checked && <iconify.Icon icon={"mdi:check"} width={16} />
+            }
+
+            </div>
+
+            <span className="flex-1 ps-4">{props.item.label}</span>
+
+            {
+                props.item.shortcut && <span className="text-base text-white/50">{props.item.shortcut}</span>
+            }
+
+        </menubar.Item>
     )
 }

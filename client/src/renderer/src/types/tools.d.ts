@@ -43,25 +43,6 @@ interface IOrbitParametersFormOut
     declination: number
 }
 
-interface IKeplerianFormOut
-{
-    specificAngularMomentum: number
-    semiMajorAxis: number
-    eccentricity: number
-    inclination: number
-    rightAscensionOfAscendingNode: number
-    argumentOfPeriapsis: number
-    trueAnomaly: number
-}
-
-interface IPerifocalFormOut
-{
-    positionX: number
-    positionY: number
-    velocityX: number
-    velocityY: number
-}
-
 interface IGeocentricEquatorialFormOut
 {
     positionX: number
@@ -78,4 +59,22 @@ interface IGroundTrackFormOut
     argumentOfPeriapsisVariation: number
     rightAscension: number
     declination: number
+}
+
+interface IVector3D
+{
+    x: number
+    y: number
+    z: number
+}
+
+interface IOrbitalElements
+{
+    sam: number // ? Specific Angular Momentum
+    sma: number // ? Semi-Major Axis
+    ecc: number // ? Eccentricity
+    inc: number // ? Inclination
+    raan: number // ? Right Ascension Ascending Node
+    aop: number // ? Argument Of Periapsis
+    ta: number // ? True Anomaly
 }

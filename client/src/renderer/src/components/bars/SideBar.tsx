@@ -55,35 +55,37 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
 
             {/* Top */}
 
-            <div className="flex flex-col flex-1 z-100">
+            <div className="flex flex-col flex-1">
 
             {
-                items.map((item: ISideBarItem) => (
-                    <Tooltip title={item.label} side="right" key={item.id}>
-                    
-                        <button
-                            onClick={() => props.setActivePage(item.id)}
-                            className={`${css} relative transition group
-                                        ${(props.activePage === item.id) ? "bg-orange-300/25" : ""}`}>
-                            
-                            {/* Vertical Bar */}
-                            
-                        {
-                            (props.activePage === item.id) && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-300 rounded"/>)
-                        }
+                items.map((item: ISideBarItem, index: number) => (
+                    <div className={index ? 'z-100' : ''} key={item.id}>
+                        <Tooltip title={item.label} side="right">
+                        
+                            <button
+                                onClick={() => props.setActivePage(item.id)}
+                                className={`${css} relative transition group
+                                            ${(props.activePage === item.id) ? "bg-orange-300/25" : ""}`}>
+                                
+                                {/* Vertical Bar */}
+                                
+                            {
+                                (props.activePage === item.id) && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-300 rounded"/>)
+                            }
 
-                            {/* Icon */}
+                                {/* Icon */}
 
-                            <iconify.Icon
-                                icon={item.icon}
-                                width={32}
-                                className={`${(props.activePage === item.id) ?
-                                            "text-orange-300" : "text-orange-100 hover:text-orange-300"}`} />
+                                <iconify.Icon
+                                    icon={item.icon}
+                                    width={32}
+                                    className={`${(props.activePage === item.id) ?
+                                                "text-orange-300" : "text-orange-100 hover:text-orange-300"}`} />
 
-                        </button>
+                            </button>
 
-                    </Tooltip>
+                        </Tooltip>
+                    </div>
                 ))
             }
 
@@ -91,7 +93,7 @@ export default function Sidebar(props: Readonly<SideBarProps>): react.JSX.Elemen
 
             {/* Bottom */}
 
-            <div className="flex flex-col gap-4 mt-auto z-2">
+            <div className="flex flex-col gap-4 mt-auto z-100">
 
                 <Tooltip title="Settings" side="right">
 

@@ -10,6 +10,8 @@ import TCPClient from './TCPClient'
 
 electron.app.whenReady().then(() =>
 {
+    electron.app.setName('Spacecraft Dynamics Labs')
+    
     // * Set app user model id for windows
 
     utils.electronApp.setAppUserModelId('com.alessio-negri')
