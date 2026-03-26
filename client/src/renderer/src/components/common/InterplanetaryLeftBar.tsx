@@ -1,7 +1,9 @@
 import * as react from "react"
+import * as iconify from "@iconify/react"
 
 import http from "@renderer/common/http"
 
+import Tooltip from "../Tooltip"
 import FormSection from "../dialogs/FormSection"
 import FormInput from "../dialogs/FormInput"
 import FormSelect from "../dialogs/FormSelect"
@@ -21,10 +23,17 @@ const defaultMission: IInterplanetaryMissionForm =
     gridSize: 1
 }
 
+interface InterplanetaryLeftBarProps
+{
+    onHide: (hide: boolean) => void
+}
+
 /** @function InterplanetaryLeftBar */
-export default function InterplanetaryLeftBar(): react.JSX.Element
+export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeftBarProps>): react.JSX.Element
 {
     // --- USE STATE ---
+
+    const [hide, setHide] = react.useState<boolean>(false)
     
     const [form, setForm] = react.useState<IInterplanetaryMissionForm>(defaultMission)
 
@@ -46,6 +55,8 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
 
         return () => { rmRI() }
     }, [])
+
+    react.useEffect(() => { props.onHide(hide) }, [hide])
     
     // --- HANDLE ---
 
@@ -137,7 +148,21 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
     // --- RENDERING ---
 
     return (
-        <div className="w-full h-full p-4 overflow-y-auto space-y-6">
+        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+
+            <Tooltip title={hide ? "Show" : "Hide"} side="top">
+
+                <iconify.Icon
+                    icon={hide ? "tabler:layout-sidebar" : "tabler:layout-sidebar-filled"}
+                    width={20}
+                    className="absolute top-2 right-2 cursor-pointer hover:text-orange-300"
+                    onClick={() => setHide(prev => !prev)}
+                />
+
+            </Tooltip>
+
+        {
+            !hide && (<>
 
             {/* Mission Section */}
 
@@ -299,6 +324,9 @@ export default function InterplanetaryLeftBar(): react.JSX.Element
                 <FormButton text="Stop Analysis" color="red" disabled={!running} onClick={handleStop} />
 
             </div>
+
+            </>)
+        }
             
         </div>
     )

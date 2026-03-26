@@ -6,9 +6,7 @@ import sys
 from PyInstaller.utils.hooks import collect_submodules
 
 # Collect FastAPI / Pydantic dynamic imports
-hiddenimports = collect_submodules('hapsira') + \
-                collect_submodules('astrora') + \
-                collect_submodules('astropy') + \
+hiddenimports = collect_submodules('astropy') + \
                 collect_submodules('motor') + \
                 collect_submodules('pymongo') + \
                 collect_submodules('fastapi') + \

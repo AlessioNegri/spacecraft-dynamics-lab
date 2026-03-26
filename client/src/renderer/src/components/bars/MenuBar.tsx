@@ -4,10 +4,11 @@ import * as iconify from "@iconify/react"
 
 import AboutDialog from "../dialogs/AboutDialog"
 
-import OrbitRepresentationDialog from "../dialogs/tools/OrbitRepresentationDialog"
 import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representation/CartesianOrbitParametersDialog"
 import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/CartesianKeplerianDialog"
 import CartesianPerifocalDialog from "../dialogs/tools/orbit_representation/CartesianPerifocalDialog"
+import KeplerianCartesianDialog from "../dialogs/tools/orbit_representation/KeplerianCartesianDialog"
+import GroundTrackPropagationDialog from "../dialogs/tools/orbit_representation/GroundTrackPropagationDialog"
 
 import GibbsMethodDialog from "../dialogs/tools/orbit_determination/GibbsMethodDialog"
 import JulianDayDialog from "../dialogs/tools/orbit_determination/JulianDayDialog"
@@ -19,12 +20,29 @@ import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
 
+const DIALOGS =
+{
+    aboutDialog: AboutDialog,
+
+    cartesianOrbitParametersDialog: CartesianOrbitParametersDialog,
+    cartesianKeplerianDialog: CartesianKeplerianDialog,
+    cartesianPerifocalDialog: CartesianPerifocalDialog,
+    keplerianCartesianDialog: KeplerianCartesianDialog,
+    groundTrackPropagationDialog: GroundTrackPropagationDialog,
+
+    gibbsMethodDialog: GibbsMethodDialog,
+    julianDayDialog: JulianDayDialog,
+    topocentricFrameDialog: TopocentricFrameDialog,
+    angleRangeDialog: AngleRangeDialog,
+    gaussMethodDialog: GaussMethodDialog
+} as const
+
 /** @function MenuBar */
 export default function MenuBar(): react.JSX.Element
 {
     // --- SHORTCUT ---
     
-    Shortcut("Ctrl+A", () => setOpenAboutDialog(true))
+    Shortcut("Ctrl+A", () => setOpenDialog("aboutDialog"))
     
     // --- USE STATE ---
 
@@ -34,25 +52,9 @@ export default function MenuBar(): react.JSX.Element
 
     const [showConsole, setShowConsole] = react.useState<boolean>(true)
 
-    const [openAboutDialog, setOpenAboutDialog] = react.useState<boolean>(false)
+    const [openDialog, setOpenDialog] = react.useState<keyof typeof DIALOGS | null>(null)
 
-    const [openOrbitRepresentationDialog, setOpenOrbitRepresentationDialog] = react.useState<boolean>(false)
-
-    const [openCartesianOrbitParametersDialog, setOpenCartesianOrbitParametersDialog] = react.useState<boolean>(false)
-
-    const [openCartesianKeplerianDialog, setOpenCartesianKeplerianDialog] = react.useState<boolean>(false)
-
-    const [openCartesianPerifocalDialog, setOpenCartesianPerifocalDialog] = react.useState<boolean>(false)
-
-    const [openGibbsMethodDialog, setOpenGibbsMethodDialog] = react.useState<boolean>(false)
-
-    const [openJulianDayDialog, setOpenJulianDayDialog] = react.useState<boolean>(false)
-
-    const [openTopocentricFrameDialog, setOpenTopocentricFrameDialog] = react.useState<boolean>(false)
-
-    const [openAngleRangeDialog, setOpenAngleRangeDialog] = react.useState<boolean>(false)
-
-    const [openGaussMethodDialog, setOpenGaussMethodDialog] = react.useState<boolean>(false)
+    const ActiveDialog = openDialog ? DIALOGS[openDialog] : null
 
     // --- USE EFFECT ---
 
@@ -83,34 +85,33 @@ export default function MenuBar(): react.JSX.Element
 
     const tools: IMenuItem[] =
     [
-        { label: "Orbit Representation", action: () => setOpenOrbitRepresentationDialog(true) },
         {
             label: "Orbit Representation",
             children:
             [
-                { label: "Cartesian → Orbit Parameters", action: () => setOpenCartesianOrbitParametersDialog(true) },
-                { label: "Cartesian → Keplerian", action: () => setOpenCartesianKeplerianDialog(true) },
-                { label: "Cartesian → Perifocal", action: () => setOpenCartesianPerifocalDialog(true) },
-                { label: "Perifocal → Geocentric Equatorial", action: () => {} },
-                { label: "Ground Track Propagation", action: () => {} }
+                { label: "Cartesian → Orbit Parameters", action: () => setOpenDialog("cartesianOrbitParametersDialog") },
+                { label: "Cartesian → Keplerian", action: () => setOpenDialog("cartesianKeplerianDialog") },
+                { label: "Cartesian → Perifocal", action: () => setOpenDialog("cartesianPerifocalDialog") },
+                { label: "Keplerian → Cartesian", action: () => setOpenDialog("keplerianCartesianDialog") },
+                { label: "Ground Track Propagation", action: () => setOpenDialog("groundTrackPropagationDialog") }
             ]
         },
         {
             label: "Orbit Determination",
             children:
             [
-                { label: "Gibbs Method", action: () => setOpenGibbsMethodDialog(true) },
-                { label: "Julian Day", action: () => setOpenJulianDayDialog(true) },
-                { label: "Topocentric Frame", action: () => setOpenTopocentricFrameDialog(true) },
-                { label: "Angle Range", action: () => setOpenAngleRangeDialog(true) },
-                { label: "Gauss Method", action: () => setOpenGaussMethodDialog(true) }
+                { label: "Gibbs Method", action: () => setOpenDialog("gibbsMethodDialog") },
+                { label: "Julian Day", action: () => setOpenDialog("julianDayDialog") },
+                { label: "Topocentric Frame", action: () => setOpenDialog("topocentricFrameDialog") },
+                { label: "Angle Range", action: () => setOpenDialog("angleRangeDialog") },
+                { label: "Gauss Method", action: () => setOpenDialog("gaussMethodDialog") }
             ]
         }
     ]
 
     const help: IMenuItem[] =
     [
-        { label: "About", shortcut: "Ctrl+A", action: () => setOpenAboutDialog(true) }
+        { label: "About", shortcut: "Ctrl+A", action: () => setOpenDialog("aboutDialog") }
     ]
 
     // --- RENDERING ---
@@ -202,79 +203,10 @@ export default function MenuBar(): react.JSX.Element
             </menubar.Root>
 
             {
-                openAboutDialog &&
-                <AboutDialog onClose={() => { setOpenAboutDialog(false) }} onOk={() => { setOpenAboutDialog(false) }} />
-            }
-
-            {
-                openOrbitRepresentationDialog && 
-                <OrbitRepresentationDialog
-                    onClose={() => { setOpenOrbitRepresentationDialog(false) }}
-                    onOk={() => {}}
-                />
-            }
-
-            {
-                openCartesianOrbitParametersDialog && 
-                <CartesianOrbitParametersDialog
-                    opened={openCartesianOrbitParametersDialog}
-                    setOpened={setOpenCartesianOrbitParametersDialog}
-                />
-            }
-
-            {
-                openCartesianKeplerianDialog && 
-                <CartesianKeplerianDialog
-                    opened={openCartesianKeplerianDialog}
-                    setOpened={setOpenCartesianKeplerianDialog}
-                />
-            }
-
-            {
-                openCartesianPerifocalDialog && 
-                <CartesianPerifocalDialog
-                    opened={openCartesianPerifocalDialog}
-                    setOpened={setOpenCartesianPerifocalDialog}
-                />
-            }
-
-            {
-                openGibbsMethodDialog && 
-                <GibbsMethodDialog
-                    opened={openGibbsMethodDialog}
-                    setOpened={setOpenGibbsMethodDialog}
-                />
-            }
-
-            {
-                openJulianDayDialog &&
-                <JulianDayDialog
-                    opened={openJulianDayDialog}
-                    setOpened={(opened: boolean) => setOpenJulianDayDialog(opened)}
-                />
-            }
-
-            {
-                openTopocentricFrameDialog &&
-                <TopocentricFrameDialog
-                    opened={openTopocentricFrameDialog}
-                    setOpened={(opened: boolean) => setOpenTopocentricFrameDialog(opened)}
-                />
-            }
-
-            {
-                openAngleRangeDialog &&
-                <AngleRangeDialog
-                    opened={openAngleRangeDialog}
-                    setOpened={(opened: boolean) => setOpenAngleRangeDialog(opened)}
-                />
-            }
-
-            {
-                openGaussMethodDialog &&
-                <GaussMethodDialog
-                    opened={openGaussMethodDialog}
-                    setOpened={(opened: boolean) => setOpenGaussMethodDialog(opened)}
+                ActiveDialog &&
+                <ActiveDialog
+                    opened={openDialog != null}
+                    setOpened={(opened: boolean) => opened ? setOpenDialog(prev => prev) : setOpenDialog(null)}
                 />
             }
 

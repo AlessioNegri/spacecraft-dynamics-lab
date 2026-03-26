@@ -20,14 +20,14 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
             margin-bottom: 10px;
             border-bottom: 1px solid white;">
 
-  <img src="../images/tools-page/cartesian-orbit-parameters.png" width="30%" alt="image">
-
   <div>
-    <h3>Cartesian → Orbital Parameters</h3>
+    <h3>Cartesian → Orbit Parameters</h3>
     <p style="text-align: justify;">
       Given a main <strong>attractor</strong> and the <strong>cartesian parameters</strong> (position and velocity) of an orbit, the converter calculates the <strong>orbit parameters</strong> with conic type classification.
     </p>
   </div>
+
+  <img src="../images/tools-page/cartesian-orbit-parameters.png" width="30%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -39,8 +39,6 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
             padding-bottom: 10px;
             margin-bottom: 10px;
             border-bottom: 1px solid white;">
-
-  <img src="../images/tools-page/cartesian-keplerian.png" width="30%" alt="image">
 
   <div>
     <h3>Cartesian → Keplerian</h3>
@@ -48,6 +46,8 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
       Given a main <strong>attractor</strong> and the <strong>cartesian parameters</strong> (position and velocity) of an orbit, the converter calculates the <strong>keplerian parameters</strong> of the orbit.
     </p>
   </div>
+
+  <img src="../images/tools-page/cartesian-keplerian.png" width="30%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -59,8 +59,6 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
             padding-bottom: 10px;
             margin-bottom: 10px;
             border-bottom: 1px solid white;">
-
-  <img src="../images/tools-page/cartesian-perifocal.png" width="30%" alt="image">
 
   <div>
     <h3>Cartesian → Perifocal</h3>
@@ -68,6 +66,8 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
       Given a main <strong>attractor</strong> and the <strong>cartesian parameters</strong> (position and velocity) of an orbit, the converter calculates the <strong>perifocal parameters</strong> (position and velocity) of the orbit.
     </p>
   </div>
+
+  <img src="../images/tools-page/cartesian-perifocal.png" width="30%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -80,14 +80,14 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
             margin-bottom: 10px;
             border-bottom: 1px solid white;">
 
-  <img src="../images/tools-page/perifocal-geocentric-equatorial.png" width="30%" alt="image">
-
   <div>
-    <h3>Perifocal → Geocentric Equatorial</h3>
+    <h3>Keplerian → Cartesian</h3>
     <p style="text-align: justify;">
       Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>geocentric equatorial parameters</strong> (position and velocity) of the orbit.
     </p>
   </div>
+
+  <img src="../images/tools-page/keplerian-cartesian.png" width="30%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -97,12 +97,116 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
             align-items: flex-start;
             gap: 20px;">
 
-  <img src="../images/tools-page/ground-track-propagation.png" width="30%" alt="image">
-
   <div>
     <h3>Ground Track Propagation</h3>
     <p style="text-align: justify;">
       Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>right ascension</strong> and <strong>declination</strong> of the satellite on the propagated position, with the oblateness effect of the selected planet.
     </p>
   </div>
+
+  <img src="../images/tools-page/ground-track-propagation.png" width="30%" alt="image">
+</div>
+
+## 🔭 Orbit Determination
+
+The `Orbit Determination` dialogs furnishes different utilities to convert predict an orbit from available data.
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Gibbs Method</h3>
+    <p style="text-align: justify;">
+      Given 3 position vectors in the <strong>Geocentric Equaorial Frame</strong>, compute the orbital elements.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/gibbs-method.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Julian Day</h3>
+    <p style="text-align: justify;">
+      Converters between UTC timestamp and <strong>Julian Day</strong>.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/julian-day.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Topocentric Frame</h3>
+    <p style="text-align: justify;">
+      Given the Geocentric Equatorial Position vector of an earth-based tracking station (for which the altitude, latitude, and local sidereal times are known), compute the derived position vectors and the orientation in the sky.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/topocentric-frame.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Angle Range</h3>
+    <p style="text-align: justify;">
+      Given the range, azimuth, angular elevation together with their rates relative to an earth-based tracking station (for which the altitude, latitude, and local sidereal times are known), calculate the state vectors in the geocentric equatorial frame.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/angle-range.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Gauss Method</h3>
+    <p style="text-align: justify;">
+      Given the direction cosine vectors and the observer's position vectors at 3 times (for which the altitude and latitude are known), compute the orbital elements.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/gauss-method.png" width="30%" alt="image">
 </div>

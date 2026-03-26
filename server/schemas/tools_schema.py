@@ -1,6 +1,8 @@
 import fastapi
 import pydantic
 
+# * Common
+
 class Vector3D(pydantic.BaseModel):
     
     x: float
@@ -17,7 +19,7 @@ class OrbitalElements(pydantic.BaseModel):
     aop: float
     ta: float
 
-# * "tools" actions
+# * Orbit Representation
     
 class CartesianInModelInfo(pydantic.BaseModel):
     
@@ -46,86 +48,6 @@ class CartesianInModelInfo(pydantic.BaseModel):
             v_z=v_z
         )
 
-class KeplerianInModelInfo(pydantic.BaseModel):
-    
-    attractor: str
-    a: float
-    ecc: float
-    inc: float
-    raan: float
-    argp: float
-    nu: float
-    dt: float | None = None
-    
-    @classmethod
-    def as_form(cls,
-                attractor: str = fastapi.Form(...),
-                a: float = fastapi.Form(..., alias="semiMajorAxis"),
-                ecc: float = fastapi.Form(..., alias="eccentricity"),
-                inc: float = fastapi.Form(..., alias="inclination"),
-                raan: float = fastapi.Form(..., alias="rightAscensionOfAscendingNode"),
-                argp: float = fastapi.Form(..., alias="argumentOfPeriapsis"),
-                nu: float = fastapi.Form(..., alias="trueAnomaly"),
-                dt: float | None = fastapi.Form(None, alias="deltaTime")):
-        
-        return cls \
-        (
-            attractor=attractor,
-            a=a,
-            ecc=ecc,
-            inc=inc,
-            raan=raan,
-            argp=argp,
-            nu=nu,
-            dt=dt
-        )
-
-class GibbsMethodInModelInfo(pydantic.BaseModel):
-    
-    class Position(pydantic.BaseModel):
-        
-        x: float
-        y: float
-        z: float
-    
-    position1: Position
-    position2: Position
-    position3: Position
-
-class TopocentricFrameInModelInfo(pydantic.BaseModel):
-    
-    class Position(pydantic.BaseModel):
-        
-        x: float
-        y: float
-        z: float
-    
-    position: Position
-    localSiderealTime: float
-    latitude: float
-    elevation: float
-    
-class AngleRangeInModelInfo(pydantic.BaseModel):
-    
-    slantRange: float
-    azimuth: float
-    elevationA: float
-    rangeRate: float
-    azimuthRate: float
-    elevationARate: float
-    localSiderealTime: float
-    latitude: float
-    elevationH: float
-
-class GaussMethodInModelInfo(pydantic.BaseModel):
-    
-    latitude: float
-    elevation: float
-    localSiderealTime: list
-    rightAscension: list
-    declination: list
-    time: list
-    
 class OrbitParametersOutModelInfo(pydantic.BaseModel):
     
     conicType: str
@@ -152,53 +74,75 @@ class PerifocalOutModelInfo(pydantic.BaseModel):
     position: Vector3D
     velocity: Vector3D
 
-class GeocentricEquatorialOutModelInfo(pydantic.BaseModel):
+class KeplerianInModelInfo(pydantic.BaseModel):
     
-    positionX: float
-    positionY: float
-    positionZ: float
-    velocityX: float
-    velocityY: float
-    velocityZ: float
-
+    attractor: str
+    oe: OrbitalElements
+    deltaTime: float | None = None
+    
+class CartesianOutModelInfo(pydantic.BaseModel):
+    
+    position: Vector3D
+    velocity: Vector3D
+    
 class GroundTrackOutModelInfo(pydantic.BaseModel):
     
-    rightAscensionOfAscendingNodeVariation: float
-    argumentOfPeriapsisVariation: float
-    rightAscension: float
-    declination: float
-
-class GibbsMethodOutModelInfo(pydantic.BaseModel):
+    draan_dt: float
+    daop_dt: float
+    alpha: float
+    delta: float
     
-    sam: float
-    sma: float
-    ecc: float
-    inc: float
-    raan: float
-    aop: float
-    ta: float
+# * Orbit Determination
+
+class GibbsMethodInModelInfo(pydantic.BaseModel):
+    
+    position1: Vector3D
+    position2: Vector3D
+    position3: Vector3D
+
+class TopocentricFrameInModelInfo(pydantic.BaseModel):
+    
+    position: Vector3D
+    localSiderealTime: float
+    latitude: float
+    elevation: float
 
 class TopocentricFrameOutModelInfo(pydantic.BaseModel):
     
-    class Position(pydantic.BaseModel):
-        
-        x: float
-        y: float
-        z: float
-    
-    geo: Position # ? Geocentric Equatorial Observer
-    te: Position # ? Topocentric Equatorial
-    th: Position # ? Topocentric Horizon
+    geo: Vector3D # ? Geocentric Equatorial Observer
+    te: Vector3D # ? Topocentric Equatorial
+    th: Vector3D # ? Topocentric Horizon
     A: float # ? Azimuth
     a: float # ? Elevation
     alpha: float # ? Right Ascension
     delta: float # ? Declination
+    
+class AngleRangeInModelInfo(pydantic.BaseModel):
+    
+    slantRange: float
+    azimuth: float
+    elevationA: float
+    rangeRate: float
+    azimuthRate: float
+    elevationARate: float
+    localSiderealTime: float
+    latitude: float
+    elevationH: float
 
 class AngleRangeOutModelInfo(pydantic.BaseModel):
     
     position: Vector3D
     velocity: Vector3D
     oe: OrbitalElements
+
+class GaussMethodInModelInfo(pydantic.BaseModel):
+    
+    latitude: float
+    elevation: float
+    localSiderealTime: list
+    rightAscension: list
+    declination: list
+    time: list
 
 class GaussMethodOutModelInfo(pydantic.BaseModel):
     

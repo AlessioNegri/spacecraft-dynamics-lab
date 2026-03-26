@@ -21,6 +21,9 @@ interface InputFieldProps
     unit?: string
     type?: react.HTMLInputTypeAttribute | "select"
     value: number | string
+    min?: number
+    max?: number
+    pattern?: string
     options?: Array<{ label: string; value: string | number }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
 }
@@ -98,21 +101,31 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
                     <input
                         required
                         name={props.name}
-                        type={props.type ?? "number"}
+                        type={props.type ?? "text"}
                         className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
                             focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
                             transition"
                         placeholder="Insert value..."
                         value={props.value}
                         onChange={props.onChange}
+                        min={props.min}
+                        max={props.max}
+                        pattern={props.pattern}
                     />
 
                 </form.Control>
 
             }
 
-
             <form.Message className="text-sm text-red-400" match="valueMissing">Required</form.Message>
+
+            <form.Message className="text-sm text-red-400" match="rangeUnderflow">Underflow</form.Message>
+
+            <form.Message className="text-sm text-red-400" match="rangeOverflow">Overflow</form.Message>
+
+            <form.Message className="text-sm text-red-400" match="patternMismatch">
+                {`Patter Mismatch ${props.pattern}`}
+            </form.Message>
 
         </form.Field>
     )

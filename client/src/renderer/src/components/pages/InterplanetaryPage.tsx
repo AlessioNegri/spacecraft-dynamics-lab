@@ -17,6 +17,10 @@ export default function InterplanetaryPage()
 
     const [selected, setSelected] = react.useState<ISelectionInfo | null>(null)
 
+    const [hideLeftBar, setHideLeftBar] = react.useState<boolean>(false)
+
+    const [hideRightBar, setHideRightBar] = react.useState<boolean>(false)
+
     // --- USE EFFECT ---
 
     const processData2D = (info: WebSocketInfo) =>
@@ -130,9 +134,9 @@ export default function InterplanetaryPage()
 
             <div className="flex flex-1 overflow-hidden">
 
-                <div className="w-80 border-r border-neutral-700 p-4 overflow-y-auto">
+                <div className={`${hideLeftBar ? "w-18" : "w-80"} border-r border-neutral-700 p-4 overflow-y-auto`}>
 
-                    <InterplanetaryLeftBar />
+                    <InterplanetaryLeftBar onHide={(hide: boolean) => setHideLeftBar(hide)} />
 
                 </div>
 
@@ -146,9 +150,9 @@ export default function InterplanetaryPage()
 
                 </div>
 
-                <div className="w-80 border-l border-neutral-700 p-4 overflow-y-auto">
+                <div className={`${hideRightBar ? "w-18" : "w-80"} border-l border-neutral-700 p-4 overflow-y-auto`}>
 
-                    <InterplanetaryRightBar info={selected} />
+                    <InterplanetaryRightBar info={selected} onHide={(hide: boolean) => setHideRightBar(hide)} />
 
                 </div>
 

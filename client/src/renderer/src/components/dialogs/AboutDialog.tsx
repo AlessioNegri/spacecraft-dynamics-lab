@@ -1,15 +1,14 @@
 import * as react from "react"
 //import * as iconify from "@iconify/react"
 
-import Dialog from "./Dialog"
-import FormButton from "./FormButton"
+import DialogRUI from "./DialogRUI"
 
 import logo from "../../assets/SDL.png"
 
 interface AboutDialogProps
 {
-    onClose: () => void
-    onOk: () => void
+    opened: boolean
+    setOpened: (opened: boolean) => void
 }
 
 /** @function AboutDialog */
@@ -22,7 +21,12 @@ export default function AboutDialog(props: Readonly<AboutDialogProps>): react.JS
     // --- RENDERING ---
 
     return (
-        <Dialog title={`About SDL`} onClose={() => { props.onClose() }} >
+        <DialogRUI
+                    title="About SDL"
+                    button="Close"
+                    open={props.opened}
+                    onClose={() => props.setOpened(false)}
+                    onSubmit={() => props.setOpened(false)}>
 
             <div className="flex-col custom-font p-4 space-y-6">
 
@@ -83,12 +87,6 @@ export default function AboutDialog(props: Readonly<AboutDialogProps>): react.JS
 
             </div>
 
-            <div className="flex justify-center">
-
-                <FormButton text="Ok" color="blue" onClick={() => props.onOk()} />
-
-            </div>
-
-        </Dialog>
+        </DialogRUI>
     )
 }

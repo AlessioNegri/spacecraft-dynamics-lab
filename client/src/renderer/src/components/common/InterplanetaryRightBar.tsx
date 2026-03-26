@@ -1,68 +1,100 @@
 import * as react from "react"
+import * as iconify from "@iconify/react"
 
+import Tooltip from "../Tooltip"
 import FormSection from "../dialogs/FormSection"
 
-/** @function InterplanetaryRightBar */
-export default function InterplanetaryRightBar({ info }: Readonly<{ info: ISelectionInfo | null }>): react.JSX.Element
+interface InterplanetaryRightBarProps
 {
+    info: ISelectionInfo | null
+    onHide: (hide: boolean) => void
+}
+
+/** @function InterplanetaryRightBar */
+export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRightBarProps>): react.JSX.Element
+{
+    // --- USE STATE ---
+
+    const [hide, setHide] = react.useState<boolean>(false)
+
+    // --- USE EFFECT ---
+
+    react.useEffect(() => { props.onHide(hide) }, [hide])
+
+    // --- RENDERING ---
+
     return (
-        <div className="w-full h-full p-4 overflow-y-auto space-y-6">
+        <div className="w-full h-full p-4 overflow-y-auto space-y-6 relative">
+
+            <Tooltip title={hide ? "Show" : "Hide"} side="top">
+            
+                <iconify.Icon
+                    icon={hide ? "tabler:layout-sidebar-right" : "tabler:layout-sidebar-right-filled"}
+                    width={20}
+                    className="absolute top-2 right-2 cursor-pointer hover:text-orange-300"
+                    onClick={() => setHide(prev => !prev)}
+                />
+
+            </Tooltip>
+
+        {
+            !hide && (<>
 
             {/* Title */}
 
             <h2 className="text-lg font-semibold text-neutral-200">Transfer Details</h2>
 
             {
-                !info &&
+                !props.info &&
                 <div className="text-neutral-500 text-sm">
                     Select a point on the pork‑chop plot to view transfer details.
                 </div>
             }
 
             {
-                info &&
+                props.info &&
                 <>
                     {/* Dates */}
 
                     <FormSection title="Dates">
 
-                        <Field title="Launch" value={info.launchDate} />
+                        <Field title="Launch" value={props.info.launchDate} />
 
-                        { info.flybyDate && <Field title="Flyby" value={info.flybyDate} /> }
+                        { props.info.flybyDate && <Field title="Flyby" value={props.info.flybyDate} /> }
 
-                        <Field title="Arrival" value={info.arrivalDate} />
+                        <Field title="Arrival" value={props.info.arrivalDate} />
 
                     {
-                        info.tof1Days &&
+                        props.info.tof1Days &&
                         <>
                         
-                            <Field title="TOF 1" value={String(info.tof1Days) + " days"} />
+                            <Field title="TOF 1" value={String(props.info.tof1Days) + " days"} />
 
-                            <Field title="" value={Number(info.tof1Days / 365).toFixed(0) + " years"} />
+                            <Field title="" value={Number(props.info.tof1Days / 365).toFixed(0) + " years"} />
 
-                            <Field title="" value={Number(info.tof1Days * 24).toFixed(0) + " hours"} />
+                            <Field title="" value={Number(props.info.tof1Days * 24).toFixed(0) + " hours"} />
 
                         </>
                     }
 
                     {
-                        info.tof2Days &&
+                        props.info.tof2Days &&
                         <>
                         
-                            <Field title="TOF 2" value={String(info.tof2Days) + " days"} />
+                            <Field title="TOF 2" value={String(props.info.tof2Days) + " days"} />
 
-                            <Field title="" value={Number(info.tof2Days / 365).toFixed(0) + " years"} />
+                            <Field title="" value={Number(props.info.tof2Days / 365).toFixed(0) + " years"} />
 
-                            <Field title="" value={Number(info.tof2Days * 24).toFixed(0) + " hours"} />
+                            <Field title="" value={Number(props.info.tof2Days * 24).toFixed(0) + " hours"} />
 
                         </>
                     }
 
-                        <Field title="TOF" value={String(info.tofDays) + " days"} />
+                        <Field title="TOF" value={String(props.info.tofDays) + " days"} />
 
-                        <Field title="" value={Number(info.tofDays / 365).toFixed(0) + " years"} />
+                        <Field title="" value={Number(props.info.tofDays / 365).toFixed(0) + " years"} />
 
-                        <Field title="" value={Number(info.tofDays * 24).toFixed(0) + " hours"} />
+                        <Field title="" value={Number(props.info.tofDays * 24).toFixed(0) + " hours"} />
                     
                     </FormSection>
 
@@ -70,13 +102,13 @@ export default function InterplanetaryRightBar({ info }: Readonly<{ info: ISelec
 
                     <FormSection title="Δv Breakdown">
 
-                        <Field title="Departure Δv" value={info.dv1.toFixed(3) + " km/s"} />
+                        <Field title="Departure Δv" value={props.info.dv1.toFixed(3) + " km/s"} />
 
-                        { info.dvGA && <Field title="Gravity Assist Δv" value={info.dvGA.toFixed(3) + " km/s"} /> }
+                        { props.info.dvGA && <Field title="Gravity Assist Δv" value={props.info.dvGA.toFixed(3) + " km/s"} /> }
 
-                        <Field title="Arrival Δv" value={info.dv2.toFixed(3) + " km/s"} />
+                        <Field title="Arrival Δv" value={props.info.dv2.toFixed(3) + " km/s"} />
 
-                        <Field title="Total Δv" value={info.dv.toFixed(3) + " km/s"} />
+                        <Field title="Total Δv" value={props.info.dv.toFixed(3) + " km/s"} />
 
                     </FormSection>
 
@@ -112,6 +144,8 @@ export default function InterplanetaryRightBar({ info }: Readonly<{ info: ISelec
                     </button> */}
                 </>
             }
+            </>)
+        }
         </div>
     )
 }
