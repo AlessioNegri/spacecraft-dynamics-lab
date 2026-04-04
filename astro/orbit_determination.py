@@ -123,7 +123,7 @@ class OrbitDetermination():
             direction (OrbitDirection, optional): Type of orbit direction. Defaults to OrbitDirection.PROGRADE.
 
         Returns:
-            list: [v_1, v_2, orbital elements, theta_2]
+            list: [v_1, v_2, orbital elements, nu_2]
         """
         
         r_1: np.ndarray = r_1.to_value(u.km)

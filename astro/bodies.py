@@ -26,6 +26,7 @@ class Body:
     f       : float | None  # ? Flattening []
     omega   : u.Quantity    # ? Rotation rate [rad/s]
     M       : u.Quantity    # ? Mass [kg]
+    g_0     : u.Quantity    # ? Standard gravity [m/s^2]
 
 BODIES: dict[Attractor, Body] = {}
 
@@ -36,7 +37,8 @@ BODIES[Attractor.SUN] = Body(
     J2=None,
     f=None,
     omega=(2 * np.pi / (25.38 * 86400)) * u.rad / u.s,
-    M=1.98847e30 * u.kg
+    M=1.98847e30 * u.kg,
+    g_0=274 * u.m / u.s**2
 )
 
 BODIES[Attractor.MERCURY] = Body(
@@ -46,7 +48,8 @@ BODIES[Attractor.MERCURY] = Body(
     J2=None,
     f=None,
     omega=(2 * np.pi / (58.646 * 86400)) * u.rad / u.s,
-    M=3.3011e23 * u.kg
+    M=3.3011e23 * u.kg,
+    g_0=3.7 * u.m / u.s**2
 )
 
 BODIES[Attractor.VENUS] = Body(
@@ -56,7 +59,8 @@ BODIES[Attractor.VENUS] = Body(
     J2=None,
     f=None,
     omega=(-2 * np.pi / (243.025 * 86400)) * u.rad / u.s,  # ? Retrograde
-    M=4.8675e24 * u.kg
+    M=4.8675e24 * u.kg,
+    g_0=8.87 * u.m / u.s**2
 )
 
 BODIES[Attractor.EARTH] = Body(
@@ -66,7 +70,8 @@ BODIES[Attractor.EARTH] = Body(
     J2=1.08262668e-3,
     f=1 / 298.257223563,
     omega=7.2921150e-5 * u.rad / u.s,
-    M=5.972168e24 * u.kg
+    M=5.972168e24 * u.kg,
+    g_0=9.80665 * u.m / u.s**2
 )
 
 BODIES[Attractor.MOON] = Body(
@@ -76,7 +81,8 @@ BODIES[Attractor.MOON] = Body(
     J2=2.03263e-4,
     f=None,
     omega=(2 * np.pi / (27.321661 * 86400)) * u.rad / u.s,
-    M=7.34767309e22 * u.kg
+    M=7.34767309e22 * u.kg,
+    g_0=1.622 * u.m / u.s**2
 )
 
 BODIES[Attractor.MARS] = Body(
@@ -86,7 +92,8 @@ BODIES[Attractor.MARS] = Body(
     J2=1.96045e-3,
     f=1 / 169.8,
     omega=7.0882181e-5 * u.rad / u.s,
-    M=6.4171e23 * u.kg
+    M=6.4171e23 * u.kg,
+    g_0=3.72076 * u.m / u.s**2
 )
 
 BODIES[Attractor.JUPITER] = Body(
@@ -96,7 +103,8 @@ BODIES[Attractor.JUPITER] = Body(
     J2=1.4697e-2,
     f=0.06487,
     omega=1.75853e-4 * u.rad / u.s,
-    M=1.8982e27 * u.kg
+    M=1.8982e27 * u.kg,
+    g_0=24.79 * u.m / u.s**2
 )
 
 BODIES[Attractor.SATURN] = Body(
@@ -107,7 +115,8 @@ BODIES[Attractor.SATURN] = Body(
     J2=1.6298e-2,
     f=0.09796,
     omega=1.63788e-4 * u.rad / u.s,
-    M=5.6834e26 * u.kg
+    M=5.6834e26 * u.kg,
+    g_0=10.44 * u.m / u.s**2
 )
 
 BODIES[Attractor.URANUS] = Body(
@@ -117,7 +126,8 @@ BODIES[Attractor.URANUS] = Body(
     J2=3.34343e-3,
     f=0.02293,
     omega=(-1.01237e-4) * u.rad / u.s,  # ? Retrograde
-    M=8.6810e25 * u.kg
+    M=8.6810e25 * u.kg,
+    g_0=8.69 * u.m / u.s**2
 )
 
 BODIES[Attractor.NEPTUNE] = Body(
@@ -127,7 +137,8 @@ BODIES[Attractor.NEPTUNE] = Body(
     J2=3.411e-3,
     f=0.01708,
     omega=1.08339e-4 * u.rad / u.s,
-    M=1.02413e26 * u.kg
+    M=1.02413e26 * u.kg,
+    g_0=11.15 * u.m / u.s**2
 )
 
 BODIES[Attractor.PLUTO] = Body(
@@ -137,7 +148,8 @@ BODIES[Attractor.PLUTO] = Body(
     J2=None,
     f=None,
     omega=(-1.138e-5) * u.rad / u.s,
-    M=1.303e22 * u.kg
+    M=1.303e22 * u.kg,
+    g_0=0.62 * u.m / u.s**2
 )
 
 def get_body(attractor: Attractor) -> Body: return BODIES[attractor]

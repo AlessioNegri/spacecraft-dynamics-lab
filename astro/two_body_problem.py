@@ -8,6 +8,7 @@ relationships between position, velocity, and orbital elements.
 References:
 - Howard D. Curtis, "Orbital Mechanics for Engineering Students"
     - Chapter 2: The Two-Body Problem
+    - Chapter 6: Orbital Maneuvers
 """
 
 __author__      = "Alessio Negri"
@@ -24,6 +25,8 @@ import typing
 import astro.bodies as bodies
 import astro.common as common
 
+from astro.orbital_maneuvers import RocketMotor
+
 class Result:
     """Result of integration
     """
@@ -36,6 +39,7 @@ class Result:
     v_x: u.Quantity
     v_y: u.Quantity
     v_z: u.Quantity
+    m_sc: u.Quantity
     
 @dataclasses.dataclass
 class OrbitParameters:
@@ -251,11 +255,12 @@ class Orbit:
         self.nu         = nu.to_value(u.deg)
         self.epoch      = epoch
         
-    def propagate_until(self, end_epoch: time.Time) -> Result:
+    def propagate_until(self, end_epoch: time.Time, rocket_motor: RocketMotor = None) -> Result:
         """Propagate the orbit until end_epoch
 
         Args:
             end_epoch (time.Time): End epoch for propagation
+            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
 
         Returns:
             Result: Integration result
@@ -267,32 +272,65 @@ class Orbit:
         
         if end_epoch < self.epoch: raise TypeError(f"'end_epoch' {end_epoch} must come after 'epoch' {self.epoch}")
         
-        solution: dict = ode.solve_ivp(fun=self._equations_relative_motion,
-                                       t_span=[0, (end_epoch - self.epoch).to(u.s).to_value()],
-                                       y0=np.concat([self.r, self.v]),
-                                       method='RK45',
-                                       args=(),
-                                       rtol=1e-8,
-                                       atol=1e-8)
-        
         result: Result = Result()
         
-        result.success = solution['success']
-        result.t = solution['t'] * u.s
-        result.r_x = solution['y'][0, :] * u.km
-        result.r_y = solution['y'][1, :] * u.km
-        result.r_z = solution['y'][2, :] * u.km
-        result.v_x = solution['y'][3, :] * u.km / u.s
-        result.v_y = solution['y'][4, :] * u.km / u.s
-        result.v_z = solution['y'][5, :] * u.km / u.s
+        if rocket_motor == None:
+        
+            solution: dict = ode.solve_ivp(fun=self._equations_relative_motion,
+                                           t_span=[0, (end_epoch - self.epoch).to(u.s).to_value()],
+                                           y0=np.concat([self.r, self.v]),
+                                           method='RK45',
+                                           args=(),
+                                           rtol=1e-8,
+                                           atol=1e-8)
+            
+            
+            
+            result.success = solution['success']
+            result.t = solution['t'] * u.s
+            result.r_x = solution['y'][0, :] * u.km
+            result.r_y = solution['y'][1, :] * u.km
+            result.r_z = solution['y'][2, :] * u.km
+            result.v_x = solution['y'][3, :] * u.km / u.s
+            result.v_y = solution['y'][4, :] * u.km / u.s
+            result.v_z = solution['y'][5, :] * u.km / u.s
+            
+        else:
+            
+            if rocket_motor.T.to_value(u.N) <= 0:
+                
+                raise ValueError("Rocket motor thrust must be greater than 0")
+            
+            if rocket_motor.I_sp.to_value(u.s) <= 0:
+                
+                raise ValueError("Rocket motor specific impulse must be greater than 0")
+            
+            solution: dict = ode.solve_ivp(fun=self._equations_relative_motion_with_thrust,
+                                           t_span=[0, (end_epoch - self.epoch).to(u.s).to_value()],
+                                           y0=np.concat([self.r, self.v, rocket_motor.m_sc.to_value(u.kg)]),
+                                           method='RK45',
+                                           args=(rocket_motor.T.to_value(u.N) * 1e-3, rocket_motor.I_sp.to_value(u.s)),
+                                           rtol=1e-8,
+                                           atol=1e-8)
+            
+            result.success = solution['success']
+            result.t = solution['t'] * u.s
+            result.r_x = solution['y'][0, :] * u.km
+            result.r_y = solution['y'][1, :] * u.km
+            result.r_z = solution['y'][2, :] * u.km
+            result.v_x = solution['y'][3, :] * u.km / u.s
+            result.v_y = solution['y'][4, :] * u.km / u.s
+            result.v_z = solution['y'][5, :] * u.km / u.s
+            result.m_sc = solution['y'][6, :] * u.kg
         
         return result
     
-    def propagate_for(self, delta: time.TimeDelta) -> Result:
+    def propagate_for(self, delta: time.TimeDelta, rocket_motor: RocketMotor = None) -> Result:
         """Propagate the orbit for delta time
 
         Args:
             delta (time.TimeDelta): Delta time for propagation
+            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
 
         Returns:
             Result: Integration result
@@ -302,24 +340,54 @@ class Orbit:
         
         common.check_time_delta(delta)
         
-        solution: dict = ode.solve_ivp(fun=self._equations_relative_motion,
-                                       t_span=[0, delta.to(u.s).to_value()],
-                                       y0=np.concat([self.r, self.v]),
-                                       method='RK45',
-                                       args=(),
-                                       rtol=1e-8,
-                                       atol=1e-8)
-        
         result: Result = Result()
         
-        result.success = solution['success']
-        result.t = solution['t'] * u.s
-        result.r_x = solution['y'][0, :] * u.km
-        result.r_y = solution['y'][1, :] * u.km
-        result.r_z = solution['y'][2, :] * u.km
-        result.v_x = solution['y'][3, :] * u.km / u.s
-        result.v_y = solution['y'][4, :] * u.km / u.s
-        result.v_z = solution['y'][5, :] * u.km / u.s
+        if rocket_motor == None:
+        
+            solution: dict = ode.solve_ivp(fun=self._equations_relative_motion,
+                                           t_span=[0, delta.to(u.s).to_value()],
+                                           y0=np.concat([self.r, self.v]),
+                                           method='RK45',
+                                           args=(),
+                                           rtol=1e-8,
+                                           atol=1e-8)
+            
+            result.success = solution['success']
+            result.t = solution['t'] * u.s
+            result.r_x = solution['y'][0, :] * u.km
+            result.r_y = solution['y'][1, :] * u.km
+            result.r_z = solution['y'][2, :] * u.km
+            result.v_x = solution['y'][3, :] * u.km / u.s
+            result.v_y = solution['y'][4, :] * u.km / u.s
+            result.v_z = solution['y'][5, :] * u.km / u.s
+            
+        else:
+        
+            if rocket_motor.T.to_value(u.N) <= 0:
+                
+                raise ValueError("Rocket motor thrust must be greater than 0")
+            
+            if rocket_motor.I_sp.to_value(u.s) <= 0:
+                
+                raise ValueError("Rocket motor specific impulse must be greater than 0")
+            
+            solution: dict = ode.solve_ivp(fun=self._equations_relative_motion_with_thrust,
+                                           t_span=[0, delta.to(u.s).to_value()],
+                                           y0=np.hstack([self.r, self.v, np.array([rocket_motor.m_sc.to_value(u.kg)])]),
+                                           method='RK45',
+                                           args=(rocket_motor.T.to_value(u.N) * 1e-3, rocket_motor.I_sp.to_value(u.s)),
+                                           rtol=1e-8,
+                                           atol=1e-8)
+            
+            result.success = solution['success']
+            result.t = solution['t'] * u.s
+            result.r_x = solution['y'][0, :] * u.km
+            result.r_y = solution['y'][1, :] * u.km
+            result.r_z = solution['y'][2, :] * u.km
+            result.v_x = solution['y'][3, :] * u.km / u.s
+            result.v_y = solution['y'][4, :] * u.km / u.s
+            result.v_z = solution['y'][5, :] * u.km / u.s
+            result.m_sc = solution['y'][6, :] * u.kg
         
         return result
         
@@ -345,8 +413,43 @@ class Orbit:
         dx_dt[0] = v_x
         dx_dt[1] = v_y
         dx_dt[2] = v_z
-        dx_dt[3] = - (self.attractor.mu.to_value() / r**3) * x
-        dx_dt[4] = - (self.attractor.mu.to_value() / r**3) * y
-        dx_dt[5] = - (self.attractor.mu.to_value() / r**3) * z
+        dx_dt[3] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * x
+        dx_dt[4] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * y
+        dx_dt[5] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * z
+        
+        return dx_dt
+    
+    def _equations_relative_motion_with_thrust(self,
+                                               t : float,
+                                               X : np.ndarray,
+                                               T : float,
+                                               I_sp : float) -> np.ndarray:
+        """Equations of relative motion with thrust
+
+        Args:
+            t (float): Time
+            X (np.ndarray): State [7,1]
+            T (float): Thrust
+            I_sp (float): Specific impulse
+
+        Returns:
+            np.ndarray: Derivative of state
+        """
+        
+        x, y, z, v_x, v_y, v_z, m = X
+        
+        r: float = np.sqrt(x**2 + y**2 + z**2)
+        
+        v: float = np.sqrt(v_x**2 + v_y**2 + v_z**2)
+        
+        dx_dt = np.zeros(shape=(7))
+        
+        dx_dt[0] = v_x
+        dx_dt[1] = v_y
+        dx_dt[2] = v_z
+        dx_dt[3] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * x + (T / m) * (v_x / v)
+        dx_dt[4] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * y + (T / m) * (v_y / v)
+        dx_dt[5] = - (self.attractor.mu.to_value(u.km**3 / u.s**2) / r**3) * z + (T / m) * (v_z / v)
+        dx_dt[6] = - T / (I_sp * self.attractor.g_0.to_value(u.km / u.s**2))
         
         return dx_dt

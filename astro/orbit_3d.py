@@ -28,13 +28,83 @@ class OrbitalElements:
     """Orbital Elements
     """
     
-    h       : u.Quantity    = 0 * u.km**2 / u.s             # ? Specific angular momentum
-    a       : u.Quantity    = 0 * u.km                      # ? Semi-major axis
-    ecc     : u.Quantity    = 0 * u.dimensionless_unscaled  # ? Eccentricity
-    inc     : u.Quantity    = 0 * u.deg                     # ? Inclination
-    raan    : u.Quantity    = 0 * u.deg                     # ? Right Ascension of the Ascending Node
-    argp    : u.Quantity    = 0 * u.deg                     # ? Argument of Perigee
-    nu      : u.Quantity    = 0 * u.deg                     # ? True Anomaly
+    h       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km**2 / u.s)               # ? Specific angular momentum
+    a       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km)                        # ? Semi-major axis
+    ecc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.dimensionless_unscaled)    # ? Eccentricity
+    inc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Inclination
+    raan    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Right Ascension of the Ascending Node
+    argp    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Argument of Perigee
+    nu      : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? True Anomaly
+    
+    def perigee_radius(self) -> u.Quantity:
+        """Calculate the perigee radius
+
+        Returns:
+            u.Quantity: Perigee radius
+        """
+        
+        return self.a * (1 - self.ecc)
+    
+    def apogee_radius(self) -> u.Quantity:
+        """Calculate the apogee radius
+
+        Returns:
+            u.Quantity: Apogee radius
+        """
+        
+        return self.a * (1 + self.ecc)
+    
+    def specific_angular_momentum(self, attractor: bodies.Attractor) -> u.Quantity:
+        """Calculate the specific angular momentum
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+
+        Returns:
+            u.Quantity: Specific angular momentum
+        """
+        
+        common.check_attractor(attractor)
+        
+        r_p: float = self.perigee_radius().to_value(u.km)
+        r_a: float = self.apogee_radius().to_value(u.km)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        return np.sqrt(2 * mu) * np.sqrt(r_a * r_p / (r_a + r_p)) * u.km**2 / u.s
+    
+    def orbital_period(self, attractor: bodies.Attractor) -> u.Quantity:
+        """Calculate the orbital period
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+
+        Returns:
+            u.Quantity: Orbital period
+        """
+        
+        common.check_attractor(attractor)
+        
+        h: float = self.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        e: float = self.ecc.to_value()
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        return 2 * np.pi / mu**2 * (h / np.sqrt(1 - e**2))**3 * u.s
+    
+    def update_from_perigee_apogee(self, r_p : u.Quantity, r_a : u.Quantity) -> None:
+        """Update the orbital elements from perigee and apogee radius
+
+        Args:
+            r_p (u.Quantity): Perigee radius
+            r_a (u.Quantity): Apogee radius
+        """
+        
+        r_p: float = r_p.to_value(u.km)
+        r_a: float = r_a.to_value(u.km)
+        
+        self.a = 0.5 * (r_p + r_a) * u.km
+        self.ecc = (r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled
 
 class Orbit3D():
     """Orbit in Three Dimensions
