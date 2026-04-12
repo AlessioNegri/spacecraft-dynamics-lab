@@ -16,6 +16,11 @@ const items: ISideBarItem[] =
         icon: "mdi:orbit"
     },
     {
+        id: "orbital-maneuvers",
+        label:"Orbital Maneuvers",
+        icon: "game-icons:rocket"
+    },
+    {
         id: "interplanetary",
         label: "Interplanetary",
         icon: "game-icons:orbital"

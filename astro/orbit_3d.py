@@ -25,16 +25,26 @@ import astro.two_body_problem as two_body_problem
 
 @dc.dataclass
 class OrbitalElements:
-    """Orbital Elements
+    """
+    Orbital Elements
+    
+    Args:
+        h (float): Specific angular momentum
+        a (float): Semi-major axis
+        ecc (float): Eccentricity
+        inc (float): Inclination
+        raan (float): Right Ascension of the Ascending Node
+        argp (float): Argument of Perigee
+        nu (float): True Anomaly
     """
     
-    h       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km**2 / u.s)               # ? Specific angular momentum
-    a       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km)                        # ? Semi-major axis
-    ecc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.dimensionless_unscaled)    # ? Eccentricity
-    inc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Inclination
-    raan    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Right Ascension of the Ascending Node
-    argp    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? Argument of Perigee
-    nu      : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)                       # ? True Anomaly
+    h       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km**2 / u.s)
+    a       : u.Quantity    = dc.field(default_factory=lambda: 0 * u.km)
+    ecc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.dimensionless_unscaled)
+    inc     : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
+    raan    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
+    argp    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
+    nu      : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
     
     def perigee_radius(self) -> u.Quantity:
         """Calculate the perigee radius
@@ -400,6 +410,58 @@ class Orbit3D():
         v_GEF: u.Quantity = u.Quantity(np.matmul(R.T, v_PF), u.km / u.s)
         
         return [r_GEF, v_GEF]
+    
+    @staticmethod
+    def perifocal_to_geocentric_equatorial_position_vector(oe : OrbitalElements, r_PF: u.Quantity) -> u.Quantity:
+        """Perifocal Frame --> Geocentric Equatiorial Frame for a given position vector
+
+        Args:
+            oe (OrbitalElements): Orbital Elements
+            r_PF (u.Quantity): Position vector in Perifocal Frame
+
+        Returns:
+            u.Quantity: r_GEF
+        """
+        
+        common.check_keplerian_parameters(oe.a.to_value(u.km),
+                                          oe.ecc.to_value(),
+                                          oe.inc.to_value(u.deg),
+                                          oe.raan.to_value(u.deg),
+                                          oe.argp.to_value(u.deg),
+                                          oe.nu.to_value(u.deg))
+        
+        common.check_position_vector(r_PF)
+        
+        inc: float = oe.inc.to_value(u.rad)
+        raan: float = oe.raan.to_value(u.rad)
+        argp: float = oe.argp.to_value(u.rad)
+        
+        R_3_raan: np.ndarray = np.array(
+            [
+                [ + np.cos(raan) , + np.sin(raan) , 0 ],
+                [ - np.sin(raan) , + np.cos(raan) , 0 ],
+                [ 0              , 0              , 1 ]
+            ])
+        
+        R_1_inc: np.ndarray = np.array(
+            [
+                [ 1 , 0              , 0              ],
+                [ 0 , + np.cos(inc) , + np.sin(inc) ],
+                [ 0 , - np.sin(inc) , + np.cos(inc) ]
+            ])
+        
+        R_3_argp: np.ndarray = np.array(
+            [
+                [ + np.cos(argp) , + np.sin(argp) , 0 ],
+                [ - np.sin(argp) , + np.cos(argp) , 0 ],
+                [ 0              , 0              , 1 ]
+            ])
+        
+        R: np.ndarray = np.matmul(R_3_argp, np.matmul(R_1_inc, R_3_raan))
+        
+        r_GEF: u.Quantity = u.Quantity(np.matmul(R.T, r_PF.to_value(u.km)), u.km)
+        
+        return r_GEF
     
     @staticmethod
     def planet_oblateness_effect(attractor: bodies.Attractor, oe : OrbitalElements) -> t.List[u.Quantity, u.Quantity]:

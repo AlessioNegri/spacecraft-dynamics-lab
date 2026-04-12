@@ -193,14 +193,18 @@ class Orbit:
     
     # --- PUBLIC ---
     
-    def from_cartesian(self, attractor: bodies.Attractor, r: u.Quantity, v: u.Quantity, epoch: time.Time) -> None:
+    def from_cartesian(self,
+                       attractor: bodies.Attractor,
+                       r: u.Quantity,
+                       v: u.Quantity,
+                       epoch: time.Time = time.Time(0, format="unix", scale="utc")) -> None:
         """Initialize the orbit based on cartesian orbit parameters
 
         Args:
             attractor (bodies.Attractor): Main attractor
             r (u.Quantity): Position vector
             v (u.Quantity): Velocity vector
-            epoch (time.Time): Epoch of orbit position
+            epoch (time.Time, optional): Epoch of orbit position. Defaults to 0.
         """
         
         common.check_attractor(attractor)
@@ -222,7 +226,7 @@ class Orbit:
                        raan: u.Quantity,
                        argp: u.Quantity,
                        nu: u.Quantity,
-                       epoch: time.Time) -> None:
+                       epoch: time.Time = time.Time(0, format="unix", scale="utc")) -> None:
         """Initialize the orbit based on keplerian orbit parameters
 
         Args:
@@ -233,7 +237,7 @@ class Orbit:
             raan (u.Quantity): Right Ascension of the Ascending Node
             argp (u.Quantity): Argumento of Periapsis
             nu (u.Quantity): True anomaly
-            epoch (time.Time): Epoch of orbit position
+            epoch (time.Time, optional): Epoch of orbit position. Defaults to 0.
         """
         
         common.check_attractor(attractor)

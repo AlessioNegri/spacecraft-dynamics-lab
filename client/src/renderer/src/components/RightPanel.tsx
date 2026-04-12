@@ -4,6 +4,7 @@ import HeaderBar from "./bars/HeaderBar"
 import Console from "./Console"
 import SpacecraftPage from "./pages/SpacecraftPage"
 import OrbitPage from "./pages/OrbitPage"
+import OrbitalManeuversPage from "./pages/OrbitalManeuversPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
 
 interface RightPanelProps
@@ -72,6 +73,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
 
                 {props.activePage === "spacecraft" && <SpacecraftPage />}
                 {props.activePage === "orbit" && <OrbitPage/>}
+                {props.activePage === "orbital-maneuvers" && <OrbitalManeuversPage/>}
                 {props.activePage === "interplanetary" && <InterplanetaryPage/>}
                 {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
                 
@@ -87,7 +89,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
             {/* Console with dynamic height */}
         
             <div
-                className={`overflow-auto custom-scrollbar bg-red-300 text-white min-h-1/4 flex
+                className={`overflow-auto custom-scrollbar bg-red-300 text-white min-h-1/6 flex
                             ${consoleShow ? "" : "hidden"}`}
                 style={{ height: consoleHeight }}>
 

@@ -17,9 +17,34 @@ function checkError(file: string, error: any): string | null
 {
     if (axios.isAxiosError(error))
     {
-        return error.response?.data?.error ||   // * FastAPI JSONResponse
-                error.response?.data ||         // * Fallback
-                error.message                   // * Generic Axios message
+        // * Generic Axios message
+
+        let message: string = error.message + ": "
+
+        // * FastAPI JSONResponse
+
+        if (error.response)
+        {
+            if (Array.isArray(error.response.data.detail))
+            {
+                const details: string[] = []
+
+                for (const item of error.response.data.detail)
+                {
+                    details.push(item.msg + " -> " + item.loc.join('.'))
+                }
+
+                message += details.join(' - ')
+            }
+            else
+            {
+                message += error.response.data.detail
+            }
+        }
+
+        globalThis.window.api.error(`[${file}] ${message}`)
+
+        return message
     }
     else
     {

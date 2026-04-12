@@ -32,15 +32,24 @@ import astro.lagrange_coefficients as lc
 class ManeuverResult:
     """Maneuver parameters"""
     
-    dv : typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.km / u.s])                   # ? Delta Velocity
-    dt : typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.s])                          # ? Delta Time
-    dm : typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.kg])                         # ? Delta Mass
-    oe : typing.List[o3d.OrbitalElements] = dc.field(default_factory=lambda: [o3d.OrbitalElements()])   # ? Orbital Elements of the transfer orbits
-    fpa : typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.deg])                       # ? Flight Path Angle at maneuver point
+    dv: typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.km / u.s])                    # ? Delta Velocity
+    dt: typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.s])                           # ? Delta Time
+    dm: typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.kg])                          # ? Delta Mass
+    oe: typing.List[o3d.OrbitalElements] = dc.field(default_factory=lambda: [o3d.OrbitalElements()])    # ? Orbital Elements of the transfer orbits
+    nu: typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.deg])                         # ? True anomaly at maneuver points
+    fpa: typing.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.deg])                        # ? Flight Path Angle at maneuver point
 
 @dc.dataclass
 class RocketMotor:
-    """Rocket Motor"""
+    """
+    Rocket Motor
+    
+    Args:
+        I_sp (float): Specific impulse
+        T (float): Thrust
+        m_sc (float): Spacecraft mass
+        m_prop (float): Propellant mass
+    """
     
     I_sp : u.Quantity = dc.field(default_factory=lambda: 0 * u.s)       # ? Specific Impulse
     T : u.Quantity = dc.field(default_factory=lambda: 0 * u.N)          # ? Thrust
@@ -205,35 +214,34 @@ class OrbitalManeuvers():
         
         # >>> 3. Transfer Orbit
         
-        a_t: float = 0.0
-        e_t: float = 0.0
-        h_t: float = 0.0
-        v_p_t: float = 0.0
-        v_a_t: float = 0.0
+        r_p_t: float = 0.0
+        r_a_t: float = 0.0
+        
+        swap: bool = False
         
         if direction == HohmannDirection.PERICENTER_APOCENTER:
             
-            a_t = 0.5 * (r_p_1 + r_a_2)
+            r_p_t: float = min(r_p_1, r_a_2)
+            r_a_t: float = max(r_p_1, r_a_2)
             
-            e_t = (r_a_2 - r_p_1) / (r_a_2 + r_p_1)
-        
-            h_t = np.sqrt(2 * mu) * np.sqrt(r_a_2 * r_p_1 / (r_a_2 + r_p_1))
-            
-            v_p_t = h_t / r_p_1
-            
-            v_a_t = h_t / r_a_2
+            swap = r_p_1 > r_a_2
             
         elif direction == HohmannDirection.APOCENTER_PERICENTER:
             
-            a_t = 0.5 * (r_p_2 + r_a_1)
+            r_p_t: float = min(r_p_2, r_a_1)
+            r_a_t: float = max(r_p_2, r_a_1)
             
-            e_t = (r_a_1 - r_p_2) / (r_a_1 + r_p_2)
+            swap = r_p_2 > r_a_1
+            
+        a_t: float = 0.5 * (r_p_t + r_a_t)
         
-            h_t = np.sqrt(2 * mu) * np.sqrt(r_a_1 * r_p_2 / (r_a_1 + r_p_2))
-            
-            v_p_t = h_t / r_p_2
-            
-            v_a_t = h_t / r_a_1
+        e_t: float = (r_a_t - r_p_t) / (r_a_t + r_p_t)
+
+        h_t: float = np.sqrt(2 * mu) * np.sqrt(r_a_t * r_p_t / (r_a_t + r_p_t))
+        
+        v_p_t: float = h_t / r_p_t
+        
+        v_a_t: float = h_t / r_a_t
         
         T_t = 2 * np.pi / float(np.sqrt(mu)) * a_t**(3/2) # ? Orbital Period
         
@@ -241,18 +249,34 @@ class OrbitalManeuvers():
         
         dv_1: float = 0.0
         dv_2: float = 0.0
+        nu_1: float = 0.0
+        nu_t: float = 0.0
         
         if direction == HohmannDirection.PERICENTER_APOCENTER:
             
-            dv_1 = abs(v_p_t - v_p_1)
+            dv_1 = abs(v_p_t - (v_p_1 if not swap else v_a_2))
             
-            dv_2 = abs(v_a_2 - v_a_t)
+            dv_2 = abs((v_a_2 if not swap else v_p_1) - v_a_t)
+            
+            nu_1 = 0.0
+            
+            nu_t = 0.0 if not swap else 180.0
         
         elif direction == HohmannDirection.APOCENTER_PERICENTER:
             
-            dv_1 = abs(v_a_t - v_a_1)
+            dv_1 = abs(v_a_t - (v_a_1 if not swap else v_p_2))
             
-            dv_2 = abs(v_p_2 - v_p_t)
+            dv_2 = abs((v_p_2 if not swap else v_a_1) - v_p_t)
+            
+            nu_1 = 180.0
+            
+            nu_t = 180.0 if not swap else 0.0
+        
+        argp_t: float = oe_1.argp.to_value(u.deg)
+        
+        if swap:
+            
+            argp_t = cm.wrap_angle(argp_t + 180.0, -180.0, +180.0)
         
         # >>> 5. Result
         
@@ -266,16 +290,17 @@ class OrbitalManeuvers():
         
         maneuver: ManeuverResult = ManeuverResult()
         
-        maneuver.dv=[dv_1 * u.km / u.s,dv_2 * u.km / u.s]
+        maneuver.dv=[dv_1 * u.km / u.s, dv_2 * u.km / u.s]
         maneuver.dt=[0.5 * T_t * u.s]
         maneuver.dm=[dm_1, dm_2]
         maneuver.oe=[o3d.OrbitalElements(h=h_t * u.km**2 / u.s,
-                                        a=a_t * u.km,
-                                        ecc=e_t * u.dimensionless_unscaled,
-                                        inc=oe_1.inc,
-                                        raan=oe_1.raan,
-                                        argp=oe_1.argp,
-                                        nu=0 * u.deg)]
+                                         a=a_t * u.km,
+                                         ecc=e_t * u.dimensionless_unscaled,
+                                         inc=oe_1.inc,
+                                         raan=oe_1.raan,
+                                         argp=argp_t * u.deg,
+                                         nu=nu_t * u.deg)]
+        maneuver.nu=[nu_1 * u.deg]
         
         return maneuver
     
@@ -340,6 +365,7 @@ class OrbitalManeuvers():
         maneuver.dt=[maneuver_1.dt[0], maneuver_2.dt[0]]
         maneuver.dm=[maneuver_1.dm[0], maneuver_2.dm[0], maneuver_3.dm[1]]
         maneuver.oe=[maneuver_1.oe[0], maneuver_2.oe[0]]
+        maneuver.nu=[maneuver_1.nu[0], maneuver_2.nu[0], maneuver_3.nu[0]]
         
         return maneuver
     
@@ -386,6 +412,8 @@ class OrbitalManeuvers():
         # >>> 1. Chaser Orbit period and velocity at pericenter
         
         T_1: float = 2 * np.pi / float(np.sqrt(mu)) * oe.a.to_value(u.km)**(3/2)
+        
+        oe.h = oe.specific_angular_momentum(attractor)
         
         v_p_1: float = oe.h.to_value(u.km**2 / u.s) / oe.perigee_radius().to_value(u.km)
         
@@ -880,10 +908,22 @@ class OrbitalManeuvers():
         
         # >>> 4. Lambert problem solution for the transfer from C to T in time dt
         
+        r_C: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(oe=oe, r_PF=r_C * u.km)
+        r_T: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(oe=oe, r_PF=r_T * u.km)
+        
+        if oe.inc <= 90.0 * u.deg:
+            
+            direction : od.OrbitDirection = od.OrbitDirection.PROGRADE
+            
+        else:
+            
+            direction = od.OrbitDirection.RETROGRADE
+        
         v_t_C, v_t_T, oe_t, nu_t_2 = od.OrbitDetermination.lambert(attractor=attractor,
-                                                                   r_1=r_C * u.km,
-                                                                   r_2=r_T * u.km,
-                                                                   dt=dt)
+                                                                   r_1=r_C,
+                                                                   r_2=r_T,
+                                                                   dt=dt,
+                                                                   direction=direction)
         
         oe_t_2: o3d.OrbitalElements = copy.deepcopy(oe_t)
         

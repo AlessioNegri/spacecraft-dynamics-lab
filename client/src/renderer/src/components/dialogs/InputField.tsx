@@ -26,6 +26,7 @@ interface InputFieldProps
     pattern?: string
     options?: Array<{ label: string; value: string | number }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
+    className?: string
 }
 
 /** @function InputField */
@@ -61,7 +62,7 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
     // --- RENDERING ---
 
     return (
-        <form.Field name={props.name} className="flex flex-col space-y-2">
+        <form.Field name={props.name} className={`flex flex-col space-y-2 ${props.className ?? ""}`}>
 
             <div className="flex justify-between">
 
@@ -85,7 +86,7 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
                     name={props.name}
                     className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
                             focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
-                            transition"
+                            transition h-8"
                     value={String(props.value)}
                     onChange={props.onChange}
                 >
@@ -104,7 +105,7 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
                         type={props.type ?? "text"}
                         className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
                             focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
-                            transition"
+                            transition h-8"
                         placeholder="Insert value..."
                         value={props.value}
                         onChange={props.onChange}

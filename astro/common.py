@@ -115,7 +115,7 @@ def check_keplerian_parameters(a: float | int,
     
     if not (0 <= raan <= 360): raise ValueError("'raan' must be in [0, 360] deg")
     
-    if not (0 <= argp <= 360): raise ValueError("'argp' must be in [-180, 180] deg")
+    if not (-180 <= argp <= 360): raise ValueError("'argp' must be in [-180, 360] deg")
     
     if not (-180 <= nu <= 360): raise ValueError("'nu' must be in [-180, 360] deg")
     

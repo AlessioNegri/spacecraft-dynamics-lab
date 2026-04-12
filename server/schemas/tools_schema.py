@@ -1,23 +1,7 @@
 import fastapi
 import pydantic
 
-# * Common
-
-class Vector3D(pydantic.BaseModel):
-    
-    x: float
-    y: float
-    z: float
-    
-class OrbitalElements(pydantic.BaseModel):
-    
-    sam: float
-    sma: float
-    ecc: float
-    inc: float
-    raan: float
-    aop: float
-    ta: float
+from schemas.common import Vector3D, OrbitalElements
 
 # * Orbit Representation
     

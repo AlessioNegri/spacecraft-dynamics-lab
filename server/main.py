@@ -14,6 +14,7 @@ from common.app_data import AppData
 
 from routers.web_socket import router as router_web_socket
 from routers.spacecraft import router as router_spacecraft
+from routers.orbital_maneuvers import router as router_orbital_maneuvers
 from routers.interplanetary import router as router_interplanetary
 from routers.tools import router as router_tools
 
@@ -116,6 +117,7 @@ app.state.data  = AppData()
 
 app.include_router(router=router_web_socket)
 app.include_router(router=router_spacecraft)
+app.include_router(router=router_orbital_maneuvers)
 app.include_router(router=router_interplanetary)
 app.include_router(router=router_tools)
 

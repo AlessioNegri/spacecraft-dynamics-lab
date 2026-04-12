@@ -1,4 +1,5 @@
 import * as react from 'react'
+import * as themes from "@radix-ui/themes"
 import * as tooltip from "@radix-ui/react-tooltip"
 
 import Shortcut from "./components/Shortcut"
@@ -23,24 +24,28 @@ export default function App(): react.JSX.Element
     // --- RENDERING ---
     
     return (
-        <tooltip.Provider>
+        <themes.Theme appearance="dark" accentColor="orange" grayColor="slate" className="w-full h-full flex flex-col">
 
-            <div className='flex flex-col w-full h-full bg-neutral-800'>
+            <tooltip.Provider>
 
-                <MenuBar />
+                <div className='flex flex-col w-full h-full bg-neutral-800'>
 
-                <div className='flex-1 overflow-auto custom-scrollbar flex flex-row'>
+                    <MenuBar />
 
-                    <Sidebar activePage={activePage} setActivePage={setActivePage} />
+                    <div className='flex-1 overflow-auto custom-scrollbar flex flex-row'>
 
-                    <RightPanel activePage={activePage} />
+                        <Sidebar activePage={activePage} setActivePage={setActivePage} />
+
+                        <RightPanel activePage={activePage} />
+
+                    </div>
+
+                    <StatusBar />
 
                 </div>
 
-                <StatusBar/>
-
-            </div>
+            </tooltip.Provider>
             
-        </tooltip.Provider>
+        </themes.Theme>
     )
 }
