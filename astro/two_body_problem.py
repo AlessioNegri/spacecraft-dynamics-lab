@@ -397,7 +397,7 @@ class Orbit:
         
     # --- PRIVATE ---
     
-    def _equations_relative_motion(self, t : float, X : np.ndarray) -> np.ndarray:
+    def _equations_relative_motion(self, t: float, X: np.ndarray) -> np.ndarray:
         """Equations of relative motion
 
         Args:

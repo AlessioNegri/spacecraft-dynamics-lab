@@ -46,6 +46,20 @@ class OrbitalElements:
     argp    : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
     nu      : u.Quantity    = dc.field(default_factory=lambda: 0 * u.deg)
     
+    def semi_major_axis(self, attractor: bodies.Attractor) -> u.Quantity:
+        """Calculate the semi-major axis
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+
+        Returns:
+            u.Quantity: Semi-major axis
+        """
+        
+        common.check_attractor(attractor)
+        
+        return self.h**2 / (bodies.BODIES[attractor].mu * (1 - self.ecc**2))
+    
     def perigee_radius(self) -> u.Quantity:
         """Calculate the perigee radius
 
