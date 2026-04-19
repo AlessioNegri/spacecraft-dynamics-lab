@@ -5,6 +5,7 @@ import Console from "./Console"
 import SpacecraftPage from "./pages/SpacecraftPage"
 import OrbitPage from "./pages/OrbitPage"
 import OrbitalManeuversPage from "./pages/OrbitalManeuversPage"
+import RelativeMotionPage from "./pages/RelativeMotionPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
 
 interface RightPanelProps
@@ -65,7 +66,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
 
             {/* Header bar */}
 
-            <HeaderBar title={props.activePage} />
+            <HeaderBar title={props.activePage.replaceAll('-', ' ')} />
 
             {/* Page fills remaining space */}
 
@@ -74,6 +75,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
                 {props.activePage === "spacecraft" && <SpacecraftPage />}
                 {props.activePage === "orbit" && <OrbitPage/>}
                 {props.activePage === "orbital-maneuvers" && <OrbitalManeuversPage/>}
+                {props.activePage === "relative-motion" && <RelativeMotionPage/>}
                 {props.activePage === "interplanetary" && <InterplanetaryPage/>}
                 {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
                 

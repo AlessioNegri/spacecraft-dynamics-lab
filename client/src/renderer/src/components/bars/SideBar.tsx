@@ -21,6 +21,12 @@ const items: ISideBarItem[] =
         icon: "game-icons:rocket"
     },
     {
+        id: "relative-motion",
+        label: "Relative Motion",
+        icon: "mdi:proximity-sensor"
+    }
+    ,
+    {
         id: "interplanetary",
         label: "Interplanetary",
         icon: "game-icons:orbital"

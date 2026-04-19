@@ -8,6 +8,7 @@ import astro.bodies as bodies
 import astro.two_body_problem as tbp
 import astro.orbit_3d as o3d
 import astro.orbit_determination as od
+import astro.relative_motion as rm
 
 # --- HTTP ---
 
@@ -410,6 +411,116 @@ async def put_predict_gauss_method(data: schema.GaussMethodInModelInfo) -> fasta
                                   raan=oe.raan.to_value(),
                                   aop=oe.argp.to_value(),
                                   ta=oe.nu.to_value())
+    )
+    
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+# ? Relative Motion
+
+@router.put("/lvlh-kinematics", response_model=schema.LvlhKinematicsOutModelInfo)
+async def put_lvlh_kinematics(data: schema.LvlhKinematicsInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Local Vertical Local Horizontal Kinematics
+    
+    Args:
+        data (schema.LvlhKinematicsInModelInfo): Attractor and orbital elements of target and chaser
+        
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+    
+    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(
+        h = data.orbitalElementsTarget.sam * u.km**2 / u.s,
+        a = data.orbitalElementsTarget.sma * u.km,
+        ecc = data.orbitalElementsTarget.ecc * u.one,
+        inc = data.orbitalElementsTarget.inc * u.deg,
+        raan = data.orbitalElementsTarget.raan * u.deg,
+        argp = data.orbitalElementsTarget.aop * u.deg,
+        nu = data.orbitalElementsTarget.ta * u.deg
+    )
+    
+    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(
+        h = data.orbitalElementsChaser.sam * u.km**2 / u.s,
+        a = data.orbitalElementsChaser.sma * u.km,
+        ecc = data.orbitalElementsChaser.ecc * u.one,
+        inc = data.orbitalElementsChaser.inc * u.deg,
+        raan = data.orbitalElementsChaser.raan * u.deg,
+        argp = data.orbitalElementsChaser.aop * u.deg,
+        nu = data.orbitalElementsChaser.ta * u.deg
+    )
+    
+    kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor, oe_target=oe_target, oe_chaser=oe_chaser)
+    
+    r: np.ndarray = kinematics[0].to_value(u.km)
+    
+    v: np.ndarray = kinematics[1].to_value(u.km / u.s)
+    
+    a: np.ndarray = kinematics[2].to_value(u.km / u.s**2)
+    
+    o: np.ndarray = kinematics[3].to_value(u.deg / u.s)
+    
+    x, y, z = rm.RelativeMotion.simulate_lvlh_kinematics(attractor=attractor, oe_target=oe_target, oe_chaser=oe_chaser)
+    
+    result: schema.LvlhKinematicsOutModelInfo = schema.LvlhKinematicsOutModelInfo(
+        position = schema.Vector3D(x=r[0], y=r[1], z=r[2]),
+        velocity = schema.Vector3D(x=v[0], y=v[1], z=v[2]),
+        acceleration = schema.Vector3D(x=a[0], y=a[1], z=a[2]),
+        angularVelocity = schema.Vector3D(x=o[0], y=o[1], z=o[2]),
+        x = x,
+        y = y,
+        z = z
+    )
+    
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/geocentric-equatorial-kinematics", response_model=schema.GeocentricEquatorialKinematicsOutModelInfo)
+async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorialKinematicsInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Geocentric Equatorial Kinematics
+    
+    Args:
+        data (schema.GeocentricEquatorialKinematicsInModelInfo): Attractor, orbital elements of target, and chaser lvlh
+        
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+    
+    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(
+        h = data.orbitalElementsTarget.sam * u.km**2 / u.s,
+        a = data.orbitalElementsTarget.sma * u.km,
+        ecc = data.orbitalElementsTarget.ecc * u.one,
+        inc = data.orbitalElementsTarget.inc * u.deg,
+        raan = data.orbitalElementsTarget.raan * u.deg,
+        argp = data.orbitalElementsTarget.aop * u.deg,
+        nu = data.orbitalElementsTarget.ta * u.deg
+    )
+    
+    r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+    
+    r_rel_lvlh: u.Quantity = np.array([data.lvlhPosition.x, data.lvlhPosition.y, data.lvlhPosition.z]) * u.km
+    
+    v_rel_lvlh: u.Quantity = np.array([data.lvlhVelocity.x, data.lvlhVelocity.y, data.lvlhVelocity.z]) * u.km / u.s
+    
+    kinematics = rm.RelativeMotion.geocentric_equatorial_kinematics(r_target=r_target,
+                                                                    v_target=v_target,
+                                                                    r_rel_lvlh=r_rel_lvlh,
+                                                                    v_rel_lvlh=v_rel_lvlh)
+    
+    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=kinematics[0], v=kinematics[1])
+    
+    result: schema.GeocentricEquatorialKinematicsOutModelInfo = schema.GeocentricEquatorialKinematicsOutModelInfo(
+        orbitalElementsChaser=schema.OrbitalElements(
+            sam=oe_chaser.h.to_value(u.km**2 / u.s),
+            sma=oe_chaser.a.to_value(u.km),
+            ecc=oe_chaser.ecc.to_value(u.dimensionless_unscaled),
+            inc=oe_chaser.inc.to_value(u.deg),
+            raan=oe_chaser.raan.to_value(u.deg),
+            aop=oe_chaser.argp.to_value(u.deg),
+            ta=oe_chaser.nu.to_value(u.deg)
+        )
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

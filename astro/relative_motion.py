@@ -213,13 +213,13 @@ class RelativeMotion():
         return [r_chaser * u.km, v_chaser * u.km / u.s]
     
     @staticmethod
-    def show_lvlh_kinematics(attractor: bd.Attractor,
-                             oe_target: o3d.OrbitalElements,
-                             oe_chaser: o3d.OrbitalElements,
-                             target_period_multiplier: int = 60,
-                             points_number: int = 1000) -> None:
+    def simulate_lvlh_kinematics(attractor: bd.Attractor,
+                                 oe_target: o3d.OrbitalElements,
+                                 oe_chaser: o3d.OrbitalElements,
+                                 target_period_multiplier: int = 60,
+                                 points_number: int = 1000) -> list:
         """
-        Fill the points for the motion of the Target w.r.t. the Chaser in the LVLH frame
+        Simulate the motion of the Target w.r.t. the Chaser in the LVLH frame
 
         Args:
             r_T (np.ndarray): Target position vector
@@ -312,15 +312,9 @@ class RelativeMotion():
             
             oe_chaser = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r_chaser, v=v_chaser)
         
-        # >>> 6. Plot
+        # >>> 6. Result
         
-        fig = plt.figure()
-        
-        fig.subplots_adjust(top=1.1, bottom=-0.1)
-        
-        ax = plt.axes(projection='3d')
-        
-        ax.plot(x, y, z)
+        return [x, y, z]
     
     @staticmethod
     def clohessy_wiltshire_matrices(n: u.Quantity, t: u.Quantity) -> list:
@@ -472,7 +466,9 @@ class RelativeMotion():
     def init(self,
              attractor: bd.Attractor,
              r: u.Quantity,
-             v: u.Quantity) -> None:
+             v: u.Quantity,
+             dr: u.Quantity,
+             dv: u.Quantity) -> None:
         """
         Initialize the parameters for the propagation
 
@@ -486,12 +482,18 @@ class RelativeMotion():
         
         cm.check_position_vector(r.to_value(u.km))
         
+        cm.check_position_vector(dr.to_value(u.km))
+        
         cm.check_velocity_vector(v.to_value(u.km / u.s))
+        
+        cm.check_velocity_vector(dv.to_value(u.km / u.s))
         
         self.ready      = True
         self.attractor  = bd.BODIES[attractor]
         self.r          = r.to(u.km).to_value()
         self.v          = v.to(u.km / u.s).to_value()
+        self.dr         = dr.to(u.km).to_value()
+        self.dv         = dv.to(u.km / u.s).to_value()
     
     def propagate_for(self, delta: time.TimeDelta) -> Result:
         """Propagate the linearized relative motion in the LVLH frame for delta time
@@ -511,7 +513,7 @@ class RelativeMotion():
         
         solution: dict = ode.solve_ivp(fun=self._linearized_equations_relative_motion,
                                        t_span=[0, delta.to(u.s).to_value()],
-                                       y0=np.concat([self.r, self.v]),
+                                       y0=np.concat([self.dr, self.dv, self.r, self.v]),
                                        method='RK45',
                                        args=(),
                                        rtol=1e-8,
@@ -573,27 +575,3 @@ class RelativeMotion():
         dx_dt[11] = - (mu / R**3) * z
         
         return dx_dt
-
-if __name__ == '__main__':
-    
-    """EXAMPLE 7.2"""
-    
-    attractor: bd.Attractor = bd.Attractor.EARTH
-    
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(h=52059 * u.km**2 / u.s,
-                                                         ecc=0.025724 * u.dimensionless_unscaled,
-                                                         inc=60 * u.deg,
-                                                         raan=40 * u.deg,
-                                                         argp=30 * u.deg,
-                                                         nu=40 * u.deg)
-    
-    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(h=52362 * u.km**2 / u.s,
-                                                         ecc=0.0072696 * u.dimensionless_unscaled,
-                                                         inc=50 * u.deg,
-                                                         raan=40 * u.deg,
-                                                         argp=120 * u.deg,
-                                                         nu=40 * u.deg)
-    
-    RelativeMotion.show_lvlh_kinematics(attractor=attractor, oe_target=oe_target, oe_chaser=oe_chaser)
-    
-    plt.show()

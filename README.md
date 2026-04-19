@@ -26,6 +26,8 @@ Spacecraft Dynamics Lab is an Electron desktop application to simulate spacecraf
 
 ➡️ [ORBITAL MANEUVERS](docs/github/orbital-maneuvers.md)
 
+➡️ [RELATIVE MOTION](docs/github/relative-motion.md)
+
 ➡️ [INTERPLANETARY](docs/github/interplanetary.md)
 
 ## 🖼️ Images

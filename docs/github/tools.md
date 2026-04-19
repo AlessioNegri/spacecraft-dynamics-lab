@@ -210,3 +210,52 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
 
   <img src="../images/tools-page/gauss-method.png" width="30%" alt="image">
 </div>
+
+## 🎯 Relative Motion
+
+The `Relative Motion` dialogs furnishes different utilities to convert between Local Vertical Local Horizontal and
+Geocentric Equatorial frames.
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>LVLH Kinematics</h3>
+    <p style="text-align: justify;">
+      Given the state vectors of the <strong>target spacecraft</strong> and of the <strong>chaser spacecraft</strong>,
+      find the position, velocity, and acceleration of Chaser relative to Target along the
+      <strong>Local Vertical Local Horizontal</strong> (LVLH) axes attached to the Target.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/lvlh-kinematics.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>LVLH Kinematics</h3>
+    <p style="text-align: justify;">
+      Given the state vectors of the <strong>target spacecraft</strong> and the state vector of the <strong>chaser
+      spacecraft</strong> relative to Target along the <strong>Local Vertical Local Horizontal</strong> (LVLH) axes
+      attached to the Target, find the position and velocity of Chaser in the Geocentric Equatorial frame.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/geocentric-equatorial-kinematics.png" width="30%" alt="image">
+</div>

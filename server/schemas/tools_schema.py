@@ -1,5 +1,6 @@
 import fastapi
 import pydantic
+import typing
 
 from schemas.common import Vector3D, OrbitalElements
 
@@ -133,3 +134,32 @@ class GaussMethodOutModelInfo(pydantic.BaseModel):
     position: Vector3D
     velocity: Vector3D
     oe: OrbitalElements
+
+# * Relative Motion
+
+class LvlhKinematicsInModelInfo(pydantic.BaseModel):
+    
+    attractor: str
+    orbitalElementsTarget: OrbitalElements
+    orbitalElementsChaser: OrbitalElements
+
+class LvlhKinematicsOutModelInfo(pydantic.BaseModel):
+    
+    position: Vector3D
+    velocity: Vector3D
+    acceleration: Vector3D
+    angularVelocity: Vector3D
+    x: typing.List[float]
+    y: typing.List[float]
+    z: typing.List[float]
+
+class GeocentricEquatorialKinematicsInModelInfo(pydantic.BaseModel):
+    
+    attractor: str
+    orbitalElementsTarget: OrbitalElements
+    lvlhPosition: Vector3D
+    lvlhVelocity: Vector3D
+
+class GeocentricEquatorialKinematicsOutModelInfo(pydantic.BaseModel):
+    
+    orbitalElementsChaser: OrbitalElements

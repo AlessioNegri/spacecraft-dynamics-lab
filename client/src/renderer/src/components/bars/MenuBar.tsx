@@ -16,6 +16,9 @@ import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/Topocen
 import AngleRangeDialog from "../dialogs/tools/orbit_determination/AngleRangeDialog"
 import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
 
+import LvlhKinematicsDialog from "../dialogs/tools/relative_motion/LvlhKinematicsDialog"
+import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_motion/GeocentricEquatorialKinematicsDialog"
+
 import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
@@ -34,7 +37,10 @@ const DIALOGS =
     julianDayDialog: JulianDayDialog,
     topocentricFrameDialog: TopocentricFrameDialog,
     angleRangeDialog: AngleRangeDialog,
-    gaussMethodDialog: GaussMethodDialog
+    gaussMethodDialog: GaussMethodDialog,
+
+    lvlhKinematicsDialog: LvlhKinematicsDialog,
+    geocentricEquatorialKinematicsDialog: GeocentricEquatorialKinematicsDialog
 } as const
 
 /** @function MenuBar */
@@ -105,6 +111,14 @@ export default function MenuBar(): react.JSX.Element
                 { label: "Topocentric Frame", action: () => setOpenDialog("topocentricFrameDialog") },
                 { label: "Angle Range", action: () => setOpenDialog("angleRangeDialog") },
                 { label: "Gauss Method", action: () => setOpenDialog("gaussMethodDialog") }
+            ]
+        },
+        {
+            label: "Relative Motion",
+            children:
+            [
+                { label: "LVLH Kinematics", action: () => setOpenDialog("lvlhKinematicsDialog") },
+                { label: "Geocentric Equatorial Kinematics", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") }
             ]
         }
     ]
