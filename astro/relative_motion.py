@@ -14,7 +14,6 @@ __maintainer__  = "Alessio Negri"
 
 import astropy.time as time
 import astropy.units as u
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as ode
 import typing

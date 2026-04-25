@@ -24,8 +24,7 @@ import typing
 
 import astro.bodies as bodies
 import astro.common as common
-
-from astro.orbital_maneuvers import RocketMotor
+import astro.orbital_maneuvers as om
 
 class Result:
     """Result of integration
@@ -259,12 +258,12 @@ class Orbit:
         self.nu         = nu.to_value(u.deg)
         self.epoch      = epoch
         
-    def propagate_until(self, end_epoch: time.Time, rocket_motor: RocketMotor = None) -> Result:
+    def propagate_until(self, end_epoch: time.Time, rocket_motor: om.RocketMotor = None) -> Result:
         """Propagate the orbit until end_epoch
 
         Args:
             end_epoch (time.Time): End epoch for propagation
-            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            rocket_motor (om.RocketMotor, optional): Rocket motor for thrust. Defaults to None.
 
         Returns:
             Result: Integration result
@@ -329,12 +328,12 @@ class Orbit:
         
         return result
     
-    def propagate_for(self, delta: time.TimeDelta, rocket_motor: RocketMotor = None) -> Result:
+    def propagate_for(self, delta: time.TimeDelta, rocket_motor: om.RocketMotor = None) -> Result:
         """Propagate the orbit for delta time
 
         Args:
             delta (time.TimeDelta): Delta time for propagation
-            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            rocket_motor (om.RocketMotor, optional): Rocket motor for thrust. Defaults to None.
 
         Returns:
             Result: Integration result

@@ -1,4 +1,5 @@
 import astropy.time as time
+import astropy.units as u
 import numpy as np
 
 import astro.bodies as bodies
@@ -111,7 +112,7 @@ def check_keplerian_parameters(a: float | int,
     
     if ecc < 0: raise ValueError("'e' must be positive")
     
-    if not (0 <= inc <= 180): raise ValueError("'inc' must be in [0, 180] deg")
+    if not (-90 <= inc <= 180): raise ValueError("'inc' must be in [-90, 180] deg")
     
     if not (0 <= raan <= 360): raise ValueError("'raan' must be in [0, 360] deg")
     
@@ -134,19 +135,28 @@ def check_angle(angle: float | int) -> None:
     
     if not (-360 <= angle <= 360): raise ValueError("'angle' must be in [-360, +360] deg")
 
-def wrap_angle(angle: float | int, low: float | int = 0, high: float | int = 360) -> float:
+def wrap_angle(angle: float | int | u.Quantity, low: float | int = 0, high: float | int = 360) -> float | u.Quantity:
     """Wrap the angle in the range [low, high) deg
 
     Args:
+        angle (float | int | u.Quantity): Angle to wrap [deg]
         low (float | int): Lower bound of the range [deg]
         high (float | int): Upper bound of the range [deg]
 
     Returns:
-        float: Wrapped angle [deg]
+        float | u.Quantity: Wrapped angle [deg]
     """
     
-    if not isinstance(angle, (float, int)): raise TypeError("'angle' must be of type 'float' or 'int'")
+    if not isinstance(angle, (float, int, u.Quantity)): raise TypeError("'angle' must be of type 'float', 'int', or 'astropy.units.Quantity'")
     
-    wrapped_angle: float = ((angle - low) % (high - low)) + low
+    if isinstance(angle, u.Quantity):
+        
+        angle = angle.to_value(u.deg)
+        
+        wrapped_angle: u.Quantity = (((angle - low) % (high - low)) + low) * u.deg
+    
+    else:
+        
+        wrapped_angle: float = ((angle - low) % (high - low)) + low
     
     return wrapped_angle
