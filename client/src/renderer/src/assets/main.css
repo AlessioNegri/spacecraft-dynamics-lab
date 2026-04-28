@@ -62,9 +62,11 @@ input[type="number"] {
 
 /** Color of calendar in input */
 
+/*
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1); /* makes icon white */
+  filter: invert(1);
 }
+*/
 
 /** Fonts */
 

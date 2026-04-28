@@ -259,3 +259,67 @@ Geocentric Equatorial frames.
 
   <img src="../images/tools-page/geocentric-equatorial-kinematics.png" width="30%" alt="image">
 </div>
+
+## 🎯 Interplanetary Trajectory
+
+The `Interplanetary Trajectory` dialogs furnishes different utilities used in interplanetary mission design and analysis, under the assumption of circular, coplanar orbits.
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Synodic Period</h3>
+    <p style="text-align: justify;">
+      The synodic period is the time interval between two successive conjunctions or oppositions of two celestial bodies. It is assumed that the planetary orbits are circular to simplify the calculations.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/synodic-period.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Sphere Of Influence</h3>
+    <p style="text-align: justify;">
+      The sphere of influence is the region around a celestial body where its gravitational field dominates over the gravitational field of other bodies.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/sphere-of-influence.png" width="30%" alt="image">
+</div>
+
+<div style="width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid white;">
+
+  <div>
+    <h3>Transfer</h3>
+    <p style="text-align: justify;">
+      With the assumption of circular coplanar planetary orbits, the users can compute the departure, rendezvous (with optimal periapse radius), and flyby parameters for interplanetary trajectories.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/transfer.png" width="30%" alt="image">
+</div>

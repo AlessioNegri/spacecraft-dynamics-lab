@@ -35,3 +35,7 @@ Spacecraft Dynamics Lab is an Electron desktop application to simulate spacecraf
 <p align="center">
   <img src="./docs/images/orbit.png" width="100%" alt="orbit">
 </p>
+
+<p align="center">
+  <img src="./docs/images/pork-chop.png" width="100%" alt="pork-chop">
+</p>

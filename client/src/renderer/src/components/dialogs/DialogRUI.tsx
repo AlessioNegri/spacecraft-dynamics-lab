@@ -110,7 +110,7 @@ function Popup(props: Readonly<PopupProps>): react.JSX.Element {
                     side="bottom"
                     align="end"
                     className="w-100 bg-neutral-900 border border-blue-400/50 rounded-lg p-4 text-justify
-                                shadow-[0_0_20px_rgba(0,0,0,0.4)] text-sm text-neutral-200 leading-relaxed"
+                                shadow-[0_0_20px_rgba(0,0,0,0.4)] text-sm text-neutral-200 leading-relaxed select-text"
                 >
 
                     <div className="space-y-2">

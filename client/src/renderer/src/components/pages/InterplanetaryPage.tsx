@@ -17,6 +17,12 @@ export default function InterplanetaryPage()
 
     const [selected, setSelected] = react.useState<ISelectionInfo | null>(null)
 
+    const [departureBody, setDepartureBody] = react.useState<string>("")
+
+    const [flybyBody, setFlybyBody] = react.useState<string>("")
+
+    const [arrivalBody, setArrivalBody] = react.useState<string>("")
+
     const [hideLeftBar, setHideLeftBar] = react.useState<boolean>(false)
 
     const [hideRightBar, setHideRightBar] = react.useState<boolean>(false)
@@ -136,7 +142,14 @@ export default function InterplanetaryPage()
 
                 <div className={`${hideLeftBar ? "w-18" : "w-80"} border-r border-neutral-700 p-4 overflow-y-auto`}>
 
-                    <InterplanetaryLeftBar onHide={(hide: boolean) => setHideLeftBar(hide)} />
+                    <InterplanetaryLeftBar
+                        onBodies={(departure: string, flyby: string, arrival: string) =>
+                        {
+                            setDepartureBody(departure)
+                            setFlybyBody(flyby)
+                            setArrivalBody(arrival)
+                        }}
+                        onHide={(hide: boolean) => setHideLeftBar(hide)} />
 
                 </div>
 
@@ -152,7 +165,13 @@ export default function InterplanetaryPage()
 
                 <div className={`${hideRightBar ? "w-18" : "w-80"} border-l border-neutral-700 p-4 overflow-y-auto`}>
 
-                    <InterplanetaryRightBar info={selected} onHide={(hide: boolean) => setHideRightBar(hide)} />
+                    <InterplanetaryRightBar
+                        departureBody={departureBody.toLocaleUpperCase()}
+                        flybyBody={flybyBody.toLocaleUpperCase()}
+                        arrivalBody={arrivalBody.toLocaleUpperCase()}
+                        info={selected}
+                        onHide={(hide: boolean) => setHideRightBar(hide)}
+                    />
 
                 </div>
 

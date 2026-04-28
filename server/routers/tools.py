@@ -9,6 +9,7 @@ import astro.two_body_problem as tbp
 import astro.orbit_3d as o3d
 import astro.orbit_determination as od
 import astro.relative_motion as rm
+import astro.interplanetary_trajectories as it
 
 # --- HTTP ---
 
@@ -523,4 +524,97 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
         )
     )
     
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+# ? Interplanetary Trajectory
+
+@router.put("/synodic-period", response_model=schema.SynodicPeriodOutModelInfo)
+async def put_synodic_period(data: schema.SynodicPeriodInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Synodic Period calculation
+
+    Args:
+        data (schema.SynodicPeriodInModelInfo): Departure and arrival planets
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    departure_planet: bodies.Attractor = bodies.Attractor(data.departurePlanet.lower())
+    
+    arrival_planet: bodies.Attractor = bodies.Attractor(data.arrivalPlanet.lower())
+    
+    synodic_period: u.Quantity = it.InterplanetaryTrajectories.synodic_period(departure_planet=departure_planet,
+                                                                              arrival_planet=arrival_planet)
+
+    phi_0, phi_f, wait_time = it.InterplanetaryTrajectories.wait_time(departure_planet=departure_planet,
+                                                                      arrival_planet=arrival_planet)
+
+    result: schema.SynodicPeriodOutModelInfo = schema.SynodicPeriodOutModelInfo(
+        synodicPeriod=synodic_period.to_value(u.day),
+        initialPhaseAngle=phi_0.to_value(u.deg),
+        finalPhaseAngle=phi_f.to_value(u.deg),
+        waitTime=wait_time.to_value(u.day)
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/sphere-of-influence", response_model=schema.SphereOfInfluenceOutModelInfo)
+async def put_sphere_of_influence(data: schema.SphereOfInfluenceInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Sphere of Influence calculation
+
+    Args:
+        data (schema.SphereOfInfluenceInModelInfo): Main attractor and body
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    main_attractor: bodies.Attractor = bodies.Attractor(data.mainAttractor.lower())
+
+    body: bodies.Attractor = bodies.Attractor(data.body.lower())
+
+    sphere_of_influence: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=body,
+                                                                                        main_attractor=main_attractor)
+
+    result: schema.SphereOfInfluenceOutModelInfo = schema.SphereOfInfluenceOutModelInfo(
+        sphereOfInfluence=sphere_of_influence.to_value(u.km)
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/transfer", response_model=schema.TransferOutModelInfo)
+async def put_transfer(data: schema.TransferInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Simple transfer calculation using Hohmann transfer as approximation
+
+    Args:
+        data (schema.TransferInModelInfo): Transfer parameters
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    departure_planet: bodies.Attractor = bodies.Attractor(data.departurePlanet.lower())
+
+    arrival_planet: bodies.Attractor = bodies.Attractor(data.arrivalPlanet.lower())
+    
+    departure_parking_orbit_radius: u.Quantity = bodies.BODIES[bodies.Attractor(data.departurePlanet)].R_E + data.departureParkingOrbitHeight * u.km
+
+    dv_departure, hyperbola_departure = it.InterplanetaryTrajectories.departure(departure_planet=departure_planet,
+                                                                                arrival_planet=arrival_planet,
+                                                                                periapse_radius=departure_parking_orbit_radius)
+
+
+    dv, hyperbola_arrival, _ = it.InterplanetaryTrajectories.rendezvous(departure_planet=departure_planet,
+                                                                        arrival_planet=arrival_planet,
+                                                                        orbit_period=data.arrivalOrbitalPeriod * u.hour)
+    
+    result: schema.TransferOutModelInfo = schema.TransferOutModelInfo(
+        departureDeltaV=dv_departure.to_value(u.km / u.s),
+        departureHyperbolaEccentricity=hyperbola_departure.eccentricity.to_value(),
+        departureHyperbolaAsymptoteAngle=hyperbola_departure.asymptote_angle.to_value(u.deg),
+        arrivalDeltaV=dv.to_value(u.km / u.s),
+        arrivalHyperbolaEccentricity=hyperbola_arrival.eccentricity.to_value(),
+        arrivalHyperbolaAsymptoteAngle=hyperbola_arrival.asymptote_angle.to_value(u.deg)
+    )
+
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

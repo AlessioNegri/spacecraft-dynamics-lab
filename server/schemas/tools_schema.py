@@ -163,3 +163,42 @@ class GeocentricEquatorialKinematicsInModelInfo(pydantic.BaseModel):
 class GeocentricEquatorialKinematicsOutModelInfo(pydantic.BaseModel):
     
     orbitalElementsChaser: OrbitalElements
+
+# * Interplanetary Trajectory
+
+class SynodicPeriodInModelInfo(pydantic.BaseModel):
+    
+    departurePlanet: str
+    arrivalPlanet: str
+    
+class SynodicPeriodOutModelInfo(pydantic.BaseModel):
+    
+    synodicPeriod: float
+    initialPhaseAngle: float
+    finalPhaseAngle: float
+    waitTime: float
+
+class SphereOfInfluenceInModelInfo(pydantic.BaseModel):
+    
+    mainAttractor: str
+    body: str
+
+class SphereOfInfluenceOutModelInfo(pydantic.BaseModel):
+    
+    sphereOfInfluence: float
+
+class TransferInModelInfo(pydantic.BaseModel):
+    
+    departurePlanet: str
+    arrivalPlanet: str
+    departureParkingOrbitHeight: float
+    arrivalOrbitalPeriod: float
+
+class TransferOutModelInfo(pydantic.BaseModel):
+    
+    departureDeltaV: float
+    departureHyperbolaEccentricity: float
+    departureHyperbolaAsymptoteAngle: float
+    arrivalDeltaV: float
+    arrivalHyperbolaEccentricity: float
+    arrivalHyperbolaAsymptoteAngle: float

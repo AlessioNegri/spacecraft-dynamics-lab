@@ -19,6 +19,10 @@ import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
 import LvlhKinematicsDialog from "../dialogs/tools/relative_motion/LvlhKinematicsDialog"
 import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_motion/GeocentricEquatorialKinematicsDialog"
 
+import SynodicPeriodDialog from "../dialogs/tools/interplanetary_trajectory/SynodicPeriodDialog"
+import SphereOfInfluenceDialog from "../dialogs/tools/interplanetary_trajectory/SphereOfInfluenceDialog"
+import TransferDialog from "../dialogs/tools/interplanetary_trajectory/TransferDialog"
+
 import Shortcut from "../Shortcut"
 
 import logo from "../../assets/SDL.png"
@@ -40,7 +44,10 @@ const DIALOGS =
     gaussMethodDialog: GaussMethodDialog,
 
     lvlhKinematicsDialog: LvlhKinematicsDialog,
-    geocentricEquatorialKinematicsDialog: GeocentricEquatorialKinematicsDialog
+    geocentricEquatorialKinematicsDialog: GeocentricEquatorialKinematicsDialog,
+    synodicPeriodDialog: SynodicPeriodDialog,
+    sphereOfInfluenceDialog: SphereOfInfluenceDialog,
+    transferDialog: TransferDialog
 } as const
 
 /** @function MenuBar */
@@ -119,6 +126,15 @@ export default function MenuBar(): react.JSX.Element
             [
                 { label: "LVLH Kinematics", action: () => setOpenDialog("lvlhKinematicsDialog") },
                 { label: "Geocentric Equatorial Kinematics", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") }
+            ]
+        },
+        {
+            label: "Interplanetary Trajectory",
+            children:
+            [
+                { label: "Synodic Period", action: () => setOpenDialog("synodicPeriodDialog") },
+                { label: "Sphere of Influence", action: () => setOpenDialog("sphereOfInfluenceDialog") },
+                { label: "Transfer", action: () => setOpenDialog("transferDialog") }
             ]
         }
     ]

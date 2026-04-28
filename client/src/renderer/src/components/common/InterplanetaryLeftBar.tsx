@@ -1,13 +1,13 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
+import * as form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
 
 import Tooltip from "../Tooltip"
 import FormSection from "../dialogs/FormSection"
-import FormInput from "../dialogs/FormInput"
-import FormSelect from "../dialogs/FormSelect"
 import FormButton from "../dialogs/FormButton"
+import InputField from "../dialogs/InputField"
 
 const defaultMission: IInterplanetaryMissionForm =
 {
@@ -25,6 +25,7 @@ const defaultMission: IInterplanetaryMissionForm =
 
 interface InterplanetaryLeftBarProps
 {
+    onBodies: (departure: string, flyby: string, arrival: string) => void
     onHide: (hide: boolean) => void
 }
 
@@ -35,7 +36,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
     const [hide, setHide] = react.useState<boolean>(false)
     
-    const [form, setForm] = react.useState<IInterplanetaryMissionForm>(defaultMission)
+    const [formIn, setFormIn] = react.useState<IInterplanetaryMissionForm>(defaultMission)
 
     const [errors, setErrors] = react.useState<Record<string, string>>({})
 
@@ -60,47 +61,40 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
     
     // --- HANDLE ---
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     {
         const { name, value } = e.target
 
-        setForm({ ...form, [name]: value })
-    }
-
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    {
-        const { name, value } = e.target
-
-        setForm({ ...form, [name]: value })
+        setFormIn({ ...formIn, [name]: value })
     }
 
     const validate = () =>
     {
         const newErrors: Record<string, string> = {}
 
-        if (form.departureBody === form.arrivalBody)    newErrors.bodies = "Choose different bodies"
-        if (form.flybyBody === form.departureBody)      newErrors.bodies = "Choose different bodies"
-        if (form.flybyBody === form.arrivalBody)        newErrors.bodies = "Choose different bodies"
+        if (formIn.departureBody === formIn.arrivalBody)    newErrors.bodies = "Choose different bodies"
+        if (formIn.flybyBody === formIn.departureBody)      newErrors.bodies = "Choose different bodies"
+        if (formIn.flybyBody === formIn.arrivalBody)        newErrors.bodies = "Choose different bodies"
 
-        if (!form.launchWindowStart)    newErrors.windows = "Choose valid launch start window"
-        if (!form.launchWindowEnd)      newErrors.windows = "Choose valid launch end window"
-        if (!form.flybyWindowStart)     newErrors.windows = "Choose valid launch start window"
-        if (!form.flybyWindowEnd)       newErrors.windows = "Choose valid launch end window"
-        if (!form.arrivalWindowStart)   newErrors.windows = "Choose valid arrival start window"
-        if (!form.arrivalWindowEnd)     newErrors.windows = "Choose valid arrival end window"
+        if (!formIn.launchWindowStart)    newErrors.windows = "Choose valid launch start window"
+        if (!formIn.launchWindowEnd)      newErrors.windows = "Choose valid launch end window"
+        if (!formIn.flybyWindowStart)     newErrors.windows = "Choose valid launch start window"
+        if (!formIn.flybyWindowEnd)       newErrors.windows = "Choose valid launch end window"
+        if (!formIn.arrivalWindowStart)   newErrors.windows = "Choose valid arrival start window"
+        if (!formIn.arrivalWindowEnd)     newErrors.windows = "Choose valid arrival end window"
 
-        if (form.launchWindowStart >= form.launchWindowEnd)     newErrors.windows = "Launch window start < launch window end"
-        if (form.arrivalWindowStart >= form.arrivalWindowEnd)   newErrors.windows = "Arrival window start < arrival window end"
-        if (form.launchWindowStart >= form.arrivalWindowStart)  newErrors.windows = "Launch window start < arrival window start"
+        if (formIn.launchWindowStart >= formIn.launchWindowEnd)     newErrors.windows = "Launch window start < launch window end"
+        if (formIn.arrivalWindowStart >= formIn.arrivalWindowEnd)   newErrors.windows = "Arrival window start < arrival window end"
+        if (formIn.launchWindowStart >= formIn.arrivalWindowStart)  newErrors.windows = "Launch window start < arrival window start"
         
-        if (form.flybyBody !== "")
+        if (formIn.flybyBody !== "")
         {
-            if (form.flybyWindowStart >= form.flybyWindowEnd)       newErrors.windows = "Flyby window start < flyby window end"
-            if (form.flybyWindowStart >= form.arrivalWindowStart)   newErrors.windows = "Flyby window start < arrival window start"
-            if (form.launchWindowStart >= form.flybyWindowStart)    newErrors.windows = "Launch window start < flyby window start"
+            if (formIn.flybyWindowStart >= formIn.flybyWindowEnd)       newErrors.windows = "Flyby window start < flyby window end"
+            if (formIn.flybyWindowStart >= formIn.arrivalWindowStart)   newErrors.windows = "Flyby window start < arrival window start"
+            if (formIn.launchWindowStart >= formIn.flybyWindowStart)    newErrors.windows = "Launch window start < flyby window start"
         }
 
-        if (form.gridSize < 1 || form.gridSize > 200) newErrors.resolution = "Grid size must be between 1 and 200"
+        if (formIn.gridSize < 1 || formIn.gridSize > 200) newErrors.resolution = "Grid size must be between 1 and 200"
 
         setErrors(newErrors)
 
@@ -113,9 +107,11 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
         if (!validate()) return
 
+        props.onBodies(formIn.departureBody, formIn.flybyBody, formIn.arrivalBody)
+
         try
         {
-            let response: any = await http.api.post(`/interplanetary/run`, form)
+            let response: any = await http.api.post(`/interplanetary/run`, formIn)
 
             globalThis.window.api.info(`[${import.meta.url}] ${JSON.stringify(response.data)}`)
         }
@@ -162,64 +158,67 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
             </Tooltip>
 
         {
-            !hide && (<>
+            !hide && (<form.Root className="space-y-6">
 
             {/* Mission Section */}
 
             <FormSection title="Mission">
 
-                <FormSelect
+                <InputField
                     label="Departure Body"
                     name="departureBody"
-                    value={form.departureBody}
-                    setValue={handleSelectChange}
+                    type="select"
+                    value={formIn.departureBody}
+                    onChange={handleChange}
                     options={
                         [
-                            { name: "Mercury", value: "mercury" },
-                            { name: "Venus", value: "venus" },
-                            { name: "Earth", value: "earth" },
-                            { name: "Mars", value: "mars" },
-                            { name: "Jupiter", value: "jupiter" },
-                            { name: "Saturn", value: "saturn" },
-                            { name: "Uranus", value: "uranus" },
-                            { name: "Neptune", value: "neptune" }
+                            { label: "Mercury", value: "mercury" },
+                            { label: "Venus", value: "venus" },
+                            { label: "Earth", value: "earth" },
+                            { label: "Mars", value: "mars" },
+                            { label: "Jupiter", value: "jupiter" },
+                            { label: "Saturn", value: "saturn" },
+                            { label: "Uranus", value: "uranus" },
+                            { label: "Neptune", value: "neptune" }
                         ]}
                 />
 
-                <FormSelect
+                <InputField
                     label="Flyby Body"
                     name="flybyBody"
-                    value={form.flybyBody}
-                    setValue={handleSelectChange}
+                    type="select"
+                    value={formIn.flybyBody}
+                    onChange={handleChange}
                     options={
                         [
-                            { name: "None", value: "" },
-                            { name: "Mercury", value: "mercury" },
-                            { name: "Venus", value: "venus" },
-                            { name: "Earth", value: "earth" },
-                            { name: "Mars", value: "mars" },
-                            { name: "Jupiter", value: "jupiter" },
-                            { name: "Saturn", value: "saturn" },
-                            { name: "Uranus", value: "uranus" },
-                            { name: "Neptune", value: "neptune" }
+                            { label: "None", value: "" },
+                            { label: "Mercury", value: "mercury" },
+                            { label: "Venus", value: "venus" },
+                            { label: "Earth", value: "earth" },
+                            { label: "Mars", value: "mars" },
+                            { label: "Jupiter", value: "jupiter" },
+                            { label: "Saturn", value: "saturn" },
+                            { label: "Uranus", value: "uranus" },
+                            { label: "Neptune", value: "neptune" }
                         ]}
                 />
 
-                <FormSelect
+                <InputField
                     label="Arrival Body"
                     name="arrivalBody"
-                    value={form.arrivalBody}
-                    setValue={handleSelectChange}
+                    type="select"
+                    value={formIn.arrivalBody}
+                    onChange={handleChange}
                     options={
                         [
-                            { name: "Mercury", value: "mercury" },
-                            { name: "Venus", value: "venus" },
-                            { name: "Earth", value: "earth" },
-                            { name: "Mars", value: "mars" },
-                            { name: "Jupiter", value: "jupiter" },
-                            { name: "Saturn", value: "saturn" },
-                            { name: "Uranus", value: "uranus" },
-                            { name: "Neptune", value: "neptune" }
+                            { label: "Mercury", value: "mercury" },
+                            { label: "Venus", value: "venus" },
+                            { label: "Earth", value: "earth" },
+                            { label: "Mars", value: "mars" },
+                            { label: "Jupiter", value: "jupiter" },
+                            { label: "Saturn", value: "saturn" },
+                            { label: "Uranus", value: "uranus" },
+                            { label: "Neptune", value: "neptune" }
                         ]}
                 />
 
@@ -233,60 +232,60 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
             <FormSection title="Date Ranges">
 
-                <FormInput
+                <InputField
                     label="Launch Window Start"
                     type="date"
                     name="launchWindowStart"
-                    value={form.launchWindowStart}
-                    setValue={handleInputChange}
+                    value={formIn.launchWindowStart}
+                    onChange={handleChange}
                 />
 
-                <FormInput
+                <InputField
                     label="Launch Window End"
                     type="date"
                     name="launchWindowEnd"
-                    value={form.launchWindowEnd}
-                    setValue={handleInputChange}
+                    value={formIn.launchWindowEnd}
+                    onChange={handleChange}
                 />
 
                 {
-                    form.flybyBody !== "" &&
+                    formIn.flybyBody !== "" &&
                     
                     <>
 
-                        <FormInput
+                        <InputField
                             label="Flyby Window Start"
                             type="date"
                             name="flybyWindowStart"
-                            value={form.flybyWindowStart}
-                            setValue={handleInputChange}
+                            value={formIn.flybyWindowStart}
+                            onChange={handleChange}
                         />
 
-                        <FormInput
+                        <InputField
                             label="Flyby Window End"
                             type="date"
                             name="flybyWindowEnd"
-                            value={form.flybyWindowEnd}
-                            setValue={handleInputChange}
+                            value={formIn.flybyWindowEnd}
+                            onChange={handleChange}
                         />
 
                     </>
                 }
 
-                <FormInput
+                <InputField
                     label="Arrival Window Start"
                     type="date"
                     name="arrivalWindowStart"
-                    value={form.arrivalWindowStart}
-                    setValue={handleInputChange}
+                    value={formIn.arrivalWindowStart}
+                    onChange={handleChange}
                 />
 
-                <FormInput
+                <InputField
                     label="Arrival Window End"
                     type="date"
                     name="arrivalWindowEnd"
-                    value={form.arrivalWindowEnd}
-                    setValue={handleInputChange}
+                    value={formIn.arrivalWindowEnd}
+                    onChange={handleChange}
                 />
 
             {
@@ -299,14 +298,14 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
             <FormSection title="Resolution">
 
-                <FormInput
+                <InputField
                     label="Grid Size (days)"
                     type="number"
                     name="gridSize"
                     min={1}
                     max={200}
-                    value={form.gridSize}
-                    setValue={handleInputChange}
+                    value={formIn.gridSize}
+                    onChange={handleChange}
                 />
 
             {
@@ -325,7 +324,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
             </div>
 
-            </>)
+            </form.Root>)
         }
             
         </div>

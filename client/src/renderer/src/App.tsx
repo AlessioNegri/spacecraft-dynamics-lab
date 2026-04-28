@@ -2,6 +2,8 @@ import * as react from 'react'
 import * as themes from "@radix-ui/themes"
 import * as tooltip from "@radix-ui/react-tooltip"
 
+import "katex/dist/katex.min.css"
+
 import Shortcut from "./components/Shortcut"
 import MenuBar from './components/bars/MenuBar'
 import StatusBar from './components/bars/StatusBar'
