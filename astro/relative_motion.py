@@ -475,6 +475,8 @@ class RelativeMotion():
             attractor (bd.Attractor): Main attractor
             r (u.Quantity): Position vector
             v (u.Quantity): Velocity vector
+            dr (u.Quantity): Relative position vector
+            dv (u.Quantity): Relative velocity vector
         """
         
         cm.check_attractor(attractor)
@@ -504,7 +506,7 @@ class RelativeMotion():
             Result: Integration result
         """
         
-        if not self.ready: raise ValueError("Relative Mootion object is not ready")
+        if not self.ready: raise ValueError("Relative Motion object is not ready")
         
         cm.check_time_delta(delta)
         

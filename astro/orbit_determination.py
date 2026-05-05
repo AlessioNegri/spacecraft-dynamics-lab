@@ -36,6 +36,8 @@ class OrbitDetermination():
     """Orbit Determination
     """
     
+    J2000: int = 2_451_545
+    
     def __init__(self):
         """Constructor
         """
