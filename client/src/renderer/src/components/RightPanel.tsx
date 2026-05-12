@@ -7,6 +7,7 @@ import OrbitPage from "./pages/OrbitPage"
 import OrbitalManeuversPage from "./pages/OrbitalManeuversPage"
 import RelativeMotionPage from "./pages/RelativeMotionPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
+import OrbitalPerturbationsPage from "./pages/OrbitalPerturbationsPage"
 
 interface RightPanelProps
 {
@@ -77,6 +78,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
                 {props.activePage === "orbital-maneuvers" && <OrbitalManeuversPage/>}
                 {props.activePage === "relative-motion" && <RelativeMotionPage/>}
                 {props.activePage === "interplanetary" && <InterplanetaryPage/>}
+                {props.activePage === "orbital-perturbations" && <OrbitalPerturbationsPage/>}
                 {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
                 
             </div>

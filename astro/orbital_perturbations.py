@@ -38,6 +38,8 @@ class Result:
     v_y: u.Quantity
     v_z: u.Quantity
     oe: typing.List[o3d.OrbitalElements]
+    
+    not_ready_message: str = "Orbital Perturbations object is not ready"
 
 class OrbitalPerturbations():
     """Orbital Perturbations
@@ -394,7 +396,7 @@ class OrbitalPerturbations():
             Result: Integration result
         """
         
-        if not self.ready: raise ValueError("Orbital Perturbations object is not ready")
+        if not self.ready: raise ValueError(self.not_ready_message)
         
         cm.check_time_delta(delta)
         
@@ -405,8 +407,8 @@ class OrbitalPerturbations():
                                        y0=np.concat([self.r, self.v]),
                                        method='RK45',
                                        args=(),
-                                       rtol=1e-8,
-                                       atol=1e-8)
+                                       rtol=1e-10,
+                                       atol=1e-12)
         
         result.success = solution['success']
         result.t = solution['t'] * u.s
@@ -415,7 +417,7 @@ class OrbitalPerturbations():
         result.r_z = solution['y'][2, :] * u.km
         result.v_x = solution['y'][3, :] * u.km / u.s
         result.v_y = solution['y'][4, :] * u.km / u.s
-        result.v_z = solution['y'][5, :] * u.km / u.S
+        result.v_z = solution['y'][5, :] * u.km / u.s
         
         return result
     
@@ -430,7 +432,7 @@ class OrbitalPerturbations():
             Result: Integration result
         """
         
-        if not self.ready: raise ValueError("Orbital Perturbations object is not ready")
+        if not self.ready: raise ValueError(self.not_ready_message)
         
         cm.check_time_delta(delta)
         
@@ -513,7 +515,7 @@ class OrbitalPerturbations():
         result.r_z = np.array([sv[2] for sv in state_vector]) * u.km
         result.v_x = np.array([sv[3] for sv in state_vector]) * u.km / u.s
         result.v_y = np.array([sv[4] for sv in state_vector]) * u.km / u.s
-        result.v_z = np.array([sv[5] for sv in state_vector]) * u.km / u.S
+        result.v_z = np.array([sv[5] for sv in state_vector]) * u.km / u.s
         result.oe = orbital_elements
         
         return result
@@ -528,7 +530,7 @@ class OrbitalPerturbations():
             Result: Integration result
         """
         
-        if not self.ready: raise ValueError("Orbital Perturbations object is not ready")
+        if not self.ready: raise ValueError(self.not_ready_message)
         
         cm.check_time_delta(delta)
         
@@ -795,9 +797,9 @@ class OrbitalPerturbations():
             
             # * Atmospheric Drag
             
-            v_atm: np.ndarray = np.cross(np.array([0, 0, omega]), r_sc) # ? Atmosphere velocity
+            v_atm: np.ndarray = np.cross(np.array([0, 0, omega]), r_sc.to_value(u.km)) # ? Atmosphere velocity
             
-            v_rel: np.ndarray = v_sc - v_atm # ? Relative velocity w.r.t. atmosphere
+            v_rel: np.ndarray = v_sc.to_value(u.km / u.s) - v_atm # ? Relative velocity w.r.t. atmosphere
             
             rho: float = self.density((r - R_E) * u.km).to_value(u.kg / u.km**3)
             

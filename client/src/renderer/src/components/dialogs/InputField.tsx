@@ -23,6 +23,7 @@ interface InputFieldProps
     value: number | string
     min?: number
     max?: number
+    disabled?: boolean
     pattern?: string
     options?: Array<{ label: string; value: string | number }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
@@ -83,6 +84,7 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
 
                 <select
                     required
+                    disabled={props.disabled}
                     name={props.name}
                     className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
                             focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
@@ -101,6 +103,7 @@ export default function InputField(props: Readonly<InputFieldProps>): react.JSX.
 
                     <input
                         required
+                        disabled={props.disabled}
                         name={props.name}
                         type={props.type ?? "text"}
                         className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono

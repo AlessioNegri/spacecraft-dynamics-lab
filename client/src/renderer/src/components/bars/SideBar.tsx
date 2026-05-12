@@ -24,12 +24,16 @@ const items: ISideBarItem[] =
         id: "relative-motion",
         label: "Relative Motion",
         icon: "mdi:proximity-sensor"
-    }
-    ,
+    },
     {
         id: "interplanetary",
         label: "Interplanetary",
         icon: "game-icons:orbital"
+    },
+    {
+        id: "orbital-perturbations",
+        label: "Orbital Perturbations",
+        icon: "game-icons:perpendicular-rings"
     }
 ]
 
