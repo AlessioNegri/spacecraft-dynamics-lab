@@ -46,11 +46,11 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
     react.useEffect(() =>
     {
-        const rmRI = globalThis.window.callback.onReceivedInfo((info: WebSocketInfo) =>
+        const rmRI = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            if (info.source === "interplanetary")
+            if (sim.source === "interplanetary")
             {
-                setRunning(info.running)
+                setRunning(sim.running)
             }
         })
 

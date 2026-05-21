@@ -54,6 +54,7 @@ async def orbital_perturbations_analysis(payload: schema.SimulationModel, wsm: W
                 asyncio.run_coroutine_threadsafe(
                     wsm.send_json(
                     {
+                        "type": update.get("type"),
                         "source": update.get("source"),
                         "counter": update.get("counter"),
                         "total": update.get("total"),

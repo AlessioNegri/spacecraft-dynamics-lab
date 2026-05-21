@@ -1,7 +1,7 @@
 import * as react from "react"
 import * as tooltip from "@radix-ui/react-tooltip"
 
-interface TooltipProps
+interface Props
 {
     children: react.ReactNode
     title: string
@@ -9,7 +9,7 @@ interface TooltipProps
 }
 
 /** @function Tooltip */
-export default function Tooltip(props: Readonly<TooltipProps>): react.JSX.Element
+export default function Tooltip(props: Readonly<Props>): react.JSX.Element
 {
     return (
         <tooltip.Root>
@@ -20,13 +20,19 @@ export default function Tooltip(props: Readonly<TooltipProps>): react.JSX.Elemen
 
             </tooltip.Trigger>
 
-            <tooltip.Content
-                side={props.side}
-                className="bg-neutral-700 text-white px-2 py-1 m-2 rounded shadow">
+            <tooltip.Portal>
 
-                {props.title}
+                <tooltip.Content
+                    side={props.side}
+                    className="bg-orange-900 text-white border border-orange-400 px-2 py-1 m-0 rounded shadow font-mono">
 
-            </tooltip.Content>
+                    {props.title}
+
+                    <tooltip.Arrow className="fill-orange-400" />
+
+                </tooltip.Content>
+                
+            </tooltip.Portal>
 
 
         </tooltip.Root>

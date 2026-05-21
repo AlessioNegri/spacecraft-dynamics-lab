@@ -44,35 +44,35 @@ export default function RightPanel(): react.JSX.Element
 
     react.useEffect(() =>
     {
-        const rmRI = globalThis.window.callback.onReceivedInfo((info: WebSocketInfo) =>
+        const rmRI = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            if (info.source === "orbital-perturbations" && info.data?.["sam"] != undefined)
+            if (sim.source === "orbital-perturbations" && sim.data?.["sam"] != undefined)
             {
-                const sam: plotly.Data = makeTrace(info.data["times"], info.data["sam"], "Linearized", "#00ccff", 3)
+                const sam: plotly.Data = makeTrace(sim.data["times"], sim.data["sam"], "Linearized", "#00ccff", 3)
 
                 setSpecificAngularMomentum([sam])
 
-                const sma: plotly.Data = makeTrace(info.data["times"], info.data["sma"], "Linearized", "#00ccff", 3)
+                const sma: plotly.Data = makeTrace(sim.data["times"], sim.data["sma"], "Linearized", "#00ccff", 3)
 
                 setSemiMajorAxis([sma])
 
-                const ecc: plotly.Data = makeTrace(info.data["times"], info.data["ecc"], "Linearized", "#00ccff", 3)
+                const ecc: plotly.Data = makeTrace(sim.data["times"], sim.data["ecc"], "Linearized", "#00ccff", 3)
 
                 setEccentricity([ecc])
 
-                const inc: plotly.Data = makeTrace(info.data["times"], info.data["inc"], "Linearized", "#00ccff", 3)
+                const inc: plotly.Data = makeTrace(sim.data["times"], sim.data["inc"], "Linearized", "#00ccff", 3)
 
                 setInclination([inc])
 
-                const raan: plotly.Data = makeTrace(info.data["times"], info.data["raan"], "Linearized", "#00ccff", 3)
+                const raan: plotly.Data = makeTrace(sim.data["times"], sim.data["raan"], "Linearized", "#00ccff", 3)
 
                 setRaan([raan])
 
-                const aop: plotly.Data = makeTrace(info.data["times"], info.data["aop"], "Linearized", "#00ccff", 3)
+                const aop: plotly.Data = makeTrace(sim.data["times"], sim.data["aop"], "Linearized", "#00ccff", 3)
 
                 setArgPeriapsis([aop])
             }
-            else if (info.source === "orbital-perturbations" && info.data == undefined)
+            else if (sim.source === "orbital-perturbations" && sim.data == undefined)
             {
                 setSpecificAngularMomentum(undefined)
                 setSemiMajorAxis(undefined)

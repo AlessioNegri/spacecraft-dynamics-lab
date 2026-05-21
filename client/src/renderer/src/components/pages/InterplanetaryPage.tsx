@@ -29,10 +29,10 @@ export default function InterplanetaryPage()
 
     // --- USE EFFECT ---
 
-    const processData2D = (info: WebSocketInfo) =>
+    const processData2D = (sim: WebSocketSimulation) =>
     {
-        const A: number = info.data["arrivalDates"].length
-        const L: number = info.data["launchDates"].length
+        const A: number = sim.data["arrivalDates"].length
+        const L: number = sim.data["launchDates"].length
 
         const dv: number[][] = utility.initArray(A, L)
 
@@ -40,17 +40,17 @@ export default function InterplanetaryPage()
         {
             for (let l = 0; l < L; l++)
             {
-                dv[a][l] = info.data["dv1"][a][l] + info.data["dv2"][a][l]
+                dv[a][l] = sim.data["dv1"][a][l] + sim.data["dv2"][a][l]
             }
         }
 
         const data: IPorkChopData2D =
         {
-            launchDates: info.data["launchDates"],
-            arrivalDates: info.data["arrivalDates"],
-            tofGrid: info.data["tof"],
-            dv1Grid: info.data["dv1"],
-            dv2Grid: info.data["dv2"],
+            launchDates: sim.data["launchDates"],
+            arrivalDates: sim.data["arrivalDates"],
+            tofGrid: sim.data["tof"],
+            dv1Grid: sim.data["dv1"],
+            dv2Grid: sim.data["dv2"],
             dvGrid: dv
         }
 
@@ -58,10 +58,10 @@ export default function InterplanetaryPage()
         setPorkChopData3D(null)
     }
 
-    const processData3D = (info: WebSocketInfo) =>
+    const processData3D = (sim: WebSocketSimulation) =>
     {
-        const A = info.data["arrivalDates"].length
-        const L = info.data["launchDates"].length
+        const A = sim.data["arrivalDates"].length
+        const L = sim.data["launchDates"].length
 
         const tof1  : number[][] = utility.initArray(A, L)
         const tof2  : number[][] = utility.initArray(A, L)
@@ -75,21 +75,21 @@ export default function InterplanetaryPage()
         {
             for (let l = 0; l < L; l++)
             {
-                tof1[a][l]  = info.data["tof1"][a][0][l]
-                tof2[a][l]  = info.data["tof2"][a][0][l]
+                tof1[a][l]  = sim.data["tof1"][a][0][l]
+                tof2[a][l]  = sim.data["tof2"][a][0][l]
                 tof[a][l]   = tof1[a][l] + tof2[a][l]
-                dv1[a][l]   = info.data["dv1"][a][0][l]
-                dvGA[a][l]  = info.data["dvGA"][a][0][l]
-                dv2[a][l]   = info.data["dv2"][a][0][l]
+                dv1[a][l]   = sim.data["dv1"][a][0][l]
+                dvGA[a][l]  = sim.data["dvGA"][a][0][l]
+                dv2[a][l]   = sim.data["dv2"][a][0][l]
                 dv[a][l]    = dv1[a][l] + dvGA[a][l] + dv2[a][l]
             }
         }
 
         const data: IPorkChopData3D =
         {
-            launchDates: info.data["launchDates"],
-            flybyDates: info.data["flybyDates"],
-            arrivalDates: info.data["arrivalDates"],
+            launchDates: sim.data["launchDates"],
+            flybyDates: sim.data["flybyDates"],
+            arrivalDates: sim.data["arrivalDates"],
             tof1Grid: tof1,
             tof2Grid: tof2,
             tofGrid: tof,
@@ -97,11 +97,11 @@ export default function InterplanetaryPage()
             dvGAGrid: dvGA,
             dv2Grid: dv2,
             dvGrid: dv,
-            tof1: info.data["tof1"],
-            tof2: info.data["tof2"],
-            dv1: info.data["dv1"],
-            dvGA: info.data["dvGA"],
-            dv2: info.data["dv2"]
+            tof1: sim.data["tof1"],
+            tof2: sim.data["tof2"],
+            dv1: sim.data["dv1"],
+            dvGA: sim.data["dvGA"],
+            dv2: sim.data["dv2"]
         }
 
         setPorkChopData2D(null)
@@ -110,20 +110,20 @@ export default function InterplanetaryPage()
     
     react.useEffect(() =>
     {
-        const rmRI = globalThis.window.callback.onReceivedInfo((info: WebSocketInfo) =>
+        const rmRI = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            if (info.source === "interplanetary" && info.data != undefined)
+            if (sim.source === "interplanetary" && sim.data != undefined)
             {
-                if (info.data["dvGA"] === undefined)
+                if (sim.data["dvGA"] === undefined)
                 {
-                    processData2D(info)
+                    processData2D(sim)
                 }
                 else
                 {
-                    processData3D(info)
+                    processData3D(sim)
                 }
             }
-            else if (info.source === "interplanetary" && info.data == undefined)
+            else if (sim.source === "interplanetary" && sim.data == undefined)
             {
                 if (porkChopData2D !== null) setPorkChopData2D(null)
                 if (porkChopData3D !== null) setPorkChopData3D(null)

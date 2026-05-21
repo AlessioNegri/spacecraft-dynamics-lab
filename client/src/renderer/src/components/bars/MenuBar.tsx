@@ -1,6 +1,12 @@
 import * as react from "react"
-import * as menubar from "@radix-ui/react-menubar"
 import * as iconify from "@iconify/react"
+import * as Menubar from "@radix-ui/react-menubar"
+
+import utility from "@renderer/common/utility"
+
+import logo from "../../assets/SDL.png"
+
+import Shortcut from "../Shortcut"
 
 import AboutDialog from "../dialogs/AboutDialog"
 
@@ -22,10 +28,6 @@ import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_moti
 import SynodicPeriodDialog from "../dialogs/tools/interplanetary_trajectory/SynodicPeriodDialog"
 import SphereOfInfluenceDialog from "../dialogs/tools/interplanetary_trajectory/SphereOfInfluenceDialog"
 import TransferDialog from "../dialogs/tools/interplanetary_trajectory/TransferDialog"
-
-import Shortcut from "../Shortcut"
-
-import logo from "../../assets/SDL.png"
 
 const DIALOGS =
 {
@@ -50,8 +52,13 @@ const DIALOGS =
     transferDialog: TransferDialog
 } as const
 
+interface Props
+{
+    activePage: string
+}
+
 /** @function MenuBar */
-export default function MenuBar(): react.JSX.Element
+export default function MenuBar(props: Readonly<Props>): react.JSX.Element
 {
     // --- SHORTCUT ---
     
@@ -64,6 +71,8 @@ export default function MenuBar(): react.JSX.Element
     const [showSideBar, setShowSideBar] = react.useState<boolean>(true)
 
     const [showConsole, setShowConsole] = react.useState<boolean>(true)
+
+    const [time, setTime] = react.useState<string>("")
 
     const [openDialog, setOpenDialog] = react.useState<keyof typeof DIALOGS | null>(null)
 
@@ -79,7 +88,22 @@ export default function MenuBar(): react.JSX.Element
 
         const rmTC = globalThis.window.callback.onTriggerConsole(() => { setShowConsole(prev => { return !prev }) })
 
-        return () => { rmWM(); rmTSB(); rmTC() }
+        const update = () =>
+        {
+            const now: Date = new Date()
+
+            const date: string = now.toLocaleDateString("it-IT")
+
+            const time: string = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+
+            setTime(`${date} ${time}`)
+        }
+
+        update()
+
+        const interval = setInterval(update, 1000)
+
+        return () => { rmWM(); rmTSB(); rmTC(); clearInterval(interval) }
     }, [])
 
     // --- GENERIC ---
@@ -93,7 +117,7 @@ export default function MenuBar(): react.JSX.Element
     const view: IMenuItem[] =
     [
         { checkable: true, checked: showSideBar, label: "Side Bar", shortcut: "Ctrl+B", action: () => globalThis.window.api.triggerSideBar() },
-        { checkable: true, checked: showConsole, label: "Console", shortcut: "Ctrl+ò", action: () => globalThis.window.api.triggerConsole() }
+        { checkable: true, checked: showConsole, label: "Console", shortcut: "Ctrl+L", action: () => globalThis.window.api.triggerConsole() }
     ]
 
     const tools: IMenuItem[] =
@@ -146,40 +170,25 @@ export default function MenuBar(): react.JSX.Element
 
     // --- RENDERING ---
 
+    const css: string = "h-10 w-10 flex justify-center items-center transition-colors duration-150"
+
     return (
-        <div className="w-full h-10 bg-neutral-900 text-white flex items-center ps-2 select-none draggable">
-            
-            <menubar.Root className="w-full flex gap-1 items-center justify-between">
+        <div className="w-full h-20 bg-neutral-900 text-white flex-col items-center select-none draggable">
 
-                <div className="flex gap-1 items-center no-drag">
+            <div className="w-full flex gap-4 items-center justify-start border-b border-neutral-700 ps-2 mb-2">
 
-                    <div className="w-8 flex justify-center">
+                <div className="w-8 flex justify-center">
 
-                        {/* <iconify.Icon
-                            icon={"streamline-ultimate:space-rocket-earth"}
-                            width={20}
-                            className="text-orange-300"
-                        /> */}
-
-                        <img
-                        src={logo}
-                        alt="Spacecraft Dynamics Lab Logo"
-                        className="h-auto rounded-3xl"
-                    />
-
-                    </div>
-
-                    <Menu label="File" items={file} />
-
-                    <Menu label="View" items={view} />
-
-                    <Menu label="Tools" items={tools} />
-
-                    <Menu label="Help" items={help} />
+                    <img src={logo} alt="Spacecraft Dynamics Lab Logo" className="h-auto rounded-3xl"/>
 
                 </div>
-                
-                <p className="text-center">Spacecraft Dynamics Lab</p>
+
+                <p
+                    className="flex-1 text-orange-300 capitalize"
+                    style={{ fontFamily: "Oxanium" }}
+                >
+                    SDL - Spacecraft Dynamics Lab | {props.activePage.replaceAll("-", " ")}
+                </p>
 
                 <div className="flex gap-1 items-center no-drag">
 
@@ -187,14 +196,10 @@ export default function MenuBar(): react.JSX.Element
 
                     <button
                         type="button"
-                        className="h-10 w-10 hover:bg-neutral-700 flex justify-center items-center"
+                        className={utility.cn(css, "hover:bg-neutral-700")}
                         onClick={() => globalThis.window.api.minimizeApp()}>
 
-                        <iconify.Icon
-                            icon={"mdi:minimize"}
-                            width={20}
-                            className="text-stone-400"
-                        />
+                        <iconify.Icon icon={"mdi:minimize"} width={20} className="text-stone-400" />
 
                     </button>
 
@@ -202,7 +207,7 @@ export default function MenuBar(): react.JSX.Element
 
                     <button
                         type="button"
-                        className="h-10 w-10 hover:bg-neutral-700 flex justify-center items-center"
+                        className={utility.cn(css, "hover:bg-neutral-700")}
                         onClick={() => globalThis.window.api.maximizeApp()}>
 
                         <iconify.Icon
@@ -217,20 +222,41 @@ export default function MenuBar(): react.JSX.Element
 
                     <button
                         type="button"
-                        className="h-10 w-10 hover:bg-red-800 flex justify-center items-center"
+                        className={utility.cn(css, "hover:bg-red-800")}
                         onClick={() => globalThis.window.api.closeApp()}>
 
-                        <iconify.Icon
-                            icon={"mdi:close"}
-                            width={20}
-                            className="text-stone-400"
-                        />
+                        <iconify.Icon icon={"mdi:close"} width={20} className="text-stone-400"/>
 
                     </button>
 
                 </div>
 
-            </menubar.Root>
+            </div>
+            
+            <Menubar.Root className="w-full flex gap-1 items-center justify-between px-2">
+
+                <div className="w-full flex gap-1 items-center justify-between no-drag">
+
+                    <Menu label="File" items={file} />
+
+                    <Menu label="View" items={view} />
+
+                    <Menu label="Tools" items={tools} />
+
+                    <Menu label="Help" items={help} />
+
+                    <p className="flex-1"></p>
+
+                    <div
+                        className="text-green-300 rounded-lg text-base tracking-widest"
+                        style={{ fontFamily: "Oxanium" }}
+                    >
+                        {time}
+                    </div>
+
+                </div>
+
+            </Menubar.Root>
 
             {
                 ActiveDialog &&
@@ -253,20 +279,20 @@ export default function MenuBar(): react.JSX.Element
 function Menu(menu: Readonly<IMenu>): react.JSX.Element
 {
     return (
-        <menubar.Menu>
+        <Menubar.Menu>
 
-            <menubar.Trigger
-                className="text-base px-2 z-110 rounded cursor-autotext-neutral-500
+            <Menubar.Trigger
+                className="text-base px-2 z-110 rounded cursor-auto
                             hover:bg-neutral-500 hover:text-neutral-400
                             data-[state=open]:bg-neutral-700 text-neutral-400">
                 
                 {menu.label}
 
-            </menubar.Trigger>
+            </Menubar.Trigger>
 
-            <menubar.Portal>
+            <Menubar.Portal>
                 
-                <menubar.Content
+                <Menubar.Content
                     align="start"
                     className="min-w-80 border rounded shadow-lg p-1 z-2
                                 bg-neutral-600 text-white border-neutral-950">
@@ -276,11 +302,11 @@ function Menu(menu: Readonly<IMenu>): react.JSX.Element
                         <MenuItem key={(item.label ?? '') + (item.checked ?? '')} item={item} />
                 )}
 
-                </menubar.Content>
+                </Menubar.Content>
 
-            </menubar.Portal>
+            </Menubar.Portal>
 
-        </menubar.Menu>
+        </Menubar.Menu>
     )
 }
 
@@ -294,31 +320,33 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
 {
     if (props.item.separator)
     {
-        return <menubar.Separator className="h-px bg-neutral-950 my-1"/>
+        return <Menubar.Separator className="h-px bg-orange-300 my-1"/>
     }
 
     if (props.item.children)
     {
         return (
-            <menubar.Sub>
+            <Menubar.Sub>
 
-                <menubar.SubTrigger
+                <Menubar.SubTrigger
                     className="px-2 py-1.5 text-base flex justify-between items-center cursor-pointer rounded
-                               hover:bg-neutral-500 hover:text-white"
+                        hover:bg-neutral-500 hover:text-white"
                 >
-                    <div className="w-2"></div>
+                    <div className="w-4 flex justify-center"></div>
 
                     <span className="flex-1 ps-4">{props.item.label}</span>
 
-                    <iconify.Icon icon="mdi:chevron-right" width={16} />
+                    <iconify.Icon icon="mdi:chevron-right" width={16} className="text-orange-300"/>
 
-                </menubar.SubTrigger>
+                </Menubar.SubTrigger>
 
-                <menubar.Portal>
+                <Menubar.Portal>
 
-                    <menubar.SubContent
+                    <Menubar.SubContent
                         sideOffset={5}
-                        className="min-w-60 border rounded shadow-lg p-1 bg-neutral-600 text-white border-neutral-950"
+                        alignOffset={-4}
+                        className="min-w-60 rounded shadow-lg p-1 bg-neutral-600 text-white
+                            border border-neutral-950"
                     >
 
                         {
@@ -326,24 +354,25 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
                                 <MenuItem key={(item.label ?? '') + (item.checked ?? '')} item={item} />)
                         }
 
-                    </menubar.SubContent>
+                    </Menubar.SubContent>
 
-                </menubar.Portal>
+                </Menubar.Portal>
 
-            </menubar.Sub>
+            </Menubar.Sub>
         )
     }
 
     return (
-        <menubar.Item
+        <Menubar.Item
             onClick={props.item.action}
             className="px-2 py-1.5 text-base flex justify-start items-center cursor-pointer rounded
-                        hover:bg-neutral-500 hover:text-white">
+                hover:bg-neutral-500 hover:text-white">
 
-            <div className="w-2">
+            <div className="w-4 flex justify-center">
             
             {
-                props.item.checkable && props.item.checked && <iconify.Icon icon={"mdi:check"} width={16} />
+                props.item.checkable && props.item.checked &&
+                <iconify.Icon icon={"mdi:check-outline"} width={16} className="text-orange-300" />
             }
 
             </div>
@@ -351,9 +380,10 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
             <span className="flex-1 ps-4">{props.item.label}</span>
 
             {
-                props.item.shortcut && <span className="text-base text-white/50">{props.item.shortcut}</span>
+                props.item.shortcut &&
+                <span className="text-base text-white/50 tracking-wider">{props.item.shortcut}</span>
             }
 
-        </menubar.Item>
+        </Menubar.Item>
     )
 }

@@ -65,6 +65,17 @@ async def websocket_endpoint(websocket: fastapi.WebSocket):
     
     data: AppData = websocket.app.state.data
     
+    await websocket.send_json(
+        {
+            "type": "info",
+            "database":
+            {
+                "connected": data.db != None,
+                "name": data.db_name,
+                "url": data.mongo_url
+            }
+        })
+    
     read_task = asyncio.create_task(reader(websocket, data))
     send_task = asyncio.create_task(sender(websocket, data))
     

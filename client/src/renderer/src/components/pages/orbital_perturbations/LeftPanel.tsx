@@ -53,11 +53,11 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
     
     react.useEffect(() =>
     {
-        const rmRI = globalThis.window.callback.onReceivedInfo((info: WebSocketInfo) =>
+        const rmRI = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            if (info.source === "orbital-perturbations")
+            if (sim.source === "orbital-perturbations")
             {
-                setRunning(info.running)
+                setRunning(sim.running)
             }
         })
 

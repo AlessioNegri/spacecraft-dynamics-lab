@@ -17,7 +17,7 @@ export default class TCPClient extends Singleton
 
     private readonly maxDelay = 15000 // ? [ms]
 
-    private readonly url = "ws://127.0.0.1:8000/ws"
+    private url = "ws://127.0.0.1:8000/ws"
 
     private isReconnecting = false;
 
@@ -31,6 +31,18 @@ export default class TCPClient extends Singleton
     }
 
     /**
+     * @description Update the web socket url and restart the connection
+     * 
+     * @param url The new web socket url
+     */
+    public updateUrl(url: string): void
+    {
+        this.url = url
+
+        this.ws?.close()
+    }
+
+    /**
      * @summary Start the web socket
      */
     public start(): void
@@ -40,6 +52,8 @@ export default class TCPClient extends Singleton
         const win: electron.BrowserWindow = MainWindow.GetInstance().window()!
 
         Logger.info("Connecting to server ...")
+
+        win.webContents.send("tcp:url", this.url)
 
         this.ws = new WebSocket(this.url)
 
@@ -57,16 +71,24 @@ export default class TCPClient extends Singleton
         {
             const json: JSON = JSON.parse(event.data)
 
-            const info: WebSocketInfo =
+            if (json["type"] === "simulation")
             {
-                source: json["source"],
-                counter: json["counter"],
-                total: json["total"],
-                running: json["running"],
-                data: json["data"]
-            }
+                const info: WebSocketSimulation =
+                {
+                    type: json["type"],
+                    source: json["source"],
+                    counter: json["counter"],
+                    total: json["total"],
+                    running: json["running"],
+                    data: json["data"]
+                }
 
-            win.webContents.send("ws:received-info", info)
+                win.webContents.send("ws:simulation", info)
+            }
+            else
+            {
+                win.webContents.send("ws:info", json)
+            }
         }
 
         this.ws.onerror = (event: Event) =>
@@ -100,6 +122,17 @@ export default class TCPClient extends Singleton
             Logger.warning("Server disconnected")
 
             win.webContents.send("tcp:opened", false)
+
+            win.webContents.send("ws:info",
+                {
+                    type: "info",
+                    database:
+                    {
+                        connected: false,
+                        name: "",
+                        url: ""
+                    }
+                })
 
             if (!this.isReconnecting)
             {

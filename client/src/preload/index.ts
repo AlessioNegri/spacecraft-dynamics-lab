@@ -14,6 +14,7 @@ const api =
     info            : (message: string) => electron.ipcRenderer.send('log:message', 'info', message),
     warning         : (message: string) => electron.ipcRenderer.send('log:message', 'warning', message),
     error           : (message: string) => electron.ipcRenderer.send('log:message', 'error', message),
+    updateTcpUrl: (url: string) => electron.ipcRenderer.send('tcp:update-url', url),
 }
 
 // * Custom Callbacks for renderer
@@ -52,6 +53,14 @@ const callback =
 
         return () => electron.ipcRenderer.removeListener('log:append', listener)
     },
+    onAppOnline: (callback: (online: boolean) => void): (() => void) =>
+    {
+        const listener = (_event: Electron.IpcRendererEvent, online: boolean) => callback(online)
+
+        electron.ipcRenderer.on('app:online', listener)
+
+        return () => electron.ipcRenderer.removeListener('app:online', listener)
+    },
     onTcpOpened: (callback: (opened: boolean) => void): (() => void) =>
     {
         const listener = (_event: Electron.IpcRendererEvent, opened: boolean) => callback(opened)
@@ -60,13 +69,29 @@ const callback =
 
         return () => electron.ipcRenderer.removeListener('tcp:opened', listener)
     },
-    onReceivedInfo: (callback: (info: WebSocketInfo) => void): (() => void) =>
+    onTcpUrl: (callback: (url: string) => void): (() => void) =>
+    {
+        const listener = (_event: Electron.IpcRendererEvent, url: string) => callback(url)
+
+        electron.ipcRenderer.on('tcp:url', listener)
+
+        return () => electron.ipcRenderer.removeListener('tcp:url', listener)
+    },
+    onWebSocketInfo: (callback: (info: WebSocketInfo) => void): (() => void) =>
     {
         const listener = (_event: Electron.IpcRendererEvent, info: WebSocketInfo) => callback(info)
 
-        electron.ipcRenderer.on('ws:received-info', listener)
+        electron.ipcRenderer.on('ws:info', listener)
 
-        return () => electron.ipcRenderer.removeListener('ws:received-info', listener)
+        return () => electron.ipcRenderer.removeListener('ws:info', listener)
+    },
+    onWebSocketSimulation: (callback: (sim: WebSocketSimulation) => void): (() => void) =>
+    {
+        const listener = (_event: Electron.IpcRendererEvent, sim: WebSocketSimulation) => callback(sim)
+
+        electron.ipcRenderer.on('ws:simulation', listener)
+
+        return () => electron.ipcRenderer.removeListener('ws:simulation', listener)
     }
 }
 

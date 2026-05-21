@@ -31,7 +31,7 @@ export default function DialogRUI(props: Readonly<DialogRUIProps>): react.JSX.El
 
             <dialog.Portal>
 
-                <dialog.Overlay className="fixed top-10 left-0 right-0 bottom-6 bg-orange-400/10" />
+                <dialog.Overlay className="fixed top-10 left-0 right-0 bottom-8 bg-orange-400/10" />
 
                 <themes.Theme appearance="dark" accentColor="orange" grayColor="slate">
 

@@ -7,6 +7,7 @@ class ActionModel(pydantic.BaseModel):
     
 class InfoModel(pydantic.BaseModel):
     
+    type: str = "simulation"
     source: str = ""
     counter: int = 0
     total: int = 0

@@ -1,9 +1,34 @@
 import * as electron from 'electron'
 import * as utils from '@electron-toolkit/utils'
+import * as dns from "node:dns"
 
 import MainWindow from './MainWindow'
 import IPC from './IPC'
 import TCPClient from './TCPClient'
+
+/**
+ * @description Checks if the computer is connected to the internet by trying to resolve "google.com"
+ * 
+ * @returns A promise that resolves to true if the computer is online, false otherwise
+ */
+function checkInternetConnection(): Promise<boolean>
+{
+    return new Promise( resolve => dns.lookup("google.com", err => resolve(!err)) )
+}
+
+// * Check internet connection every 10 seconds and send the status to the renderer process
+
+setInterval(async () =>
+{
+    const online: boolean = await checkInternetConnection()
+
+    const win: electron.BrowserWindow | null = MainWindow.GetInstance().window()
+
+    if (win)
+    {
+        win.webContents.send("app:online", online)
+    }
+}, 10000)
 
 // * This method will be called when Electron has finished initialization and is ready to create browser windows
 // * Some APIs can only be used after this event occurs

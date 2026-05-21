@@ -21,7 +21,7 @@ export default function App(): react.JSX.Element
 
     Shortcut("Ctrl+E", () => globalThis.window.api.closeApp())
     Shortcut("Ctrl+B", () => globalThis.window.api.triggerSideBar())
-    Shortcut("Ctrl+ò", () => globalThis.window.api.triggerConsole())
+    Shortcut("Ctrl+L", () => globalThis.window.api.triggerConsole())
 
     // --- RENDERING ---
     
@@ -32,7 +32,7 @@ export default function App(): react.JSX.Element
 
                 <div className='flex flex-col w-full h-full bg-neutral-800'>
 
-                    <MenuBar />
+                    <MenuBar activePage={activePage} />
 
                     <div className='flex-1 overflow-auto custom-scrollbar flex flex-row'>
 

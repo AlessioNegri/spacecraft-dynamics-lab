@@ -46,6 +46,7 @@ async def pork_chop_analysis(payload: schema.SimulationModel, wsm: WebSocketMana
                 asyncio.run_coroutine_threadsafe(
                     wsm.send_json(
                     {
+                        "type": update.get("type"),
                         "source": update.get("source"),
                         "counter": update.get("counter"),
                         "total": update.get("total"),

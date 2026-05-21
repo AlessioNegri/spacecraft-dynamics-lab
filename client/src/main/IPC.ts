@@ -1,6 +1,7 @@
 import * as electron from 'electron'
 
 import MainWindow from './MainWindow'
+import TCPClient from './TCPClient'
 
 /** @class Inter Protocol Communication class */
 export default function IPC(): void
@@ -55,6 +56,13 @@ export default function IPC(): void
         }
 
         win.webContents.send('log:append', entry)
+    })
+
+    // * tcp
+
+    electron.ipcMain.on('tcp:update-url', (_, url: string) =>
+    {
+        TCPClient.GetInstance().updateUrl(url)
     })
 
     // ? BE --> FE

@@ -54,7 +54,17 @@ def convert_orbit(orbit_data: dict) -> dict:
 
 # --- HTTP ---
 
-router: fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft', tags=['Spacecraft'])
+def require_mongo(request: fastapi.Request):
+    if not request.app.state.data.mongo_enabled:
+        raise fastapi.HTTPException(
+            status_code=503,
+            detail=f"MongoDB unavailable: {request.app.state.data.mongo_error}"
+        )
+    return database.get_client()
+
+router: fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft',
+                                              tags=['Spacecraft'],
+                                              dependencies=[fastapi.Depends(require_mongo)])
 
 # >>> GET
 

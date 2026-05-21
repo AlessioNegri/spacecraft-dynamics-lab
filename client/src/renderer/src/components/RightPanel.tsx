@@ -1,6 +1,7 @@
 import * as react from "react"
 
-import HeaderBar from "./bars/HeaderBar"
+import utility from "@renderer/common/utility"
+
 import Console from "./Console"
 import SpacecraftPage from "./pages/SpacecraftPage"
 import OrbitPage from "./pages/OrbitPage"
@@ -8,6 +9,7 @@ import OrbitalManeuversPage from "./pages/OrbitalManeuversPage"
 import RelativeMotionPage from "./pages/RelativeMotionPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
 import OrbitalPerturbationsPage from "./pages/OrbitalPerturbationsPage"
+import SettingsPage from "./pages/SettingsPage"
 
 interface RightPanelProps
 {
@@ -65,10 +67,6 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
     return (
         <div className="flex-1 flex flex-col min-h-0">
 
-            {/* Header bar */}
-
-            <HeaderBar title={props.activePage.replaceAll('-', ' ')} />
-
             {/* Page fills remaining space */}
 
             <div className="flex-1 min-h-1/4 overflow-auto custom-scrollbar">
@@ -79,7 +77,11 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
                 {props.activePage === "relative-motion" && <RelativeMotionPage/>}
                 {props.activePage === "interplanetary" && <InterplanetaryPage/>}
                 {props.activePage === "orbital-perturbations" && <OrbitalPerturbationsPage/>}
-                {props.activePage === "settings" && <div className="bg-green-500 h-full w-full border-8" />}
+
+                <div className={utility.cn(props.activePage === 'settings' ? 'block' : 'hidden', 'h-full')}>
+                    <SettingsPage />
+                </div>
+
                 
             </div>
 
