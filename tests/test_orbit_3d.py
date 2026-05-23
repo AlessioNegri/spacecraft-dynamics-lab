@@ -112,17 +112,17 @@ def test_example_4_11():
     
     op: two_body_problem.OrbitParameters = two_body_problem.Orbit.cartesian_to_orbit_parameters(attractor, r_GEF, v_GEF)
     
-    assert np.isclose(op.T.to_value(u.s), 10_928, atol=1e-0)
+    assert np.isclose(op.period.to_value(u.s), 10_928, atol=1e-0)
     
-    n: float = 2 * np.pi / op.T.to_value(u.s) # ? Mean motion [rad/s]
+    n: float = 2 * np.pi / op.period.to_value(u.s) # ? Mean motion [rad/s]
     
-    t_1: u.Quantity = orbital_position.OrbitalPosition.elliptical_orbit_time(oe.nu, op.T, oe.ecc.to_value())
+    t_1: u.Quantity = orbital_position.OrbitalPosition.elliptical_orbit_time(oe.nu, op.period, oe.ecc.to_value())
     
     assert np.isclose(t_1.to_value(u.s), 631.00, atol=1e-0)
     \
     t_2: u.Quantity = t_1 + 96 * u.hour
     
-    nu_32: u.Quantity = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(t_2, op.T, oe.ecc.to_value())
+    nu_32: u.Quantity = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(t_2, op.period, oe.ecc.to_value())
     
     assert np.isclose(nu_32.to_value(u.deg), -148,75, atol=1e-2)
     

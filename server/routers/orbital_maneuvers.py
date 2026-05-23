@@ -71,13 +71,13 @@ def propagate_orbit(attractor: bodies.Attractor, oe: o3d.OrbitalElements, dt: ti
     
     orbit: tbp.Orbit = tbp.Orbit()
     
-    orbit.from_cartesian(attractor=attractor, r=r_gef, v=v_gef)
+    orbit.from_cartesian(attractor=attractor, position=r_gef, velocity=v_gef)
     
     result: tbp.Result = orbit.propagate_for(dt)
     
     simulation_points: typing.List[schema.Vector3D] = []
     
-    for x, y, z in zip(result.r_x.to_value(), result.r_y.to_value(), result.r_z.to_value()):
+    for x, y, z in zip(result.position_x.to_value(), result.position_y.to_value(), result.position_z.to_value()):
         
         simulation_points.append(schema.Vector3D(x=x, y=y, z=z))
     

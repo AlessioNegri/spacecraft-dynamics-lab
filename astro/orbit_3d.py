@@ -556,11 +556,11 @@ class Orbit3D():
         
         if ecc == 0:
             
-            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(oe.nu, op.T)
+            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(oe.nu, op.period)
             
         elif ecc < 1.0:
             
-            t_0 = orbital_position.OrbitalPosition.elliptical_orbit_time(oe.nu, op.T, oe.ecc.to_value())
+            t_0 = orbital_position.OrbitalPosition.elliptical_orbit_time(oe.nu, op.period, oe.ecc.to_value())
         
         # >>> 3. Propagation
         
@@ -572,11 +572,11 @@ class Orbit3D():
         
         if ecc == 0:
             
-            nu = orbital_position.OrbitalPosition.circular_orbit_true_anomaly(t, op.T)
+            nu = orbital_position.OrbitalPosition.circular_orbit_true_anomaly(t, op.period)
             
         elif ecc < 1.0:
             
-            nu = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(t, op.T, oe.ecc.to_value())
+            nu = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(t, op.period, oe.ecc.to_value())
         
         # >>> b) New Orbital Elements
         

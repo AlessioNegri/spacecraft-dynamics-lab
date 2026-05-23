@@ -1312,22 +1312,22 @@ class OrbitalManeuvers():
             
             orbit: tbp.Orbit = tbp.Orbit()
             
-            orbit.from_cartesian(attractor=attractor, r=r_0, v=v_0,
+            orbit.from_cartesian(attractor=attractor, position=r_0, velocity=v_0,
                                  epoch=time.Time('2026-01-01T00:00:00', format='isot', scale='utc'))
             
             result: tbp.Result = orbit.propagate_for(delta=t_burn, rocket_motor=rocket_motor)
             
             if not result.success: raise RuntimeError('Integration failed.')
             
-            r: u.Quantity = np.array([result.r_x[-1].to_value(u.km),
-                                      result.r_y[-1].to_value(u.km),
-                                      result.r_z[-1].to_value(u.km)]) * u.km
+            r: u.Quantity = np.array([result.position_x[-1].to_value(u.km),
+                                      result.position_y[-1].to_value(u.km),
+                                      result.position_z[-1].to_value(u.km)]) * u.km
             
-            v: u.Quantity = np.array([result.v_x[-1].to_value(u.km / u.s),
-                                      result.v_y[-1].to_value(u.km / u.s),
-                                      result.v_z[-1].to_value(u.km / u.s)]) * u.km / u.s
+            v: u.Quantity = np.array([result.velocity_x[-1].to_value(u.km / u.s),
+                                      result.velocity_y[-1].to_value(u.km / u.s),
+                                      result.velocity_z[-1].to_value(u.km / u.s)]) * u.km / u.s
             
-            m_sc: u.Quantity = result.m_sc[-1]
+            m_sc: u.Quantity = result.mass_spacecraft[-1]
             
             # >>> 2. Calculate orbital elements
             

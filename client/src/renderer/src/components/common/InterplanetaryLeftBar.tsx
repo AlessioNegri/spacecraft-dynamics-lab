@@ -191,7 +191,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                     onChange={handleChange}
                     options={
                         [
-                            { label: "None", value: "" },
+                            { label: "None", value: " " },
                             { label: "Mercury", value: "mercury" },
                             { label: "Venus", value: "venus" },
                             { label: "Earth", value: "earth" },
@@ -249,7 +249,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                 />
 
                 {
-                    formIn.flybyBody !== "" &&
+                    formIn.flybyBody.trim() !== "" &&
                     
                     <>
 

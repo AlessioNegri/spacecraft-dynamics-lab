@@ -34,6 +34,8 @@ async def post_run(payload: schema.SimulationModel, background: fastapi.Backgrou
         ActionModel: Result
     """
     
+    payload.flybyBody = payload.flybyBody.strip()
+    
     wsm: WebSocketManager = request.app.state.wsm
     
     data: AppData = request.app.state.data

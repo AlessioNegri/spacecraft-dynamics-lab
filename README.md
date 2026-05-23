@@ -61,6 +61,15 @@ Here are some references that were used to develop the application:
 | **Publisher** | Elsevier Science |
 | **URL** | [https://www.google.it/books/](https://www.google.it/books/edition/Orbital_Mechanics_for_Engineering_Studen/2U9Z8k0TlTYC?hl=it&gbpv=0) |
 
+| **Title** | **Space Flight Dynamics** |
+| --- | --- |
+| **Authors** | Craig A. Kluever |
+| **ISBN** | 9781119157823 |
+| **Series** | Aerospace |
+| **Year** | 2018 |
+| **Publisher** | Wiley |
+| **URL** | [https://www.google.it/books/](https://www.google.it/books/edition/Space_Flight_Dynamics/Cp1PDwAAQBAJ?hl=it&gbpv=0) |
+
 ## 📋 Table Of Contents
 
 > Click on the links below to navigate through the documentation.

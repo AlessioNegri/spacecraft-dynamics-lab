@@ -35,27 +35,29 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    orbit_parameters: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor, r=r, v=v)
+    orbit_parameters: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
+                                                                                    position=r,
+                                                                                    velocity=v)
     
     alpha, delta = o3d.Orbit3D.right_ascension_declination(r=r)
     
     result: schema.OrbitParametersOutModelInfo = schema.OrbitParametersOutModelInfo(
         conicType                = orbit_parameters.conic_type,
-        specificAngularMomentum  = orbit_parameters.h.to_value(),
-        specificMechanicalEnergy = orbit_parameters.epsilon.to_value(),
-        eccentricity             = orbit_parameters.e,
-        orbitalPeriod            = orbit_parameters.T.to_value(),
-        apoapsisRadius           = orbit_parameters.r_a.to_value(),
-        periapsisRadius          = orbit_parameters.r_p.to_value(),
-        semiMajorAxis            = orbit_parameters.a.to_value(),
-        semiMinorAxis            = orbit_parameters.b.to_value(),
-        escapeVelocity           = orbit_parameters.v_esc.to_value(),
-        infiniteTrueAnomaly      = orbit_parameters.theta_inf.to_value(),
-        hyperbolaAsymptoteAngle  = orbit_parameters.beta.to_value(),
-        turnAngle                = orbit_parameters.delta_ta.to_value(),
-        aimingRadius             = orbit_parameters.delta_ar.to_value(),
-        hyperbolicExcessSpeed    = orbit_parameters.v_inf.to_value(),
-        characteristicEnergy     = orbit_parameters.C_3.to_value(),
+        specificAngularMomentum  = orbit_parameters.specific_angular_momentum.to_value(),
+        specificMechanicalEnergy = orbit_parameters.specific_energy.to_value(),
+        eccentricity             = orbit_parameters.eccentricity,
+        orbitalPeriod            = orbit_parameters.period.to_value(),
+        apoapsisRadius           = orbit_parameters.apoapsis_radius.to_value(),
+        periapsisRadius          = orbit_parameters.periapsis_radius.to_value(),
+        semiMajorAxis            = orbit_parameters.semimajor_axis.to_value(),
+        semiMinorAxis            = orbit_parameters.semiminor_axis.to_value(),
+        escapeVelocity           = orbit_parameters.escape_velocity.to_value(),
+        infiniteTrueAnomaly      = orbit_parameters.asymptotic_true_anomaly.to_value(),
+        hyperbolaAsymptoteAngle  = orbit_parameters.asymptote_angle.to_value(),
+        turnAngle                = orbit_parameters.turning_angle.to_value(),
+        aimingRadius             = orbit_parameters.aiming_radius.to_value(),
+        hyperbolicExcessSpeed    = orbit_parameters.hyperbolic_excess_speed.to_value(),
+        characteristicEnergy     = orbit_parameters.characteristic_energy.to_value(),
         rightAscension           = alpha.to_value(),
         declination              = delta.to_value()
     )

@@ -1,23 +1,105 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as katex from "react-katex"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
+import utility from "@renderer/common/utility"
 
-interface OutputFieldProps
+type AllowedTextFieldType =
+    | "text"
+    | "number"
+    | "email"
+    | "password"
+    | "search"
+    | "tel"
+    | "url"
+    | "date"
+    | "time"
+    | "datetime-local"
+    | "month"
+    | "week"
+
+const allowedTypes: AllowedTextFieldType[] =
+[
+    "text",
+    "number",
+    "email",
+    "password",
+    "search",
+    "tel",
+    "url",
+    "date",
+    "time",
+    "datetime-local",
+    "month",
+    "week"
+]
+
+interface Props
 {
     name?: string
     label: string
+    symbol?: string
     unit?: string
     type?: react.HTMLInputTypeAttribute
     value: number | string
     disabled?: boolean
 }
 
-/** @function Field */
-export default function OutputField(props: Readonly<OutputFieldProps>): react.JSX.Element
+/** @function OutputField */
+export default function OutputField(props: Readonly<Props>): react.JSX.Element
 {
     return (
-        <form.Field name={props.name ?? "undefined"} className="flex flex-col space-y-2">
+        <Form.Field name={props.name ?? "undefined"} className="flex flex-col space-y-2">
 
-            <div className="flex justify-between">
+            <Themes.Flex direction={"column"} gap={"2"}>
+            
+                <Themes.Text className="text-sm text-neutral-300">
+                    {props.label}
+                </Themes.Text>
+
+                <Themes.TextField.Root
+                    className="textfield-padding"
+                    variant="soft"
+                    color={props.disabled ? "red" : "cyan"}
+                    size={"2"}
+                    style={{ fontFamily: "Oxanium" }}
+                    disabled={props.disabled}
+                    type={allowedTypes.find(t => t === props.type) ?? "text"}
+                    value={
+                        (!props.type || props.type === "text") &&
+                        !Number.isNaN(Number(props.value)) &&
+                        typeof props.value !== "string"
+                        ?
+                        Number(props.value).toLocaleString("it-IT",
+                            {minimumFractionDigits: 0, maximumFractionDigits: 5})
+                        :
+                        props.value
+                    }
+                >
+
+                    <Themes.TextField.Slot
+                        className={utility.cn(props.disabled ? "bg-red-900" : "bg-cyan-900", "rounded-l")}
+                    >
+
+                        <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+
+                    </Themes.TextField.Slot>
+
+                    <Themes.TextField.Slot
+                        className={utility.cn(props.disabled ? "bg-red-900" : "bg-cyan-900", "rounded-r text-xs")}
+                    >
+
+                        <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+
+                    </Themes.TextField.Slot>
+
+                </Themes.TextField.Root>
+
+            </Themes.Flex>
+
+            {/*  */}
+
+            {/* <div className="flex justify-between">
             
                 <form.Label className="text-sm text-neutral-300">{props.label}</form.Label>
 
@@ -48,8 +130,8 @@ export default function OutputField(props: Readonly<OutputFieldProps>): react.JS
 
                 />
 
-            </form.Control>
+            </form.Control> */}
 
-        </form.Field>
+        </Form.Field>
     )
 }

@@ -100,3 +100,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 [data-state="open"] {
     animation: fadeIn 0.5s ease-out;
 }
+
+.textfield-padding .rt-TextFieldInput {
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 15px;
+}

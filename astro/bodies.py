@@ -202,7 +202,7 @@ def get_body(attractor: Attractor) -> Body: return BODIES[attractor]
 
 julian_century: u.Unit = 36525 * u.day
 
-EPHEMERIDES: typing.Dict[Attractor, typing.Tuple[OrbitalElements, OrbitalElementsCentennialRates]] = {}
+EPHEMERIDES: typing.Dict[Attractor, typing.Tuple[PlanetaryOrbitalElements, PlanetaryOrbitalElementsCentennialRates]] = {}
 
 EPHEMERIDES[Attractor.MERCURY] = (
     PlanetaryOrbitalElements(
