@@ -17,14 +17,17 @@ def test_gibbs_method():
     r_2: u.Quantity = np.array([-1365.5, 3637.6, 6346.8]) * u.km
     r_3: u.Quantity = np.array([-2940.3, 2473.7, 6555.8]) * u.km
     
-    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor, r_1=r_1, r_2=r_2, r_3=r_3)
+    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
+                                                                 position_1=r_1,
+                                                                 position_2=r_2,
+                                                                 position_3=r_3)
     
-    assert np.isclose(oe.a.to_value(u.km), 8001, atol=1e-0)
-    assert np.isclose(oe.ecc.to_value(), 0.1, atol=1e-1)
-    assert np.isclose(oe.inc.to_value(u.deg), 60, atol=1e-0)
-    assert np.isclose(oe.raan.to_value(u.deg), 40, atol=1e-0)
-    assert np.isclose(oe.argp.to_value(u.deg), 30, atol=1e-0)
-    assert np.isclose(oe.nu.to_value(u.deg), 50, atol=1e-0)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 8001, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(), 0.1, atol=1e-1)
+    assert np.isclose(oe.inclination.to_value(u.deg), 60, atol=1e-0)
+    assert np.isclose(oe.right_ascension_of_ascending_node.to_value(u.deg), 40, atol=1e-0)
+    assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 30, atol=1e-0)
+    assert np.isclose(oe.true_anomaly.to_value(u.deg), 50, atol=1e-0)
 
 def test_lambert():
     """EXAMPLE 5.2"""
@@ -38,7 +41,7 @@ def test_lambert():
     
     orb_par: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor, position=r_1, velocity=v_1)
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe.nu, T=orb_par.period, e=oe.ecc.to_value())
+    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe.true_anomaly, T=orb_par.period, e=oe.eccentricity.to_value())
     
     assert np.isclose(v_1[0].to_value(u.km / u.s), -5.9925, atol=1e-4)
     assert np.isclose(v_1[1].to_value(u.km / u.s), 1.9254, atol=1e-4)
@@ -48,13 +51,13 @@ def test_lambert():
     assert np.isclose(v_2[1].to_value(u.km / u.s), -4.1966, atol=1e-4)
     assert np.isclose(v_2[2].to_value(u.km / u.s), -0.38529, atol=1e-5)
     
-    assert np.isclose(oe.h.to_value(u.km**2 / u.s), 80_466, atol=1e-0)
-    assert np.isclose(oe.a.to_value(u.km), 20_003, atol=1e-0)
-    assert np.isclose(oe.ecc.to_value(), 0.4335, atol=1e-4)
-    assert np.isclose(oe.inc.to_value(u.deg), 30.19, atol=1e-2)
-    assert np.isclose(oe.raan.to_value(u.deg), 44.60, atol=1e-2)
-    assert np.isclose(oe.argp.to_value(u.deg), 30.71, atol=1e-2)
-    assert np.isclose(oe.nu.to_value(u.deg), 350.8, atol=1e-1)
+    assert np.isclose(oe.specific_angular_momentum.to_value(u.km**2 / u.s), 80_466, atol=1e-0)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 20_003, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(), 0.4335, atol=1e-4)
+    assert np.isclose(oe.inclination.to_value(u.deg), 30.19, atol=1e-2)
+    assert np.isclose(oe.right_ascension_of_ascending_node.to_value(u.deg), 44.60, atol=1e-2)
+    assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 30.71, atol=1e-2)
+    assert np.isclose(oe.true_anomaly.to_value(u.deg), 350.8, atol=1e-1)
     
     assert np.isclose(t_1.to_value(u.s), -256.1, atol=1e-1)
 
@@ -123,7 +126,9 @@ def test_geocentric_equatorial_position_vector():
     
     phi: u.Quantity = 20 * u.deg
     
-    R: u.Quantity = od.OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor, theta=theta, phi=phi)
+    R: u.Quantity = od.OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
+                                                                                local_sidereal_time=theta,
+                                                                                latitude=phi)
     
     assert np.isclose(R[0].to_value(u.km), -5955, 1e-0)
     assert np.isclose(R[1].to_value(u.km), -699.5, 1e-1)
@@ -140,13 +145,16 @@ def test_topocentric_equatorial_position_vector():
     
     phi: u.Quantity = 20 * u.deg
     
-    rho: u.Quantity = od.OrbitDetermination.topocentric_equatorial_position_vector(attractor=attractor, r=r, theta=theta, phi=phi)
+    rho: u.Quantity = od.OrbitDetermination.topocentric_equatorial_position_vector(attractor=attractor,
+                                                                                   position=r,
+                                                                                   local_sidereal_time=theta,
+                                                                                   latitude=phi)
     
     assert np.isclose(rho[0].to_value(u.km), 586.8, 1e-1)
     assert np.isclose(rho[1].to_value(u.km), -1084, 1e-0)
     assert np.isclose(rho[2].to_value(u.km), 1523, 1e-0)
     
-    alpha, delta = o3d.Orbit3D.right_ascension_declination(r=rho)
+    alpha, delta = o3d.Orbit3D.right_ascension_declination(position=rho)
     
     assert np.isclose(alpha.to_value(u.deg), 298.4, 1e-1)
     assert np.isclose(delta.to_value(u.deg), 51.01, 1e-2)
@@ -162,7 +170,10 @@ def test_topocentric_horizon_position_vector():
     
     phi: u.Quantity = -40 * u.deg
     
-    rho, A, a = od.OrbitDetermination.topocentric_horizon_position_vector(attractor=attractor, r=r, theta=theta, phi=phi)
+    rho, A, a = od.OrbitDetermination.topocentric_horizon_position_vector(attractor=attractor,
+                                                                          position=r,
+                                                                          local_sidereal_time=theta,
+                                                                          latitude=phi)
     
     assert np.isclose(rho[0].to_value(u.km), 339.5, 1e-1)
     assert np.isclose(rho[1].to_value(u.km), -282.6, 1e-1)
@@ -183,7 +194,11 @@ def test_topocentric_equatorial_right_ascension_declination():
     
     a: u.Quantity = 43 * u.deg
     
-    rho, alpha, delta = od.OrbitDetermination.topocentric_equatorial_right_ascension_declination(attractor=attractor, theta=theta, phi=phi, A=A, a=a)
+    rho, alpha, delta = od.OrbitDetermination.topocentric_equatorial_right_ascension_declination(attractor=attractor,
+                                                                                                 local_sidereal_time=theta,
+                                                                                                 latitude=phi,
+                                                                                                 azimuth=A,
+                                                                                                 elevation=a)
     
     assert np.isclose(rho[0].to_value(), -0.9810, 1e-4)
     assert np.isclose(rho[1].to_value(), -0.1857, 1e-4)
@@ -213,14 +228,14 @@ def test_predict_from_angle_range():
     phi: u.Quantity = 60 * u.deg
     
     r, v = od.OrbitDetermination.predict_from_angle_range(attractor=attractor,
-                                                          rho=rho,
-                                                          A=A,
-                                                          a=a,
-                                                          drho_dt=drho_dt,
-                                                          dA_dt=dA_dt,
-                                                          da_dt=da_dt,
-                                                          theta=theta,
-                                                          phi=phi)
+                                                          slant_range=rho,
+                                                          azimuth=A,
+                                                          elevation=a,
+                                                          range_rate=drho_dt,
+                                                          azimuth_rate=dA_dt,
+                                                          elevation_rate=da_dt,
+                                                          local_sidereal_time=theta,
+                                                          latitude=phi)
     
     assert np.isclose(r[0].to_value(u.km), 3831, atol=1e-0)
     assert np.isclose(r[1].to_value(u.km), -2216, atol=1e-0)
@@ -229,14 +244,14 @@ def test_predict_from_angle_range():
     assert np.isclose(v[1].to_value(u.km / u.s), -4.562, atol=1e-3)
     assert np.isclose(v[2].to_value(u.km / u.s), -0.2920, atol=1e-3)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r, v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
-    assert np.isclose(oe.a.to_value(u.km), 5170, atol=1e-0)
-    assert np.isclose(oe.ecc.to_value(), 0.6195, atol=1e-4)
-    assert np.isclose(oe.inc.to_value(u.deg), 113.4, atol=1e-1)
-    assert np.isclose(oe.raan.to_value(u.deg), 109.8, atol=1e-1)
-    assert np.isclose(oe.argp.to_value(u.deg), 309.8, atol=1e-1)
-    assert np.isclose(oe.nu.to_value(u.deg), 165.3, atol=1e-1)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 5170, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(), 0.6195, atol=1e-4)
+    assert np.isclose(oe.inclination.to_value(u.deg), 113.4, atol=1e-1)
+    assert np.isclose(oe.right_ascension_of_ascending_node.to_value(u.deg), 109.8, atol=1e-1)
+    assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 309.8, atol=1e-1)
+    assert np.isclose(oe.true_anomaly.to_value(u.deg), 165.3, atol=1e-1)
 
 def test_predict_from_gauss_method():
     """EXAMPLE 5.11"""
@@ -256,12 +271,12 @@ def test_predict_from_gauss_method():
     H: u.Quantity = 1 * u.km
     
     r, v = od.OrbitDetermination.predict_from_gauss_method(attractor=attractor,
-                                                           phi=phi,
-                                                           theta=theta,
-                                                           alpha=alpha,
-                                                           delta=delta,
-                                                           t=t,
-                                                           H=H)
+                                                           latitude=phi,
+                                                           local_sidereal_time_list=theta,
+                                                           right_ascension_list=alpha,
+                                                           declination_list=delta,
+                                                           observation_time_list=t,
+                                                           site_altitude=H)
     
     assert np.isclose(r[0].to_value(u.km), 5659.8, atol=1e-1)
     assert np.isclose(r[1].to_value(u.km), 6534.8, atol=1e-1)
@@ -288,12 +303,12 @@ def test_predict_from_gauss_method_extended():
     H: u.Quantity = 1 * u.km
     
     r, v = od.OrbitDetermination.predict_from_gauss_method_extended(attractor=attractor,
-                                                                    phi=phi,
-                                                                    theta=theta,
-                                                                    alpha=alpha,
-                                                                    delta=delta,
-                                                                    t=t,
-                                                                    H=H)
+                                                                    latitude=phi,
+                                                                    local_sidereal_time_list=theta,
+                                                                    right_ascension_list=alpha,
+                                                                    declination_list=delta,
+                                                                    observation_time_list=t,
+                                                                    site_altitude=H)
     
     assert np.isclose(r[0].to_value(u.km), 5662.8, atol=1e-1)
     assert np.isclose(r[1].to_value(u.km), 6539.0, atol=1e-1)

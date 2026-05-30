@@ -24,26 +24,26 @@ def test_hohmann_transfer_1():
     r_a_1: u.Quantity = (6378 + 800) * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     r_p_2: u.Quantity = (6378 + 16000) * u.km
     r_a_2: u.Quantity = (6378 + 16000) * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     direction: om.HohmannDirection = om.HohmannDirection.PERICENTER_APOCENTER
@@ -53,7 +53,7 @@ def test_hohmann_transfer_1():
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 1.7225, atol=1e-4)
     assert np.isclose(maneuver.dv[1].to_value(u.km / u.s), 1.3297, atol=1e-4)
     assert np.isclose(maneuver.dm[0].to_value(u.kg) + maneuver.dm[1].to_value(u.kg), 1291.3, atol=1e-1)
-    assert np.isclose(maneuver.oe[0].h.to_value(u.km**2 / u.s), 64689.5, atol=1e-1)
+    assert np.isclose(maneuver.oe[0].specific_angular_momentum.to_value(u.km**2 / u.s), 64689.5, atol=1e-1)
     
 def test_hohmann_transfer_2():
     """EXAMPLE 6.2"""
@@ -70,19 +70,19 @@ def test_hohmann_transfer_2():
     r: u.Quantity = np.array([-(6378 + 5000), 0, 0]) * u.km
     v: u.Quantity = np.array([0, -10, 0]) * u.km / u.s
     
-    oe_1: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor, r, v)
+    oe_1: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor, r, v)
     
     r_p_2: u.Quantity = (6378 + 500) * u.km
     r_a_2: u.Quantity = (6378 + 500) * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     direction: om.HohmannDirection = om.HohmannDirection.PERICENTER_APOCENTER
@@ -108,25 +108,25 @@ def test_bi_elliptic_hohmann_transfer():
     r_1: u.Quantity = 7000 * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_1 + r_1),
-        ecc=(r_1 - r_1) / (r_1 + r_1) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_1 + r_1),
+        eccentricity=(r_1 - r_1) / (r_1 + r_1) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     r_2: u.Quantity = 105000 * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_2 + r_2),
-        ecc=(r_2 - r_2) / (r_2 + r_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_2 + r_2),
+        eccentricity=(r_2 - r_2) / (r_2 + r_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     r_3: u.Quantity = 210000 * u.km
@@ -165,13 +165,13 @@ def test_phasing_maneuver_1():
     r_a: u.Quantity = 13600 * u.km
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=60116 * u.km**2 / u.s,
-        a=0.5 * (r_p + r_a),
-        ecc=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=60116 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p + r_a),
+        eccentricity=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     nu_target: u.Quantity = 90 * u.deg
@@ -203,13 +203,13 @@ def test_phasing_maneuver_2():
     r: u.Quantity = 42164 * u.km
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=np.sqrt(mu * r.to_value(u.km)) * u.km**2 / u.s,
-        a=r,
-        ecc=0 * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=np.sqrt(mu * r.to_value(u.km)) * u.km**2 / u.s,
+        semimajor_axis=r,
+        eccentricity=0 * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     nu_target: u.Quantity = -12 * u.deg
@@ -240,13 +240,13 @@ def test_non_hohmann_transfer():
     r_a_1: u.Quantity = 20000 * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=150 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=150 * u.deg
     )
     
     r_2: u.Quantity = 6378 * u.km
@@ -259,8 +259,8 @@ def test_non_hohmann_transfer():
                                                                            nu_2=nu_2)
     
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 0.9896, atol=1e-4)
-    assert np.isclose(maneuver.oe[0].h.to_value(u.km**2 / u.s), 62711, atol=1e-0)
-    assert np.isclose(maneuver.oe[0].ecc.to_value(u.dimensionless_unscaled), 0.5469, atol=1e-4)
+    assert np.isclose(maneuver.oe[0].specific_angular_momentum.to_value(u.km**2 / u.s), 62711, atol=1e-0)
+    assert np.isclose(maneuver.oe[0].eccentricity.to_value(u.dimensionless_unscaled), 0.5469, atol=1e-4)
     assert np.isclose(maneuver.fpa[0].to_value(u.deg), 123.3, atol=1e-1)
 
 def test_apse_line_rotation_from_eta():
@@ -279,26 +279,26 @@ def test_apse_line_rotation_from_eta():
     r_a_1: u.Quantity = 16000 * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     r_p_2: u.Quantity = 7000 * u.km
     r_a_2: u.Quantity = 21000 * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=25 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=25 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     eta: u.Quantity = 25 * u.deg
@@ -310,7 +310,7 @@ def test_apse_line_rotation_from_eta():
                                                                                   eta=eta)
     
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 1.503, atol=1e-3)
-    assert np.isclose(maneuver.oe[0].nu.to_value(u.deg), 153.04, atol=1e-2)
+    assert np.isclose(maneuver.oe[0].true_anomaly.to_value(u.deg), 153.04, atol=1e-2)
     assert np.isclose(maneuver.fpa[0].to_value(u.deg), 91.28, atol=1e-2)
     
 def test_apse_line_rotation_from_true_anomaly():
@@ -329,13 +329,13 @@ def test_apse_line_rotation_from_true_anomaly():
     r_a: u.Quantity = 17000 * u.km
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p + r_a),
-        ecc=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p + r_a),
+        eccentricity=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
     dv: u.Quantity = 2 * u.km / u.s
@@ -347,10 +347,10 @@ def test_apse_line_rotation_from_true_anomaly():
                                                                                            dv=dv,
                                                                                            fpa=fpa)
     
-    assert np.isclose(maneuver.oe[0].ecc.to_value(u.dimensionless_unscaled), 0.80883, atol=1e-5)
-    assert np.isclose(maneuver.oe[0].perigee_radius().to_value(u.km), 6771.1, atol=1e-1)
-    assert np.isclose(maneuver.oe[0].apogee_radius().to_value(u.km), 64069, atol=1e-0)
-    assert np.isclose(maneuver.oe[0].argp.to_value(u.deg), -22.05, atol=1e-2)
+    assert np.isclose(maneuver.oe[0].eccentricity.to_value(u.dimensionless_unscaled), 0.80883, atol=1e-5)
+    assert np.isclose(maneuver.oe[0].calc_perigee_radius().to_value(u.km), 6771.1, atol=1e-1)
+    assert np.isclose(maneuver.oe[0].calc_apogee_radius().to_value(u.km), 64069, atol=1e-0)
+    assert np.isclose(maneuver.oe[0].argument_of_periapsis.to_value(u.deg), -22.05, atol=1e-2)
 
 def test_chase_maneuver():
     """EXAMPLE 6.9"""
@@ -368,13 +368,13 @@ def test_chase_maneuver():
     r_a: u.Quantity = 18900 * u.km
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p + r_a),
-        ecc=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=45 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p + r_a),
+        eccentricity=(r_a - r_p) / (r_a + r_p) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=45 * u.deg
     )
     
     nu_T: u.Quantity = 150 * u.deg
@@ -389,10 +389,10 @@ def test_chase_maneuver():
     
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 4.6755, atol=1e-4)
     assert np.isclose(maneuver.dv[1].to_value(u.km / u.s), 4.7540, atol=1e-4)
-    assert np.isclose(maneuver.oe[0].h.to_value(u.km**2 / u.s), 76167, atol=1e-0)
-    assert np.isclose(maneuver.oe[0].ecc.to_value(u.dimensionless_unscaled), 0.8500, atol=1e-4)
-    assert np.isclose(maneuver.oe[0].a.to_value(u.km), 52445, atol=1e-0)
-    assert np.isclose(maneuver.oe[0].nu.to_value(u.deg), 319.52, atol=1e-2)
+    assert np.isclose(maneuver.oe[0].specific_angular_momentum.to_value(u.km**2 / u.s), 76167, atol=1e-0)
+    assert np.isclose(maneuver.oe[0].eccentricity.to_value(u.dimensionless_unscaled), 0.8500, atol=1e-4)
+    assert np.isclose(maneuver.oe[0].semimajor_axis.to_value(u.km), 52445, atol=1e-0)
+    assert np.isclose(maneuver.oe[0].true_anomaly.to_value(u.deg), 319.52, atol=1e-2)
 
 def test_launch_azimuth():
     """EXAMPLE 6.10"""
@@ -422,29 +422,29 @@ def test_plane_change_maneuver_from_dihedral_angle_1():
     r_a_1: u.Quantity = 42164 * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=28 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=180 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=28 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=180 * u.deg
     )
     
     r_p_2: u.Quantity = 42164 * u.km
     r_a_2: u.Quantity = 42164 * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
-    dihedral_angle: u.Quantity = oe_2.inc - oe_1.inc
+    dihedral_angle: u.Quantity = oe_2.inclination - oe_1.inclination
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_dihedral_angle(attractor=attractor,
                                                                                                 rocket_motor=rocket_motor,
@@ -458,29 +458,29 @@ def test_plane_change_maneuver_from_dihedral_angle_1():
     r_a_1: u.Quantity = 6678 * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=28 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=180 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=28 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=180 * u.deg
     )
     
     r_p_2: u.Quantity = 6678 * u.km
     r_a_2: u.Quantity = 42164 * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=0 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=0 * u.deg
     )
     
-    dihedral_angle: u.Quantity = oe_2.inc - oe_1.inc
+    dihedral_angle: u.Quantity = oe_2.inclination - oe_1.inclination
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_dihedral_angle(attractor=attractor,
                                                                                                 rocket_motor=rocket_motor,
@@ -506,29 +506,29 @@ def test_plane_change_maneuver_from_dihedral_angle_2():
     r_a_1: u.Quantity = (10000 + 6378) * u.km
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_1 + r_a_1),
-        ecc=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
-        inc=15 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=120 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_1 + r_a_1),
+        eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.dimensionless_unscaled,
+        inclination=15 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=120 * u.deg
     )
     
     r_p_2: u.Quantity = (500 + 6378) * u.km
     r_a_2: u.Quantity = (10000 + 6378) * u.km
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=0.5 * (r_p_2 + r_a_2),
-        ecc=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
-        inc=0 * u.deg,
-        raan=0 * u.deg,
-        argp=0 * u.deg,
-        nu=120 * u.deg
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=0.5 * (r_p_2 + r_a_2),
+        eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.dimensionless_unscaled,
+        inclination=0 * u.deg,
+        right_ascension_of_ascending_node=0 * u.deg,
+        argument_of_periapsis=0 * u.deg,
+        true_anomaly=120 * u.deg
     )
     
-    dihedral_angle: u.Quantity = oe_2.inc - oe_1.inc
+    dihedral_angle: u.Quantity = oe_2.inclination - oe_1.inclination
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_dihedral_angle(attractor=attractor,
                                                                                                 rocket_motor=rocket_motor,
@@ -538,8 +538,8 @@ def test_plane_change_maneuver_from_dihedral_angle_2():
     
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 1.3325, atol=1e-4)
     
-    oe_1.nu = 300 * u.deg
-    oe_2.nu = 300 * u.deg
+    oe_1.true_anomaly = 300 * u.deg
+    oe_2.true_anomaly = 300 * u.deg
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_dihedral_angle(attractor=attractor,
                                                                                                 rocket_motor=rocket_motor,
@@ -562,23 +562,23 @@ def test_plane_change_maneuver_from_raan_and_inclination():
     )
     
     oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=10048 * u.km,
-        ecc=0.1983 * u.dimensionless_unscaled,
-        inc=2.7794 * u.rad,
-        raan=1.3915 * u.rad,
-        argp=2.8956 * u.rad,
-        nu=1.3078 * u.rad
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=10048 * u.km,
+        eccentricity=0.1983 * u.dimensionless_unscaled,
+        inclination=2.7794 * u.rad,
+        right_ascension_of_ascending_node=1.3915 * u.rad,
+        argument_of_periapsis=2.8956 * u.rad,
+        true_anomaly=1.3078 * u.rad
     )
     
     oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
-        h=0 * u.km**2 / u.s,
-        a=10048 * u.km,
-        ecc=0.1983 * u.dimensionless_unscaled,
-        inc=0.444 * u.rad,
-        raan=2.5486 * u.rad,
-        argp=3.1052 * u.rad,
-        nu=2.0233 * u.rad
+        specific_angular_momentum=0 * u.km**2 / u.s,
+        semimajor_axis=10048 * u.km,
+        eccentricity=0.1983 * u.dimensionless_unscaled,
+        inclination=0.444 * u.rad,
+        right_ascension_of_ascending_node=2.5486 * u.rad,
+        argument_of_periapsis=3.1052 * u.rad,
+        true_anomaly=2.0233 * u.rad
     )
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_raan_and_inclination(attractor=attractor,
@@ -587,8 +587,8 @@ def test_plane_change_maneuver_from_raan_and_inclination():
                                                                                                       oe_2=oe_2)
     
     assert np.isclose(maneuver.dv[0].to_value(u.km / u.s), 9.9574, atol=1e-4)
-    assert np.isclose(maneuver.oe[0].argp.to_value(u.rad), 3.0316, atol=1e-4)
-    assert np.isclose(maneuver.oe[0].nu.to_value(u.rad), 2.7026, atol=1e-4)
+    assert np.isclose(maneuver.oe[0].argument_of_periapsis.to_value(u.rad), 3.0316, atol=1e-4)
+    assert np.isclose(maneuver.oe[0].true_anomaly.to_value(u.rad), 2.7026, atol=1e-4)
 
 def test_constant_tangential_thrust_transfer_from_time():
     """EXAMPLE 6.16"""
@@ -685,13 +685,13 @@ def test_non_impulsive_maneuver_1():
                               maneuver.v_y.to_value(u.km / u.s),
                               maneuver.v_z.to_value(u.km / u.s)]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor,
-                                                           r=r,
-                                                           v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                           position=r,
+                                                           velocity=v)
     
-    assert np.isclose(oe.a.to_value(u.km), 16000 + 6378, atol=1e-0)
-    assert np.isclose(oe.ecc.to_value(u.dimensionless_unscaled), 0.00867, atol=1e-5)
-    assert np.isclose(oe.argp.to_value(u.deg), 80.85, atol=1e-2)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 16000 + 6378, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(u.dimensionless_unscaled), 0.00867, atol=1e-5)
+    assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 80.85, atol=1e-2)
 
 @pytest.mark.skip(reason="Too long to run")
 def test_non_impulsive_maneuver_2():
@@ -741,9 +741,9 @@ def test_non_impulsive_maneuver_2():
                               maneuver.v_y.to_value(u.km / u.s),
                               maneuver.v_z.to_value(u.km / u.s)]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor,
-                                                           r=r,
-                                                           v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                           position=r,
+                                                           velocity=v)
     
-    assert np.isclose(oe.a.to_value(u.km), 42164 - 15, atol=1e-0)
-    assert np.isclose(oe.ecc.to_value(u.dimensionless_unscaled), 0.02346, atol=1e-5)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 42164 - 15, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(u.dimensionless_unscaled), 0.02346, atol=1e-5)

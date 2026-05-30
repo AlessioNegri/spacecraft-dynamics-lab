@@ -36,6 +36,8 @@ export default function DialogRUI(props: Readonly<DialogRUIProps>): react.JSX.El
                 <themes.Theme appearance="dark" accentColor="orange" grayColor="slate">
 
                     <dialog.Content
+                        aria-description={props.title}
+                        aria-describedby={props.title}
                         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
                                     w-[80%] max-w-200 bg-neutral-800 text-white rounded-lg shadow-xl
                                     border-2 border-orange-800/50 p-6 space-y-6"

@@ -24,13 +24,13 @@ def fill_orbital_elements(oe_schema: schema.OrbitalElements) -> o3d.OrbitalEleme
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements()
     
-    oe.h = oe_schema.sam * u.km**2 / u.s
-    oe.a = oe_schema.sma * u.km
-    oe.ecc = oe_schema.ecc * u.dimensionless_unscaled
-    oe.inc = oe_schema.inc * u.deg
-    oe.raan = oe_schema.raan * u.deg
-    oe.argp = oe_schema.aop * u.deg
-    oe.nu = oe_schema.ta * u.deg
+    oe.specific_angular_momentum = oe_schema.sam * u.km**2 / u.s
+    oe.semimajor_axis = oe_schema.sma * u.km
+    oe.eccentricity = oe_schema.ecc * u.dimensionless_unscaled
+    oe.inclination = oe_schema.inc * u.deg
+    oe.right_ascension_of_ascending_node = oe_schema.raan * u.deg
+    oe.argument_of_periapsis = oe_schema.aop * u.deg
+    oe.true_anomaly = oe_schema.ta * u.deg
     
     return oe
 
@@ -57,7 +57,7 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     
     oe_target: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElementsTarget)
     
-    r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
     oe_chaser: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElementsChaser)
     

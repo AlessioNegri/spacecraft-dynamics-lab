@@ -86,8 +86,8 @@ def test_encke_method():
     
     result: op.Result = orbit.propagate_encke_for(delta=delta, step=step)
     
-    draan_dhour: float = (result.oe[-1].raan - result.oe[0].raan).to_value(u.deg) / delta.to_value(u.hour)
-    dargp_dhour: float = (result.oe[-1].argp - result.oe[0].argp).to_value(u.deg) / delta.to_value(u.hour)
+    draan_dhour: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg) / delta.to_value(u.hour)
+    dargp_dhour: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg) / delta.to_value(u.hour)
     
     assert np.isclose(draan_dhour, -0.166, atol=1e-3)
     assert np.isclose(dargp_dhour, 0.263, atol=1e-3)
@@ -110,8 +110,8 @@ def test_gauss_method_gravitational_perturbation():
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    draan_dhour: float = (result.oe[-1].raan - result.oe[0].raan).to_value(u.deg) / delta.to_value(u.hour)
-    dargp_dhour: float = (result.oe[-1].argp - result.oe[0].argp).to_value(u.deg) / delta.to_value(u.hour)
+    draan_dhour: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg) / delta.to_value(u.hour)
+    dargp_dhour: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg) / delta.to_value(u.hour)
     
     assert np.isclose(draan_dhour, -0.172, atol=1e-3)
     assert np.isclose(dargp_dhour, 0.282, atol=1e-3)
@@ -146,15 +146,15 @@ def test_gauss_method_solar_radiation_pressure():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(h=63383.4 * u.km**2 / u.s,
-                                                    a=0 * u.km,
-                                                    ecc=0.025422 * u.dimensionless_unscaled,
-                                                    inc=88.3924 * u.deg,
-                                                    raan=45.3812 * u.deg,
-                                                    argp=227.493 * u.deg,
-                                                    nu=343.427 * u.deg)
+    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=63383.4 * u.km**2 / u.s,
+                                                    semimajor_axis=0 * u.km,
+                                                    eccentricity=0.025422 * u.dimensionless_unscaled,
+                                                    inclination=88.3924 * u.deg,
+                                                    right_ascension_of_ascending_node=45.3812 * u.deg,
+                                                    argument_of_periapsis=227.493 * u.deg,
+                                                    true_anomaly=343.427 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_0)
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_438_400.5
     
@@ -175,9 +175,9 @@ def test_gauss_method_solar_radiation_pressure():
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].raan - result.oe[0].raan).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argp - result.oe[0].argp).to_value(u.deg)
-    delta_a: float = (result.oe[-1].a - result.oe[0].a).to_value(u.km)
+    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg)
+    delta_a: float = (result.oe[-1].semimajor_axis - result.oe[0].semimajor_axis).to_value(u.km)
     print(delta_raan, delta_argp, delta_a)
     assert np.isclose(delta_raan, -0.035, atol=1e-3)
     assert np.isclose(delta_argp, -84.27, atol=1e-2)
@@ -199,15 +199,15 @@ def test_gauss_method_lunar_gravity():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(h=69084.1 * u.km**2 / u.s,
-                                                    a=26553.4 * u.km,
-                                                    ecc=0.741 * u.dimensionless_unscaled,
-                                                    inc=63.4 * u.deg,
-                                                    raan=0 * u.deg,
-                                                    argp=270 * u.deg,
-                                                    nu=0 * u.deg)
+    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
+                                                    semimajor_axis=26553.4 * u.km,
+                                                    eccentricity=0.741 * u.dimensionless_unscaled,
+                                                    inclination=63.4 * u.deg,
+                                                    right_ascension_of_ascending_node=0 * u.deg,
+                                                    argument_of_periapsis=270 * u.deg,
+                                                    true_anomaly=0 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_0)
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_454_283.0
     
@@ -220,9 +220,9 @@ def test_gauss_method_lunar_gravity():
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].raan - oe_0.raan).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argp - oe_0.argp).to_value(u.deg)
-    delta_inc: float = (result.oe[-1].inc - oe_0.inc).to_value(u.deg)
+    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - oe_0.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (result.oe[-1].argument_of_periapsis - oe_0.argument_of_periapsis).to_value(u.deg)
+    delta_inc: float = (result.oe[-1].inclination - oe_0.inclination).to_value(u.deg)
     print(delta_raan, delta_argp, delta_inc)
     assert np.isclose(delta_raan, -0.035, atol=1e-3)
     assert np.isclose(delta_argp, -84.27, atol=1e-2)
@@ -233,15 +233,15 @@ def test_gauss_method_sun_gravity():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(h=69084.1 * u.km**2 / u.s,
-                                                    a=26553.4 * u.km,
-                                                    ecc=0.741 * u.dimensionless_unscaled,
-                                                    inc=63.4 * u.deg,
-                                                    raan=0 * u.deg,
-                                                    argp=270 * u.deg,
-                                                    nu=0 * u.deg)
+    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
+                                                    semimajor_axis=26553.4 * u.km,
+                                                    eccentricity=0.741 * u.dimensionless_unscaled,
+                                                    inclination=63.4 * u.deg,
+                                                    right_ascension_of_ascending_node=0 * u.deg,
+                                                    argument_of_periapsis=270 * u.deg,
+                                                    true_anomaly=0 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_0)
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_454_283.0
     
@@ -254,9 +254,9 @@ def test_gauss_method_sun_gravity():
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].raan - oe_0.raan).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argp - oe_0.argp).to_value(u.deg)
-    delta_inc: float = (result.oe[-1].inc - oe_0.inc).to_value(u.deg)
+    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - oe_0.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (result.oe[-1].argument_of_periapsis - oe_0.argument_of_periapsis).to_value(u.deg)
+    delta_inc: float = (result.oe[-1].inclination - oe_0.inclination).to_value(u.deg)
     print(delta_raan, delta_argp, delta_inc)
     assert np.isclose(delta_raan, -0.15, atol=1e-2)
     assert np.isclose(delta_argp, 0.2, atol=1e-2)

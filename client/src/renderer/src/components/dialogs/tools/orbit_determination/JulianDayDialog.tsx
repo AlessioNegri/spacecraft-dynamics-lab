@@ -1,19 +1,20 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
-import * as themes from "@radix-ui/themes"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
 
-interface JulianDayDialogProps
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
-export default function JulianDayDialog(props: Readonly<JulianDayDialogProps>): react.JSX.Element
+export default function JulianDayDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -28,8 +29,6 @@ export default function JulianDayDialog(props: Readonly<JulianDayDialogProps>): 
     const [longitudeIn, setLongitudeIn] = react.useState<number>(139.8)
 
     const [localSiderealTimeOut, setLocalSiderealTimeOut] = react.useState<number>(0)
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- HANDLE ---
 
@@ -48,9 +47,7 @@ export default function JulianDayDialog(props: Readonly<JulianDayDialogProps>): 
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -66,9 +63,7 @@ export default function JulianDayDialog(props: Readonly<JulianDayDialogProps>): 
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -89,60 +84,83 @@ export default function JulianDayDialog(props: Readonly<JulianDayDialogProps>): 
 
             {/* TS -> JD */}
 
-            <form.Root className="w-full flex justify-between items-center space-x-4 border-b pb-4 mb-4">
+            <Form.Root className="w-full flex justify-between items-center space-x-4 border-b pb-4 mb-4">
 
                 <div className="flex flex-col space-y-4">
 
                     <InputField
                         name="timestamp"
                         label="Timestamp"
+                        symbol="t"
                         type="datetime-local"
                         value={timestampIn}
                         onChange={(e: react.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setTimestampIn(e.target.value)}
                     />
 
                     <InputField
+                        type="number"
                         name="longitude"
                         label="Longitude"
-                        unit="DEG"
+                        symbol="\lambda"
+                        unit="deg"
                         value={longitudeIn}
+                        min={-360}
+                        max={360}
                         onChange={(e: react.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setLongitudeIn(Number(e.target.value))}
                     />
 
                 </div>
 
-                <themes.Button variant="outline" color="orange" onClick={handleSubmitT2JD}>
+                <Themes.Button variant="outline" color="orange" onClick={handleSubmitT2JD}>
                     Convert
-                </themes.Button>
+                </Themes.Button>
 
                 <div className="flex flex-col space-y-4">
 
-                    <OutputField name="julian-day" label="Julian Day" value={julianDayOut} />
+                    <OutputField
+                        name="julian-day"
+                        label="Julian Day"
+                        symbol="JD"
+                        value={julianDayOut}
+                    />
 
-                    <OutputField name="local-sidereal-time" label="Local Sidereal Time" unit="DEG" value={localSiderealTimeOut} />
+                    <OutputField
+                        name="local-sidereal-time"
+                        label="Local Sidereal Time"
+                        symbol="\theta"
+                        unit="deg"
+                        value={localSiderealTimeOut}
+                    />
 
                 </div>
 
-            </form.Root>
+            </Form.Root>
 
             {/* JS -> TS */}
 
-            <form.Root className="w-full flex justify-between items-end space-x-4 pb-4 mb-4">
+            <Form.Root className="w-full flex justify-between items-end space-x-4 pb-4 mb-4">
 
                 <InputField
                     name="julian-day"
                     label="Julian Day"
+                    symbol="JD"
                     value={julianDayIn}
                     onChange={(e: react.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setJulianDayIn(Number(e.target.value))}
                 />
 
-                <themes.Button variant="outline" color="orange" onClick={handleSubmitJD2T}>
+                <Themes.Button variant="outline" color="orange" onClick={handleSubmitJD2T}>
                     Convert
-                </themes.Button>
+                </Themes.Button>
 
-                <OutputField name="timestamp" label="Timestamp" type="datetime-local" value={timestampOut} />
+                <OutputField
+                    name="timestamp"
+                    label="Timestamp"
+                    symbol="t"
+                    type="datetime-local"
+                    value={timestampOut}
+                />
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

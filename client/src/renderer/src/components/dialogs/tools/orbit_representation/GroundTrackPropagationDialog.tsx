@@ -1,10 +1,11 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
 
 interface IFormIn
 {
@@ -45,22 +46,20 @@ const defaultOut: IFormOut =
     delta: 0
 }
 
-interface GroundTrackPropagationDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function GroundTrackPropagationDialog */
-export default function GroundTrackPropagationDialog(props: Readonly<GroundTrackPropagationDialogProps>): react.JSX.Element
+export default function GroundTrackPropagationDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
     const [formIn, setFormIn] = react.useState<IFormIn>(defaultIn)
 
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
 
@@ -98,9 +97,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -117,7 +114,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
                 {
                     title: "Ground Track Propagation",
                     content:
-                        `Given the initial orbital elements of a satellite relative to the Geocentric Equatorial frame,
+                        `Given the initial orbital elements of a satellite relative to the Inertial Reference Frame,
                         compute the right ascension and declination relative to the rotating earth after a given time
                         interval.`
                 }
@@ -125,10 +122,10 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
-                className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
+                className="grid grid-cols-3 gap-4 border-b pb-4 mb-4 items-end">
 
                 <InputField
                     name="attractor"
@@ -148,13 +145,24 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
                             { label: "Neptune", value: "neptune" }
                         ]}
                 />
+
+                <InputField
+                    name="deltaTime"
+                    label="Time Delta"
+                    symbol="\Delta t"
+                    unit="s"
+                    value={formIn.deltaTime}
+                    onChange={handleChange}
+                    min={0}
+                />
                 
                 <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
 
                 <InputField
                     name="oe.sma"
-                    label="Semi-Major Axis"
-                    unit="KM"
+                    label="Semimajor Axis"
+                    symbol="a"
+                    unit="km"
                     type="text"
                     value={String(formIn.oe.sma)}
                     onChange={handleChange}
@@ -164,26 +172,31 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
                 <InputField
                     name="oe.ecc"
                     label="Eccentricity"
-                    unit="KM"
+                    symbol="e"
+                    unit=""
                     value={formIn.oe.ecc}
                     onChange={handleChange}
                     min={0}
                 />
 
                 <InputField
+                    type="number"
                     name="oe.inc"
                     label="Inclination"
-                    unit="DEG"
+                    symbol="i"
+                    unit="deg"
                     value={formIn.oe.inc}
                     onChange={handleChange}
-                    min={-360}
-                    max={360}
+                    min={-90}
+                    max={180}
                 />
 
                 <InputField
+                    type="number"
                     name="oe.raan"
-                    label="RAAN"
-                    unit="DEG"
+                    label="Right Ascension of Ascending Node"
+                    symbol="\Omega"
+                    unit="deg"
                     value={formIn.oe.raan}
                     onChange={handleChange}
                     min={-360}
@@ -191,9 +204,11 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
                 />
 
                 <InputField
+                    type="number"
                     name="oe.aop"
-                    label="Argument Periapsis"
-                    unit="DEG"
+                    label="Argument Of Periapsis"
+                    symbol="\omega"
+                    unit="deg"
                     value={formIn.oe.aop}
                     onChange={handleChange}
                     min={-360}
@@ -201,39 +216,52 @@ export default function GroundTrackPropagationDialog(props: Readonly<GroundTrack
                 />
 
                 <InputField
+                    type="number"
                     name="oe.ta"
                     label="True Anomaly"
-                    unit="DEG"
+                    symbol="\theta"
+                    unit="deg"
                     value={formIn.oe.ta}
                     onChange={handleChange}
                     min={-360}
                     max={360}
                 />
 
-                <InputField
-                    name="deltaTime"
-                    label="Time Delta"
-                    unit="S"
-                    value={formIn.deltaTime}
-                    onChange={handleChange}
-                    min={0}
-                />
-
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
             
-            <form.Root className="grid grid-cols-2 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-2 gap-4 mb-4">
                 
-                <OutputField label="RAAN Variation" unit="DEG / DAY" value={formOut.draan_dt} />
+                <OutputField
+                    label="Right Ascension of Ascending Node Variation"
+                    symbol="d\Omega / dt"
+                    unit="deg / day"
+                    value={formOut.draan_dt}
+                />
 
-                <OutputField label="Argument Periapsis Variation" unit="DEG / DAY" value={formOut.daop_dt} />
+                <OutputField
+                    label="Argument Of Periapsis Variation"
+                    symbol="d\omega / dt"
+                    unit="deg / day"
+                    value={formOut.daop_dt}
+                />
 
-                <OutputField label="Right Ascension" unit="DEG" value={formOut.alpha} />
+                <OutputField
+                    label="Right Ascension"
+                    symbol="\alpha"
+                    unit="deg"
+                    value={formOut.alpha}
+                />
 
-                <OutputField label="Declination" unit="DEG" value={formOut.delta} />
+                <OutputField
+                    label="Declination"
+                    symbol="\delta"
+                    unit="deg"
+                    value={formOut.delta}
+                />
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

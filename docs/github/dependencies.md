@@ -122,7 +122,13 @@
       style="border-radius: 50px;"
       />
   </td>
-  <td></td>
+  <td>
+    <img
+      src="https://img.shields.io/badge/Katex_0.16.45-%23008080.svg?style=for-the-badge&logo=latex&logoColor=white"
+      alt="logo"
+      style="border-radius: 50px;"
+      />
+  </td>
   <td></td>
   </tr>
 

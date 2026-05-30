@@ -450,11 +450,11 @@ class OrbitalPerturbations():
         
         dv_0: np.ndarray = np.zeros(shape=(3))
         
-        oe_0: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=self.attractor,
-                                                                 r=r_0 * u.km,
-                                                                 v=v_0 * u.km / u.s)
+        oe_0: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                 position=r_0 * u.km,
+                                                                 velocity=v_0 * u.km / u.s)
         
-        max_step: float = oe_0.orbital_period(attractor=self.attractor).to_value(u.s) / 100.0
+        max_step: float = oe_0.calc_orbital_period(attractor=self.attractor).to_value(u.s) / 100.0
         
         times: np.ndarray = np.arange(start=step.to_value(u.s), stop=delta.to_value(u.s), step=step.to_value(u.s))
         
@@ -500,9 +500,9 @@ class OrbitalPerturbations():
             
             # >>> c. Calculates osculating orbital elements
             
-            oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=self.attractor,
-                                                                   r=r_0 * u.km,
-                                                                   v=v_0 * u.km / u.s)
+            oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                   position=r_0 * u.km,
+                                                                   velocity=v_0 * u.km / u.s)
             
             orbital_elements.append(oe)
         
@@ -534,18 +534,18 @@ class OrbitalPerturbations():
         
         cm.check_time_delta(delta)
         
-        oe_0: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=self.attractor,
-                                                                 r=self.r * u.km,
-                                                                 v=self.v * u.km / u.s)
+        oe_0: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                 position=self.r * u.km,
+                                                                 velocity=self.v * u.km / u.s)
         
         solution: dict = ode.solve_ivp(fun=self._gauss_variational_eom,
                                        t_span=[0, delta.to_value(u.s)],
-                                       y0=np.array([oe_0.h.to_value(u.km**2 / u.s),
-                                                    oe_0.ecc.to_value(u.dimensionless_unscaled),
-                                                    oe_0.nu.to_value(u.rad),
-                                                    oe_0.raan.to_value(u.rad),
-                                                    oe_0.inc.to_value(u.rad),
-                                                    oe_0.argp.to_value(u.rad)]),
+                                       y0=np.array([oe_0.specific_angular_momentum.to_value(u.km**2 / u.s),
+                                                    oe_0.eccentricity.to_value(u.dimensionless_unscaled),
+                                                    oe_0.true_anomaly.to_value(u.rad),
+                                                    oe_0.right_ascension_of_ascending_node.to_value(u.rad),
+                                                    oe_0.inclination.to_value(u.rad),
+                                                    oe_0.argument_of_periapsis.to_value(u.rad)]),
                                        method='RK45',
                                        args=(),
                                        rtol=1e-8,
@@ -559,15 +559,15 @@ class OrbitalPerturbations():
         
         for idx, _ in enumerate(solution['t']):
             
-            oe_idx: o3d.OrbitalElements = o3d.OrbitalElements(h=solution['y'][0, idx] * u.km**2 / u.s,
-                                                              a=0.0 * u.km,
-                                                              ecc=solution['y'][1, idx] * u.dimensionless_unscaled,
-                                                              inc=(solution['y'][4, idx] * u.rad).to(u.deg),
-                                                              raan=(solution['y'][3, idx] * u.rad).to(u.deg),
-                                                              argp=(solution['y'][5, idx] * u.rad).to(u.deg),
-                                                              nu=(solution['y'][2, idx] * u.rad).to(u.deg))
+            oe_idx: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=solution['y'][0, idx] * u.km**2 / u.s,
+                                                              semimajor_axis=0.0 * u.km,
+                                                              eccentricity=solution['y'][1, idx] * u.dimensionless_unscaled,
+                                                              inclination=(solution['y'][4, idx] * u.rad).to(u.deg),
+                                                              right_ascension_of_ascending_node=(solution['y'][3, idx] * u.rad).to(u.deg),
+                                                              argument_of_periapsis=(solution['y'][5, idx] * u.rad).to(u.deg),
+                                                              true_anomaly=(solution['y'][2, idx] * u.rad).to(u.deg))
             
-            oe_idx.a = oe_idx.semi_major_axis(attractor=self.attractor)
+            oe_idx.calc_semimajor_axis(attractor=self.attractor)
             
             result.oe.append(oe_idx)
         
@@ -598,7 +598,7 @@ class OrbitalPerturbations():
         
         R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2
+        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
         
         # >>> Perturbations
         
@@ -675,7 +675,7 @@ class OrbitalPerturbations():
         
         R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2
+        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
         
         # >>> Osculating state on the perturbed orbit
         
@@ -781,7 +781,7 @@ class OrbitalPerturbations():
         
         R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2
+        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
         
         r: float = h**2 / (mu * (1 + ecc * np.cos(nu)))
         
@@ -791,7 +791,7 @@ class OrbitalPerturbations():
         p_s: float = 0.0
         p_w: float = 0.0
         
-        r_sc, v_sc = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=self.attractor, oe=oe) # ? Spacecraft
+        r_sc, v_sc = o3d.Orbit3D.keplerian_to_cartesian(attractor=self.attractor, orbital_elements=oe) # ? Spacecraft
         
         if self.use_atmospheric_drag:
             

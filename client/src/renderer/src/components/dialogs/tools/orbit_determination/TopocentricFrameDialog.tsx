@@ -1,10 +1,12 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 interface IFormIn
 {
@@ -16,13 +18,13 @@ interface IFormIn
 
 interface IFormOut
 {
-    geo: IVector3D // ? Geocentric Equatorial Observer
-    te: IVector3D // ? Topocentric Equatorial
-    th: IVector3D // ? Topocentric Horizon
-    A: number // ? Azimuth
-    a: number // ? Elevation
-    alpha: number // ? Right Ascension
-    delta: number // ? Declination
+    positionGeocentricEquatorial: IVector3D // ? Geocentric Equatorial Observer
+    positionTopocentricEquatorial: IVector3D // ? Topocentric Equatorial
+    positionTopocentricHorizon: IVector3D // ? Topocentric Horizon
+    azimuth: number // ? Azimuth
+    elevation: number // ? Elevation
+    rightAscension: number // ? Right Ascension
+    declination: number // ? Declination
 }
 
 const defaultIn: IFormIn =
@@ -35,23 +37,23 @@ const defaultIn: IFormIn =
 
 const defaultOut: IFormOut =
 {
-    geo: { x: 0, y: 0, z: 0 },
-    te: { x: 0, y: 0, z: 0 },
-    th: { x: 0, y: 0, z: 0 },
-    A: 0,
-    a: 0,
-    alpha: 0,
-    delta: 0
+    positionGeocentricEquatorial: { x: 0, y: 0, z: 0 },
+    positionTopocentricEquatorial: { x: 0, y: 0, z: 0 },
+    positionTopocentricHorizon: { x: 0, y: 0, z: 0 },
+    azimuth: 0,
+    elevation: 0,
+    rightAscension: 0,
+    declination: 0
 }
 
-interface TopocentricFrameDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function TopocentricFrameDialog */
-export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameDialogProps>): react.JSX.Element
+export default function TopocentricFrameDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
     
@@ -60,8 +62,6 @@ export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameD
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
     
     const [errors, setErrors] = react.useState<Record<string, string>>({})
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
     
@@ -115,9 +115,7 @@ export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameD
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -142,32 +140,43 @@ export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameD
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
 
                 <InputField
+                    type="number"
                     name="localSiderealTime"
                     label="Local Sidereal Time"
-                    unit="DEG"
+                    symbol="\theta"
+                    unit="deg"
                     value={formIn.localSiderealTime}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="latitude"
                     label="Latitude"
-                    unit="DEG"
+                    symbol="\phi"
+                    unit="deg"
                     value={formIn.latitude}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="elevation"
                     label="Elevation Above Sea Level"
-                    unit="KM"
+                    symbol="H"
+                    unit="km"
                     value={formIn.elevation}
+                    min={0}
                     onChange={handleChange}
                 />
 
@@ -177,68 +186,113 @@ export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameD
 
                 <InputField
                     name="position.x"
-                    label="X"
-                    unit="KM"
+                    symbol="r_x"
+                    unit="km"
                     value={formIn.position.x}
                     onChange={handleChange}
                 />
 
                 <InputField
                     name="position.y"
-                    label="Y"
-                    unit="KM"
+                    symbol="r_y"
+                    unit="km"
                     value={formIn.position.y}
                     onChange={handleChange}
                 />
 
                 <InputField
                     name="position.z"
-                    label="Z"
-                    unit="KM"
+                    symbol="r_z"
+                    unit="km"
                     value={formIn.position.z}
                     onChange={handleChange}
                 />
 
-                {
-                    errors.position &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.position}</span>
-                }
+                { errors.position && <ErrorText text={errors.position} /> }
                 
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-3 gap-4 mb-4">
 
-                <span className="col-span-3 text-center uppercase font-semibold">
-                    Geocentric Equatorial Observer Position Vector
-                </span>
+                <div className="flex flex-col gap-4">
 
-                <OutputField name="geo.x" label="X" unit="KM" value={formOut.geo.x} />
+                    <span className="text-center uppercase font-semibold">
+                        Geocentric Equatorial Observer Position Vector
+                    </span>
+
+                    <OutputField
+                        symbol="r_x"
+                        unit="km"
+                        value={formOut.positionGeocentricEquatorial.x}
+                    />
                 
-                <OutputField name="geo.y" label="Y" unit="KM" value={formOut.geo.y} />
-    
-                <OutputField name="geo.z" label="Z" unit="KM" value={formOut.geo.z} />
+                    <OutputField
+                        symbol="r_y"
+                        unit="km"
+                        value={formOut.positionGeocentricEquatorial.y}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">
-                    Topocentric Equatorial Position Vector
-                </span>
+                    <OutputField
+                        symbol="r_z"
+                        unit="km"
+                        value={formOut.positionGeocentricEquatorial.z}
+                    />
 
-                <OutputField name="te.x" label="X" unit="KM" value={formOut.te.x} />
-                
-                <OutputField name="te.y" label="Y" unit="KM" value={formOut.te.y} />
-    
-                <OutputField name="te.z" label="Z" unit="KM" value={formOut.te.z} />
+                </div>
 
-                <span className="col-span-3 text-center uppercase font-semibold">
-                    Topocentric Horizon Position Vector
-                </span>
+                <div className="flex flex-col gap-4">
 
-                <OutputField name="th.x" label="X" unit="KM" value={formOut.th.x} />
-                
-                <OutputField name="th.y" label="Y" unit="KM" value={formOut.th.y} />
-    
-                <OutputField name="th.z" label="Z" unit="KM" value={formOut.th.z} />
+                    <span className="text-center uppercase font-semibold">
+                        Topocentric Equatorial Position Vector
+                    </span>
+
+                    <OutputField
+                        symbol="r_x"
+                        unit="km"
+                        value={formOut.positionTopocentricEquatorial.x}
+                    />
+
+                    <OutputField
+                        symbol="r_y"
+                        unit="km"
+                        value={formOut.positionTopocentricEquatorial.y}
+                    />
+
+                    <OutputField
+                        symbol="r_z"
+                        unit="km"
+                        value={formOut.positionTopocentricEquatorial.z}
+                    />
+
+                </div>
+
+                <div className="flex flex-col gap-4">
+
+                    <span className="text-center uppercase font-semibold">
+                        Topocentric Horizon Position Vector
+                    </span>
+
+                    <OutputField
+                        symbol="r_x"
+                        unit="km"
+                        value={formOut.positionTopocentricHorizon.x}
+                    />
+
+                    <OutputField
+                        symbol="r_y"
+                        unit="km"
+                        value={formOut.positionTopocentricHorizon.y}
+                    />
+
+                    <OutputField
+                        symbol="r_z"
+                        unit="km"
+                        value={formOut.positionTopocentricHorizon.z}
+                    />
+
+                </div>
 
                 <span className="col-span-3 text-center uppercase font-semibold">
                     Orientation
@@ -246,17 +300,37 @@ export default function TopocentricFrameDialog(props: Readonly<TopocentricFrameD
 
                 <div className="col-span-full grid grid-cols-4 gap-4">
 
-                    <OutputField name="A" label="Azimuth" unit="DEG" value={formOut.A} />
+                    <OutputField
+                        symbol="A"
+                        label="Azimuth"
+                        unit="deg"
+                        value={formOut.azimuth}
+                    />
 
-                    <OutputField name="a" label="Elevation" unit="DEG" value={formOut.a} />
+                    <OutputField
+                        symbol="a"
+                        label="Elevation"
+                        unit="deg"
+                        value={formOut.elevation}
+                    />
 
-                    <OutputField name="alpha" label="Right Ascension" unit="DEG" value={formOut.alpha} />
+                    <OutputField
+                        symbol="\alpha"
+                        label="Right Ascension"
+                        unit="deg"
+                        value={formOut.rightAscension}
+                    />
 
-                    <OutputField name="delta" label="Declination" unit="DEG" value={formOut.delta} />
+                    <OutputField
+                        symbol="\delta"
+                        label="Declination"
+                        unit="deg"
+                        value={formOut.declination}
+                    />
 
                 </div>
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

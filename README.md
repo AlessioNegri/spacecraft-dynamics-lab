@@ -8,7 +8,7 @@ Spacecraft Dynamics Lab is an Electron desktop application to simulate spacecraf
     <img src="./docs/images/about.png" width="50%" alt="about">
 </p>
 
-## Building **Spacecraft Dynamics Lab**: A Modern App Lab with React, Electron, and Python
+## Building **Spacecraft Dynamics Lab**: A Modern App with React, Electron, and Python
 
 Scientific software has a reputation for being powerful but visually outdated. Many tools in orbital mechanics — from GMAT to custom research scripts — rely on legacy UI frameworks, blocking the adoption of modern interaction patterns, responsive layouts, and real‑time visualization.
 

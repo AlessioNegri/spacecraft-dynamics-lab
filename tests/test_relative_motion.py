@@ -10,23 +10,23 @@ def test_lvlh_kinematics_and_geocentric_equatorial_kinematics():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(h=52059 * u.km**2 / u.s,
-                                                         ecc=0.025724 * u.dimensionless_unscaled,
-                                                         inc=60 * u.deg,
-                                                         raan=40 * u.deg,
-                                                         argp=30 * u.deg,
-                                                         nu=40 * u.deg)
+    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=52059 * u.km**2 / u.s,
+                                                         eccentricity=0.025724 * u.dimensionless_unscaled,
+                                                         inclination=60 * u.deg,
+                                                         right_ascension_of_ascending_node=40 * u.deg,
+                                                         argument_of_periapsis=30 * u.deg,
+                                                         true_anomaly=40 * u.deg)
     
-    r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
-    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(h=52362 * u.km**2 / u.s,
-                                                         ecc=0.0072696 * u.dimensionless_unscaled,
-                                                         inc=50 * u.deg,
-                                                         raan=40 * u.deg,
-                                                         argp=120 * u.deg,
-                                                         nu=40 * u.deg)
+    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=52362 * u.km**2 / u.s,
+                                                         eccentricity=0.0072696 * u.dimensionless_unscaled,
+                                                         inclination=50 * u.deg,
+                                                         right_ascension_of_ascending_node=40 * u.deg,
+                                                         argument_of_periapsis=120 * u.deg,
+                                                         true_anomaly=40 * u.deg)
     
-    r_chaser, v_chaser = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_chaser)
+    r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_chaser)
     
     kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor, oe_target=oe_target, oe_chaser=oe_chaser)
     
@@ -66,23 +66,23 @@ def test_two_impulsive_rendezvous_maneuver():
     
     radius: float = bd.BODIES[attractor].R_E.to_value(u.km)
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(h=0 * u.km**2 / u.s,
-                                                         ecc=0 * u.dimensionless_unscaled,
-                                                         inc=40 * u.deg,
-                                                         raan=20 * u.deg,
-                                                         argp=0 * u.deg,
-                                                         nu=60 * u.deg)
+    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                         eccentricity=0 * u.dimensionless_unscaled,
+                                                         inclination=40 * u.deg,
+                                                         right_ascension_of_ascending_node=20 * u.deg,
+                                                         argument_of_periapsis=0 * u.deg,
+                                                         true_anomaly=60 * u.deg)
     
-    oe_target.update_from_perigee_apogee(r_p=(radius + 300) * u.km, r_a=(radius + 300) * u.km)
+    oe_target.update_from_perigee_apogee(periapsis_radius=(radius + 300) * u.km, apoapsis_radius=(radius + 300) * u.km)
     
-    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(h=0 * u.km**2 / u.s,
-                                                         ecc=0 * u.dimensionless_unscaled,
-                                                         inc=40.130 * u.deg,
-                                                         raan=19.819 * u.deg,
-                                                         argp=70.662 * u.deg,
-                                                         nu=349.65 * u.deg)
+    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                         eccentricity=0 * u.dimensionless_unscaled,
+                                                         inclination=40.130 * u.deg,
+                                                         right_ascension_of_ascending_node=19.819 * u.deg,
+                                                         argument_of_periapsis=70.662 * u.deg,
+                                                         true_anomaly=349.65 * u.deg)
     
-    oe_chaser.update_from_perigee_apogee(r_p=(radius + 320.06) * u.km, r_a=(radius + 513.86) * u.km)
+    oe_chaser.update_from_perigee_apogee(periapsis_radius=(radius + 320.06) * u.km, apoapsis_radius=(radius + 513.86) * u.km)
     
     dv_tot, _, _, _ = rm.RelativeMotion.two_impulsive_rendezvous_maneuver(attractor=attractor,
                                                                              oe_target=oe_target,

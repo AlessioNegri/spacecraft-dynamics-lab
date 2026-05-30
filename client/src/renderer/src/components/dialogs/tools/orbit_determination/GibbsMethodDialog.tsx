@@ -1,10 +1,12 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 interface IFormIn
 {
@@ -30,13 +32,13 @@ const defaultOut: IFormOut =
     oe: { sam: 0, sma: 0, ecc: 0, inc: 0, raan: 0, aop: 0, ta: 0 }
 }
 
-interface GibbsMethodDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
-export default function GibbsMethodDialog(props: Readonly<GibbsMethodDialogProps>): react.JSX.Element
+export default function GibbsMethodDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -45,8 +47,6 @@ export default function GibbsMethodDialog(props: Readonly<GibbsMethodDialogProps
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
     
     const [errors, setErrors] = react.useState<Record<string, string>>({})
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
     
@@ -103,9 +103,7 @@ export default function GibbsMethodDialog(props: Readonly<GibbsMethodDialogProps
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -122,131 +120,164 @@ export default function GibbsMethodDialog(props: Readonly<GibbsMethodDialogProps
                 {
                     title: "Gibbs Method",
                     content:
-                        `Given 3 position vectors in the Geocentric Equaorial Frame, compute the orbital elements.`
+                        `Given 3 position vectors in the Inertial Reference Frame, compute the orbital elements.`
                 }
             }>
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector 1</span>
+                <div className="flex flex-col gap-4">
 
-                <InputField
-                    name="position1.x"
-                    label="X"
-                    unit="KM"
-                    value={formIn.position1.x}
-                    onChange={handleChange}
-                />
+                    <span className="text-center uppercase font-semibold">Position Vector 1</span>
 
-                <InputField
-                    name="position1.y"
-                    label="Y"
-                    unit="KM"
-                    value={formIn.position1.y}
-                    onChange={handleChange}
-                />
+                    <InputField
+                        name="position1.x"
+                        symbol="r_x"
+                        unit="km"
+                        value={formIn.position1.x}
+                        onChange={handleChange}
+                    />
 
-                <InputField
-                    name="position1.z"
-                    label="Z"
-                    unit="KM"
-                    value={formIn.position1.z}
-                    onChange={handleChange}
-                />
+                    <InputField
+                        name="position1.y"
+                        symbol="r_y"
+                        unit="km"
+                        value={formIn.position1.y}
+                        onChange={handleChange}
+                    />
 
-                {
-                    errors.position1 &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.position1}</span>
-                }
+                    <InputField
+                        name="position1.z"
+                        symbol="r_z"
+                        unit="km"
+                        value={formIn.position1.z}
+                        onChange={handleChange}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector 2</span>
-
-                <InputField
-                    name="position2.x"
-                    label="X"
-                    unit="KM"
-                    value={formIn.position2.x}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="position2.y"
-                    label="Y"
-                    unit="KM"
-                    value={formIn.position2.y}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="position2.z"
-                    label="Z"
-                    unit="KM"
-                    value={formIn.position2.z}
-                    onChange={handleChange}
-                />
-
-                {
-                    errors.position2 &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.position2}</span>
-                }
-
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector 3</span>
-
-                <InputField
-                    name="position3.x"
-                    label="X"
-                    unit="KM"
-                    value={formIn.position3.x}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="position3.y"
-                    label="Y"
-                    unit="KM"
-                    value={formIn.position3.y}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="position3.z"
-                    label="Z"
-                    unit="KM"
-                    value={formIn.position3.z}
-                    onChange={handleChange}
-                />
-
-                {
-                    errors.position3 &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.position3}</span>
-                }
+                    { errors.position1 && <ErrorText text={errors.position1} /> }
                 
-            </form.Root>
+                </div>
+
+                <div className="flex flex-col gap-4">
+
+                    <span className="text-center uppercase font-semibold">Position Vector 2</span>
+
+                    <InputField
+                        name="position2.x"
+                        symbol="r_x"
+                        unit="km"
+                        value={formIn.position2.x}
+                        onChange={handleChange}
+                    />
+
+                    <InputField
+                        name="position2.y"
+                        symbol="r_y"
+                        unit="km"
+                        value={formIn.position2.y}
+                        onChange={handleChange}
+                    />
+
+                    <InputField
+                        name="position2.z"
+                        symbol="r_z"
+                        unit="km"
+                        value={formIn.position2.z}
+                        onChange={handleChange}
+                    />
+
+                    { errors.position2 && <ErrorText text={errors.position2} /> }
+
+                </div>
+
+                <div className="flex flex-col gap-4">
+
+                    <span className="text-center uppercase font-semibold">Position Vector 3</span>
+
+                    <InputField
+                        name="position3.x"
+                        symbol="r_x"
+                        unit="km"
+                        value={formIn.position3.x}
+                        onChange={handleChange}
+                    />
+
+                    <InputField
+                        name="position3.y"
+                        symbol="r_y"
+                        unit="km"
+                        value={formIn.position3.y}
+                        onChange={handleChange}
+                    />
+
+                    <InputField
+                        name="position3.z"
+                        symbol="r_z"
+                        unit="km"
+                        value={formIn.position3.z}
+                        onChange={handleChange}
+                    />
+
+                    { errors.position3 && <ErrorText text={errors.position3} /> }
+
+                </div>
+                
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-3 gap-4 mb-4">
 
                 <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
 
-                <OutputField name="sma" label="Semi-Major Axis" unit="KM" value={formOut.oe.sma} />
+                <OutputField
+                    label="Semimajor Axis"
+                    symbol="a"
+                    unit="km"
+                    value={formOut.oe.sma}
+                />
 
-                <OutputField name="ecc" label="Eccentricity" value={formOut.oe.ecc} />
+                <OutputField
+                    label="Eccentricity"
+                    symbol="e"
+                    unit=""
+                    value={formOut.oe.ecc}
+                />
 
-                <OutputField name="inc" label="Inclination" unit="DEG" value={formOut.oe.inc} />
+                <OutputField
+                    label="Inclination"
+                    symbol="i"
+                    unit="deg"
+                    value={formOut.oe.inc}
+                />
 
-                <OutputField name="raan" label="RAAN" unit="DEG" value={formOut.oe.raan} />
+                <OutputField
+                    label="RAAN"
+                    symbol="\Omega"
+                    unit="deg"
+                    value={formOut.oe.raan}
+                />
 
-                <OutputField name="aop" label="Argument Periapsis" unit="DEG" value={formOut.oe.aop} />
+                <OutputField
+                    label="Argument Periapsis"
+                    symbol="\omega"
+                    unit="deg"
+                    value={formOut.oe.aop}
+                />
 
-                <OutputField name="ta" label="True Anomaly" unit="DEG" value={formOut.oe.ta} />
-                    
-            </form.Root>
+                <OutputField
+                    label="True Anomaly"
+                    symbol="\theta"
+                    unit="deg"
+                    value={formOut.oe.ta}
+                />
+
+            </Form.Root>
 
         </DialogRUI>
     )

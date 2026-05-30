@@ -27,7 +27,7 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
     </p>
   </div>
 
-  <img src="../images/tools-page/cartesian-orbit-parameters.png" width="30%" alt="image">
+  <img src="../images/tools-page/cartesian-orbit-parameters.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -47,7 +47,7 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
     </p>
   </div>
 
-  <img src="../images/tools-page/cartesian-keplerian.png" width="30%" alt="image">
+  <img src="../images/tools-page/cartesian-keplerian.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -67,7 +67,7 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
     </p>
   </div>
 
-  <img src="../images/tools-page/cartesian-perifocal.png" width="30%" alt="image">
+  <img src="../images/tools-page/cartesian-perifocal.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -83,11 +83,11 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
   <div>
     <h3>Keplerian → Cartesian</h3>
     <p style="text-align: justify;">
-      Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>geocentric equatorial parameters</strong> (position and velocity) of the orbit.
+      Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>inertial reference frame parameters</strong> (position and velocity) of the orbit.
     </p>
   </div>
 
-  <img src="../images/tools-page/keplerian-cartesian.png" width="30%" alt="image">
+  <img src="../images/tools-page/keplerian-cartesian.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -104,7 +104,7 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
     </p>
   </div>
 
-  <img src="../images/tools-page/ground-track-propagation.png" width="30%" alt="image">
+  <img src="../images/tools-page/ground-track-propagation.png" width="40%" alt="image">
 </div>
 
 ## 🔭 Orbit Determination
@@ -124,11 +124,11 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
   <div>
     <h3>Gibbs Method</h3>
     <p style="text-align: justify;">
-      Given 3 position vectors in the <strong>Geocentric Equaorial Frame</strong>, compute the orbital elements.
+      Given 3 position vectors in the <strong>Inertial Reference Frame</strong>, compute the orbital elements.
     </p>
   </div>
 
-  <img src="../images/tools-page/gibbs-method.png" width="30%" alt="image">
+  <img src="../images/tools-page/gibbs-method.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -148,7 +148,7 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
     </p>
   </div>
 
-  <img src="../images/tools-page/julian-day.png" width="30%" alt="image">
+  <img src="../images/tools-page/julian-day.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -168,7 +168,7 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
     </p>
   </div>
 
-  <img src="../images/tools-page/topocentric-frame.png" width="30%" alt="image">
+  <img src="../images/tools-page/topocentric-frame.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -188,7 +188,7 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
     </p>
   </div>
 
-  <img src="../images/tools-page/angle-range.png" width="30%" alt="image">
+  <img src="../images/tools-page/angle-range.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -208,7 +208,7 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
     </p>
   </div>
 
-  <img src="../images/tools-page/gauss-method.png" width="30%" alt="image">
+  <img src="../images/tools-page/gauss-method.png" width="40%" alt="image">
 </div>
 
 ## 🎯 Relative Motion
@@ -235,7 +235,7 @@ Geocentric Equatorial frames.
     </p>
   </div>
 
-  <img src="../images/tools-page/lvlh-kinematics.png" width="30%" alt="image">
+  <img src="../images/tools-page/lvlh-kinematics.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -249,7 +249,7 @@ Geocentric Equatorial frames.
             border-bottom: 1px solid white;">
 
   <div>
-    <h3>LVLH Kinematics</h3>
+    <h3>Geocentric Equatorial Kinematics</h3>
     <p style="text-align: justify;">
       Given the state vectors of the <strong>target spacecraft</strong> and the state vector of the <strong>chaser
       spacecraft</strong> relative to Target along the <strong>Local Vertical Local Horizontal</strong> (LVLH) axes
@@ -257,7 +257,7 @@ Geocentric Equatorial frames.
     </p>
   </div>
 
-  <img src="../images/tools-page/geocentric-equatorial-kinematics.png" width="30%" alt="image">
+  <img src="../images/tools-page/geocentric-equatorial-kinematics.png" width="40%" alt="image">
 </div>
 
 ## 🎯 Interplanetary Trajectory
@@ -281,7 +281,7 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
     </p>
   </div>
 
-  <img src="../images/tools-page/synodic-period.png" width="30%" alt="image">
+  <img src="../images/tools-page/synodic-period.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -301,7 +301,7 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
     </p>
   </div>
 
-  <img src="../images/tools-page/sphere-of-influence.png" width="30%" alt="image">
+  <img src="../images/tools-page/sphere-of-influence.png" width="40%" alt="image">
 </div>
 
 <div style="width: 80%;
@@ -321,5 +321,5 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
     </p>
   </div>
 
-  <img src="../images/tools-page/transfer.png" width="30%" alt="image">
+  <img src="../images/tools-page/transfer.png" width="40%" alt="image">
 </div>

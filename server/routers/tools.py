@@ -39,7 +39,7 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
                                                                                     position=r,
                                                                                     velocity=v)
     
-    alpha, delta = o3d.Orbit3D.right_ascension_declination(r=r)
+    alpha, delta = o3d.Orbit3D.right_ascension_declination(position=r)
     
     result: schema.OrbitParametersOutModelInfo = schema.OrbitParametersOutModelInfo(
         conicType                = orbit_parameters.conic_type,
@@ -80,16 +80,16 @@ async def put_convert_cartesian_to_keplerian(data: schema.CartesianInModelInfo) 
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r, v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.OrbitalElements = schema.OrbitalElements(
-        sam     = oe.h.to_value(),
-        sma     = oe.a.to_value(),
-        ecc     = oe.ecc,
-        inc     = oe.inc.to_value(),
-        raan    = oe.raan.to_value(),
-        aop     = oe.argp.to_value(),
-        ta      = oe.nu.to_value()
+        sam = oe.specific_angular_momentum.to_value(),
+        sma = oe.semimajor_axis.to_value(),
+        ecc = oe.eccentricity.to_value(),
+        inc = oe.inclination.to_value(),
+        raan = oe.right_ascension_of_ascending_node.to_value(),
+        aop = oe.argument_of_periapsis.to_value(),
+        ta = oe.true_anomaly.to_value()
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -110,7 +110,7 @@ async def put_convert_cartesian_to_perifocal(data: schema.CartesianInModelInfo) 
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    r_PF, v_PF = o3d.Orbit3D.geocentric_equatorial_to_perifocal(attractor=attractor, r=r, v=v)
+    r_PF, v_PF = o3d.Orbit3D.geocentric_equatorial_to_perifocal(attractor=attractor, position=r, velocity=v)
     
     result: schema.PerifocalOutModelInfo = schema.PerifocalOutModelInfo(
         position = schema.Vector3D(x=r_PF[0].to_value(), y=r_PF[1].to_value(), z=0),
@@ -132,17 +132,15 @@ async def put_convert_keplerian_to_cartesian(data: schema.KeplerianInModelInfo) 
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h = 0 * u.km**2 / u.s,
-        a = data.oe.sma * u.km,
-        ecc = data.oe.ecc * u.one,
-        inc = data.oe.inc * u.deg,
-        raan = data.oe.raan * u.deg,
-        argp = data.oe.aop * u.deg,
-        nu = data.oe.ta * u.deg
-    )
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=data.oe.sma * u.km,
+                                                  eccentricity=data.oe.ecc * u.one,
+                                                  inclination=data.oe.inc * u.deg,
+                                                  right_ascension_of_ascending_node=data.oe.raan * u.deg,
+                                                  argument_of_periapsis=data.oe.aop * u.deg,
+                                                  true_anomaly=data.oe.ta * u.deg)
     
-    r_GEF, v_GEF = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe)
+    r_GEF, v_GEF = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
     result: schema.CartesianOutModelInfo = schema.CartesianOutModelInfo(
         position = schema.Vector3D(x=r_GEF[0].to_value(), y=r_GEF[1].to_value(), z=r_GEF[2].to_value()),
@@ -164,21 +162,21 @@ async def put_propagate_ground_track(data: schema.KeplerianInModelInfo) -> fasta
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(
-        h = 0 * u.km**2 / u.s,
-        a = data.oe.sma * u.km,
-        ecc = data.oe.ecc * u.one,
-        inc = data.oe.inc * u.deg,
-        raan = data.oe.raan * u.deg,
-        argp = data.oe.aop * u.deg,
-        nu = data.oe.ta * u.deg
-    )
-    
     dt: u.Quantity = data.deltaTime * u.s if data.deltaTime is not None else 0 * u.s
     
-    d_raan_dt, d_argp_dt = o3d.Orbit3D.planet_oblateness_effect(attractor=attractor, oe=oe)
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=data.oe.sma * u.km,
+                                                  eccentricity=data.oe.ecc * u.one,
+                                                  inclination=data.oe.inc * u.deg,
+                                                  right_ascension_of_ascending_node=data.oe.raan * u.deg,
+                                                  argument_of_periapsis=data.oe.aop * u.deg,
+                                                  true_anomaly=data.oe.ta * u.deg)
     
-    alpha, delta = o3d.Orbit3D.ground_track_propagation(attractor=attractor, oe=oe, dt=time.TimeDelta(dt))
+    d_raan_dt, d_argp_dt = o3d.Orbit3D.planet_oblateness_effect(attractor=attractor, orbital_elements=oe)
+    
+    alpha, delta = o3d.Orbit3D.ground_track_propagation(attractor=attractor,
+                                                        orbital_elements=oe,
+                                                        time_step=time.TimeDelta(dt))
     
     result: schema.GroundTrackOutModelInfo = schema.GroundTrackOutModelInfo(
         draan_dt = d_raan_dt.to_value(),
@@ -208,16 +206,19 @@ async def put_gibbs_method(data: schema.GibbsMethodInModelInfo) -> fastapi.respo
     r_2: u.Quantity = np.array([data.position2.x, data.position2.y, data.position2.z]) * u.km
     r_3: u.Quantity = np.array([data.position3.x, data.position3.y, data.position3.z]) * u.km
     
-    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor, r_1=r_1, r_2=r_2, r_3=r_3)
+    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
+                                                                 position_1=r_1,
+                                                                 position_2=r_2,
+                                                                 position_3=r_3)
     
     result: schema.OrbitalElements = schema.OrbitalElements(
-        sam=oe.h.to_value(),
-        sma=oe.a.to_value(),
-        ecc=oe.ecc.to_value(),
-        inc=oe.inc.to_value(),
-        raan=oe.raan.to_value(),
-        aop=oe.argp.to_value(),
-        ta=oe.nu.to_value()
+        sam=oe.specific_angular_momentum.to_value(),
+        sma=oe.semimajor_axis.to_value(),
+        ecc=oe.eccentricity.to_value(),
+        inc=oe.inclination.to_value(),
+        raan=oe.right_ascension_of_ascending_node.to_value(),
+        aop=oe.argument_of_periapsis.to_value(),
+        ta=oe.true_anomaly.to_value()
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -277,36 +278,36 @@ async def put_topocentric_frame(data: schema.TopocentricFrameInModelInfo) -> fas
     H: u.Quantity = data.elevation * u.km
     
     R: u.Quantity = od.OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                theta=theta,
-                                                                                phi=phi,
-                                                                                H=H)
+                                                                                local_sidereal_time=theta,
+                                                                                latitude=phi,
+                                                                                site_altitude=H)
     
     rho_te: u.Quantity = od.OrbitDetermination.topocentric_equatorial_position_vector(attractor=attractor,
-                                                                                      r=r,
-                                                                                      theta=theta,
-                                                                                      phi=phi,
-                                                                                      H=H)
+                                                                                      position=r,
+                                                                                      local_sidereal_time=theta,
+                                                                                      latitude=phi,
+                                                                                      site_altitude=H)
     
     rho_th, A, a = od.OrbitDetermination.topocentric_horizon_position_vector(attractor=attractor,
-                                                                             r=r,
-                                                                             theta=theta,
-                                                                             phi=phi,
-                                                                             H=H)
+                                                                             position=r,
+                                                                             local_sidereal_time=theta,
+                                                                             latitude=phi,
+                                                                             site_altitude=H)
     
     _, alpha, delta = od.OrbitDetermination.topocentric_equatorial_right_ascension_declination(attractor=attractor,
-                                                                                               theta=theta,
-                                                                                               phi=phi,
-                                                                                               A=A,
-                                                                                               a=a)
+                                                                                               local_sidereal_time=theta,
+                                                                                               latitude=phi,
+                                                                                               azimuth=A,
+                                                                                               elevation=a)
     
     result: schema.TopocentricFrameOutModelInfo = schema.TopocentricFrameOutModelInfo(
-        geo=schema.Vector3D(x=R[0].to_value(), y=R[1].to_value(), z=R[2].to_value()),
-        te=schema.Vector3D(x=rho_te[0].to_value(), y=rho_te[1].to_value(), z=rho_te[2].to_value()),
-        th=schema.Vector3D(x=rho_th[0].to_value(), y=rho_th[1].to_value(), z=rho_th[2].to_value()),
-        A=A.to_value(),
-        a=a.to_value(),
-        alpha=alpha.to_value(),
-        delta=delta.to_value()
+        positionGeocentricEquatorial=schema.Vector3D(x=R[0].to_value(), y=R[1].to_value(), z=R[2].to_value()),
+        positionTopocentricEquatorial=schema.Vector3D(x=rho_te[0].to_value(), y=rho_te[1].to_value(), z=rho_te[2].to_value()),
+        positionTopocentricHorizon=schema.Vector3D(x=rho_th[0].to_value(), y=rho_th[1].to_value(), z=rho_th[2].to_value()),
+        azimuth=A.to_value(),
+        elevation=a.to_value(),
+        rightAscension=alpha.to_value(),
+        declination=delta.to_value()
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -343,28 +344,28 @@ async def put_predict_angle_range(data: schema.AngleRangeInModelInfo) -> fastapi
     H: u.Quantity = data.elevationH * u.km
     
     r, v = od.OrbitDetermination.predict_from_angle_range(attractor=attractor,
-                                                          rho=rho,
-                                                          A=A,
-                                                          a=a,
-                                                          drho_dt=drho_dt,
-                                                          dA_dt=dA_dt,
-                                                          da_dt=da_dt,
-                                                          theta=theta,
-                                                          phi=phi,
-                                                          H=H)
+                                                          slant_range=rho,
+                                                          azimuth=A,
+                                                          elevation=a,
+                                                          range_rate=drho_dt,
+                                                          azimuth_rate=dA_dt,
+                                                          elevation_rate=da_dt,
+                                                          local_sidereal_time=theta,
+                                                          latitude=phi,
+                                                          site_altitude=H)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r, v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),
         velocity=schema.Vector3D(x=v[0].to_value(), y=v[1].to_value(), z=v[2].to_value()),
-        oe=schema.OrbitalElements(sam=oe.h.to_value(),
-                                  sma=oe.a.to_value(),
-                                  ecc=oe.ecc.to_value(),
-                                  inc=oe.inc.to_value(),
-                                  raan=oe.raan.to_value(),
-                                  aop=oe.argp.to_value(),
-                                  ta=oe.nu.to_value())
+        oe=schema.OrbitalElements(sam=oe.specific_angular_momentum.to_value(),
+                                  sma=oe.semimajor_axis.to_value(),
+                                  ecc=oe.eccentricity.to_value(),
+                                  inc=oe.inclination.to_value(),
+                                  raan=oe.right_ascension_of_ascending_node.to_value(),
+                                  aop=oe.argument_of_periapsis.to_value(),
+                                  ta=oe.true_anomaly.to_value())
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -395,25 +396,25 @@ async def put_predict_gauss_method(data: schema.GaussMethodInModelInfo) -> fasta
     H: u.Quantity = data.elevation * u.km
     
     r, v = od.OrbitDetermination.predict_from_gauss_method_extended(attractor=attractor,
-                                                                    phi=phi,
-                                                                    theta=theta,
-                                                                    alpha=alpha,
-                                                                    delta=delta,
-                                                                    t=t,
-                                                                    H=H)
+                                                                    latitude=phi,
+                                                                    local_sidereal_time_list=theta,
+                                                                    right_ascension_list=alpha,
+                                                                    declination_list=delta,
+                                                                    observation_time_list=t,
+                                                                    site_altitude=H)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r, v=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),
         velocity=schema.Vector3D(x=v[0].to_value(), y=v[1].to_value(), z=v[2].to_value()),
-        oe=schema.OrbitalElements(sam=oe.h.to_value(),
-                                  sma=oe.a.to_value(),
-                                  ecc=oe.ecc.to_value(),
-                                  inc=oe.inc.to_value(),
-                                  raan=oe.raan.to_value(),
-                                  aop=oe.argp.to_value(),
-                                  ta=oe.nu.to_value())
+        oe=schema.OrbitalElements(sam=oe.specific_angular_momentum.to_value(),
+                                  sma=oe.semimajor_axis.to_value(),
+                                  ecc=oe.eccentricity.to_value(),
+                                  inc=oe.inclination.to_value(),
+                                  raan=oe.right_ascension_of_ascending_node.to_value(),
+                                  aop=oe.argument_of_periapsis.to_value(),
+                                  ta=oe.true_anomaly.to_value())
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -434,23 +435,23 @@ async def put_lvlh_kinematics(data: schema.LvlhKinematicsInModelInfo) -> fastapi
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
     oe_target: o3d.OrbitalElements = o3d.OrbitalElements(
-        h = data.orbitalElementsTarget.sam * u.km**2 / u.s,
-        a = data.orbitalElementsTarget.sma * u.km,
-        ecc = data.orbitalElementsTarget.ecc * u.one,
-        inc = data.orbitalElementsTarget.inc * u.deg,
-        raan = data.orbitalElementsTarget.raan * u.deg,
-        argp = data.orbitalElementsTarget.aop * u.deg,
-        nu = data.orbitalElementsTarget.ta * u.deg
+        specific_angular_momentum = data.orbitalElementsTarget.sam * u.km**2 / u.s,
+        semimajor_axis = data.orbitalElementsTarget.sma * u.km,
+        eccentricity = data.orbitalElementsTarget.ecc * u.dimensionless_unscaled,
+        inclination = data.orbitalElementsTarget.inc * u.deg,
+        right_ascension_of_ascending_node = data.orbitalElementsTarget.raan * u.deg,
+        argument_of_periapsis = data.orbitalElementsTarget.aop * u.deg,
+        true_anomaly = data.orbitalElementsTarget.ta * u.deg
     )
     
     oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(
-        h = data.orbitalElementsChaser.sam * u.km**2 / u.s,
-        a = data.orbitalElementsChaser.sma * u.km,
-        ecc = data.orbitalElementsChaser.ecc * u.one,
-        inc = data.orbitalElementsChaser.inc * u.deg,
-        raan = data.orbitalElementsChaser.raan * u.deg,
-        argp = data.orbitalElementsChaser.aop * u.deg,
-        nu = data.orbitalElementsChaser.ta * u.deg
+        specific_angular_momentum = data.orbitalElementsChaser.sam * u.km**2 / u.s,
+        semimajor_axis = data.orbitalElementsChaser.sma * u.km,
+        eccentricity = data.orbitalElementsChaser.ecc * u.dimensionless_unscaled,
+        inclination = data.orbitalElementsChaser.inc * u.deg,
+        right_ascension_of_ascending_node = data.orbitalElementsChaser.raan * u.deg,
+        argument_of_periapsis = data.orbitalElementsChaser.aop * u.deg,
+        true_anomaly = data.orbitalElementsChaser.ta * u.deg
     )
     
     kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor, oe_target=oe_target, oe_chaser=oe_chaser)
@@ -492,16 +493,16 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
     oe_target: o3d.OrbitalElements = o3d.OrbitalElements(
-        h = data.orbitalElementsTarget.sam * u.km**2 / u.s,
-        a = data.orbitalElementsTarget.sma * u.km,
-        ecc = data.orbitalElementsTarget.ecc * u.one,
-        inc = data.orbitalElementsTarget.inc * u.deg,
-        raan = data.orbitalElementsTarget.raan * u.deg,
-        argp = data.orbitalElementsTarget.aop * u.deg,
-        nu = data.orbitalElementsTarget.ta * u.deg
+        specific_angular_momentum = data.orbitalElementsTarget.sam * u.km**2 / u.s,
+        semimajor_axis = data.orbitalElementsTarget.sma * u.km,
+        eccentricity = data.orbitalElementsTarget.ecc * u.dimensionless_unscaled,
+        inclination = data.orbitalElementsTarget.inc * u.deg,
+        right_ascension_of_ascending_node = data.orbitalElementsTarget.raan * u.deg,
+        argument_of_periapsis = data.orbitalElementsTarget.aop * u.deg,
+        true_anomaly = data.orbitalElementsTarget.ta * u.deg
     )
     
-    r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
     r_rel_lvlh: u.Quantity = np.array([data.lvlhPosition.x, data.lvlhPosition.y, data.lvlhPosition.z]) * u.km
     
@@ -512,17 +513,17 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
                                                                     r_rel_lvlh=r_rel_lvlh,
                                                                     v_rel_lvlh=v_rel_lvlh)
     
-    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=kinematics[0], v=kinematics[1])
+    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=kinematics[0], velocity=kinematics[1])
     
     result: schema.GeocentricEquatorialKinematicsOutModelInfo = schema.GeocentricEquatorialKinematicsOutModelInfo(
         orbitalElementsChaser=schema.OrbitalElements(
-            sam=oe_chaser.h.to_value(u.km**2 / u.s),
-            sma=oe_chaser.a.to_value(u.km),
-            ecc=oe_chaser.ecc.to_value(u.dimensionless_unscaled),
-            inc=oe_chaser.inc.to_value(u.deg),
-            raan=oe_chaser.raan.to_value(u.deg),
-            aop=oe_chaser.argp.to_value(u.deg),
-            ta=oe_chaser.nu.to_value(u.deg)
+            sam=oe_chaser.specific_angular_momentum.to_value(u.km**2 / u.s),
+            sma=oe_chaser.semimajor_axis.to_value(u.km),
+            ecc=oe_chaser.eccentricity.to_value(u.dimensionless_unscaled),
+            inc=oe_chaser.inclination.to_value(u.deg),
+            raan=oe_chaser.right_ascension_of_ascending_node.to_value(u.deg),
+            aop=oe_chaser.argument_of_periapsis.to_value(u.deg),
+            ta=oe_chaser.true_anomaly.to_value(u.deg)
         )
     )
     

@@ -94,14 +94,14 @@ class TopocentricFrameInModelInfo(pydantic.BaseModel):
 
 class TopocentricFrameOutModelInfo(pydantic.BaseModel):
     
-    geo: Vector3D # ? Geocentric Equatorial Observer
-    te: Vector3D # ? Topocentric Equatorial
-    th: Vector3D # ? Topocentric Horizon
-    A: float # ? Azimuth
-    a: float # ? Elevation
-    alpha: float # ? Right Ascension
-    delta: float # ? Declination
-    
+    positionGeocentricEquatorial: Vector3D # ? Geocentric Equatorial Observer
+    positionTopocentricEquatorial: Vector3D # ? Topocentric Equatorial
+    positionTopocentricHorizon: Vector3D # ? Topocentric Horizon
+    azimuth: float # ? Azimuth
+    elevation: float # ? Elevation
+    rightAscension: float # ? Right Ascension
+    declination: float # ? Declination
+
 class AngleRangeInModelInfo(pydantic.BaseModel):
     
     slantRange: float

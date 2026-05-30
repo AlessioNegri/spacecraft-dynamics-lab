@@ -23,8 +23,8 @@ class Body:
     name    : str           # ? Name
     mu      : u.Quantity    # ? Gravitational constant [km^3 / s^2]
     R_E     : u.Quantity    # ? Equatorial radius [km]
-    J2      : float | None  # ? J2 []
-    f       : float | None  # ? Flattening []
+    J2      : u.Quantity | None  # ? J2 []
+    f       : u.Quantity | None  # ? Flattening []
     omega   : u.Quantity    # ? Rotation rate [rad/s]
     M       : u.Quantity    # ? Mass [kg]
     g_0     : u.Quantity    # ? Standard gravity [m/s^2]
@@ -96,8 +96,8 @@ BODIES[Attractor.EARTH] = Body(
     name=Attractor.EARTH,
     mu=398600.4418 * u.km**3 / u.s**2,
     R_E=6378.1363 * u.km,
-    J2=1.08262668e-3,
-    f=1 / 298.257223563,
+    J2=1.08262668e-3 * u.one,
+    f=1 / 298.257223563 * u.one,
     omega=7.2921150e-5 * u.rad / u.s,
     M=5.972168e24 * u.kg,
     g_0=9.80665 * u.m / u.s**2,
@@ -109,7 +109,7 @@ BODIES[Attractor.MOON] = Body(
     name=Attractor.MOON,
     mu=4902.800066 * u.km**3 / u.s**2,
     R_E=1737.4 * u.km,
-    J2=2.03263e-4,
+    J2=2.03263e-4 * u.one,
     f=None,
     omega=(2 * np.pi / (27.321661 * 86400)) * u.rad / u.s,
     M=7.34767309e22 * u.kg,
@@ -122,8 +122,8 @@ BODIES[Attractor.MARS] = Body(
     name=Attractor.MARS,
     mu=42828.375214 * u.km**3 / u.s**2,
     R_E=3396.19 * u.km,
-    J2=1.96045e-3,
-    f=1 / 169.8,
+    J2=1.96045e-3 * u.one,
+    f=1 / 169.8 * u.one,
     omega=7.0882181e-5 * u.rad / u.s,
     M=6.4171e23 * u.kg,
     g_0=3.72076 * u.m / u.s**2,
@@ -135,8 +135,8 @@ BODIES[Attractor.JUPITER] = Body(
     name=Attractor.JUPITER,
     mu=126686511.0 * u.km**3 / u.s**2,
     R_E=71492.0 * u.km,
-    J2=1.4697e-2,
-    f=0.06487,
+    J2=1.4697e-2 * u.one,
+    f=0.06487 * u.one,
     omega=1.75853e-4 * u.rad / u.s,
     M=1.8982e27 * u.kg,
     g_0=24.79 * u.m / u.s**2,
@@ -148,8 +148,8 @@ BODIES[Attractor.SATURN] = Body(
     name=Attractor.SATURN,
     mu=37931207.8 * u.km**3 / u.s**2,
     R_E=60268.0 * u.km,
-    J2=1.6298e-2,
-    f=0.09796,
+    J2=1.6298e-2 * u.one,
+    f=0.09796 * u.one,
     omega=1.63788e-4 * u.rad / u.s,
     M=5.6834e26 * u.kg,
     g_0=10.44 * u.m / u.s**2,
@@ -161,8 +161,8 @@ BODIES[Attractor.URANUS] = Body(
     name=Attractor.URANUS,
     mu=5793951.0 * u.km**3 / u.s**2,
     R_E=25559.0 * u.km,
-    J2=3.34343e-3,
-    f=0.02293,
+    J2=3.34343e-3 * u.one,
+    f=0.02293 * u.one,
     omega=(-1.01237e-4) * u.rad / u.s,  # ? Retrograde
     M=8.6810e25 * u.kg,
     g_0=8.69 * u.m / u.s**2,
@@ -174,8 +174,8 @@ BODIES[Attractor.NEPTUNE] = Body(
     name=Attractor.NEPTUNE,
     mu=6836529.0 * u.km**3 / u.s**2,
     R_E=24764.0 * u.km,
-    J2=3.411e-3,
-    f=0.01708,
+    J2=3.411e-3 * u.one,
+    f=0.01708 * u.one,
     omega=1.08339e-4 * u.rad / u.s,
     M=1.02413e26 * u.kg,
     g_0=11.15 * u.m / u.s**2,

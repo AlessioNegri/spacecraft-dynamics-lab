@@ -1,10 +1,11 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
 
 interface IFormIn
 {
@@ -40,22 +41,20 @@ const defaultOut: IFormOut =
     oe: { sam: 0, sma: 0, ecc: 0, inc: 0, raan: 0, aop: 0, ta: 0 }
 }
 
-interface GaussMethodDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function GaussMethodDialog */
-export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps>): react.JSX.Element
+export default function GaussMethodDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
         
     const [formIn, setFormIn] = react.useState<IFormIn>(defaultIn)
         
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
 
@@ -99,9 +98,7 @@ export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -125,24 +122,31 @@ export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
 
                 <InputField
+                    type="number"
                     name="latitude"
                     label="Latitude"
-                    unit="DEG"
+                    symbol="\phi"
+                    unit="deg"
                     value={formIn.latitude}
+                    min={-90}
+                    max={90}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="elevationH"
                     label="Elevation Above Sea Level"
-                    unit="KM"
+                    symbol="H"
+                    unit="km"
                     value={formIn.elevation}
+                    min={0}
                     onChange={handleChange}
                 />
 
@@ -157,34 +161,49 @@ export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps
                 <div className="grid grid-rows-3 gap-4 border-2 border-neutral-700 rounded p-2">
 
                     <InputField
+                        type="number"
                         name="time.0"
                         label="Time"
-                        unit="S"
+                        symbol="t"
+                        unit="s"
                         value={formIn.time[0]}
+                        min={0}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="rightAscension.0"
                         label="Right Ascension"
-                        unit="DEG"
+                        symbol="\alpha"
+                        unit="deg"
                         value={formIn.rightAscension[0]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
                     
                     <InputField
+                        type="number"
                         name="declination.0"
                         label="Declination"
-                        unit="DEG"
+                        symbol="\delta"
+                        unit="deg"
                         value={formIn.declination[0]}
+                        min={-90}
+                        max={90}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="localSiderealTime.0"
                         label="Local Sidereal Time"
-                        unit="DEG"
+                        symbol="\theta"
+                        unit="deg"
                         value={formIn.localSiderealTime[0]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
 
@@ -193,34 +212,49 @@ export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps
                 <div className="grid grid-rows-3 gap-4 border-2 border-neutral-700 rounded p-2">
 
                     <InputField
+                        type="number"
                         name="time.1"
                         label="Time"
-                        unit="S"
+                        symbol="t"
+                        unit="s"
                         value={formIn.time[1]}
+                        min={0}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="rightAscension.1"
                         label="Right Ascension"
-                        unit="DEG"
+                        symbol="\alpha"
+                        unit="deg"
                         value={formIn.rightAscension[1]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="declination.1"
                         label="Declination"
-                        unit="DEG"
+                        symbol="\delta"
+                        unit="deg"
                         value={formIn.declination[1]}
+                        min={-90}
+                        max={90}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="localSiderealTime.1"
                         label="Local Sidereal Time"
-                        unit="DEG"
+                        symbol="\theta"
+                        unit="deg"
                         value={formIn.localSiderealTime[1]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
 
@@ -229,76 +263,156 @@ export default function GaussMethodDialog(props: Readonly<GaussMethodDialogProps
                 <div className="grid grid-rows-3 gap-4 border-2 border-neutral-700 rounded p-2">
 
                     <InputField
+                        type="number"
                         name="time.2"
                         label="Time"
-                        unit="S"
+                        symbol="t"
+                        unit="s"
                         value={formIn.time[2]}
+                        min={0}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="rightAscension.2"
                         label="Right Ascension"
-                        unit="DEG"
+                        symbol="\alpha"
+                        unit="deg"
                         value={formIn.rightAscension[2]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="declination.2"
                         label="Declination"
-                        unit="DEG"
+                        symbol="\delta"
+                        unit="deg"
                         value={formIn.declination[2]}
+                        min={-90}
+                        max={90}
                         onChange={handleChange}
                     />
 
                     <InputField
+                        type="number"
                         name="localSiderealTime.2"
                         label="Local Sidereal Time"
-                        unit="DEG"
+                        symbol="\theta"
+                        unit="deg"
                         value={formIn.localSiderealTime[2]}
+                        min={-360}
+                        max={360}
                         onChange={handleChange}
                     />
 
                 </div>
 
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-2 gap-4 mb-4">
 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector</span>
+                <div className="flex flex-col gap-4">
+                
+                    <span className="text-center uppercase font-semibold">Position Vector</span>
 
-                <OutputField name="position.x" label="X" unit="KM" value={formOut.position.x} />
+                    <OutputField
+                        symbol="r_x"
+                        unit="km"
+                        value={formOut.position.x}
+                    />
 
-                <OutputField name="position.y" label="Y" unit="KM" value={formOut.position.y} />
+                    <OutputField
+                        symbol="r_y"
+                        unit="km"
+                        value={formOut.position.y}
+                    />
 
-                <OutputField name="position.z" label="Z" unit="KM" value={formOut.position.z} />
+                    <OutputField
+                        symbol="r_z"
+                        unit="km"
+                        value={formOut.position.z}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Velocity Vector</span>
+                </div>
 
-                <OutputField name="velocity.x" label="X" unit="KM / S" value={formOut.velocity.x} />
+                <div className="flex flex-col gap-4">
+                
+                    <span className="text-center uppercase font-semibold">Velocity Vector</span>
 
-                <OutputField name="velocity.y" label="Y" unit="KM / S" value={formOut.velocity.y} />
+                    <OutputField
+                        symbol="v_x"
+                        unit="km / s"
+                        value={formOut.velocity.x}
+                    />
 
-                <OutputField name="velocity.z" label="Z" unit="KM / S" value={formOut.velocity.z} />
+                    <OutputField
+                        symbol="v_y"
+                        unit="km / s"
+                        value={formOut.velocity.y}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
+                    <OutputField
+                        symbol="v_z"
+                        unit="km / s"
+                        value={formOut.velocity.z}
+                    />
 
-                <OutputField name="sma" label="Semi-Major Axis" unit="KM" value={formOut.oe.sma} />
+                </div>
 
-                <OutputField name="ecc" label="Eccentricity" value={formOut.oe.ecc} />
+                <div className="col-span-full grid grid-cols-3 gap-4">
+                
+                    <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
 
-                <OutputField name="inc" label="Inclination" unit="DEG" value={formOut.oe.inc} />
+                    <OutputField
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        value={formOut.oe.sma}
+                    />
 
-                <OutputField name="raan" label="RAAN" unit="DEG" value={formOut.oe.raan} />
+                    <OutputField
+                        label="Eccentricity"
+                        symbol="e"
+                        value={formOut.oe.ecc}
+                    />
 
-                <OutputField name="aop" label="Argument Periapsis" unit="DEG" value={formOut.oe.aop} />
+                    <OutputField
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={formOut.oe.inc}
+                    />
 
-                <OutputField name="ta" label="True Anomaly" unit="DEG" value={formOut.oe.ta} />
+                    <OutputField
+                        label="Right Ascension Of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={formOut.oe.raan}
+                    />
 
-            </form.Root>
+                    <OutputField
+                        label="Argument Of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={formOut.oe.aop}
+                    />
+
+                    <OutputField
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={formOut.oe.ta}
+                    />
+
+                </div>
+
+            </Form.Root>
 
         </DialogRUI>
     )

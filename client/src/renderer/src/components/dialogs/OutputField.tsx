@@ -2,6 +2,7 @@ import * as react from "react"
 import * as katex from "react-katex"
 import * as Form from "@radix-ui/react-form"
 import * as Themes from "@radix-ui/themes"
+
 import utility from "@renderer/common/utility"
 
 type AllowedTextFieldType =
@@ -37,7 +38,7 @@ const allowedTypes: AllowedTextFieldType[] =
 interface Props
 {
     name?: string
-    label: string
+    label?: string
     symbol?: string
     unit?: string
     type?: react.HTMLInputTypeAttribute
@@ -53,12 +54,14 @@ export default function OutputField(props: Readonly<Props>): react.JSX.Element
 
             <Themes.Flex direction={"column"} gap={"2"}>
             
-                <Themes.Text className="text-sm text-neutral-300">
-                    {props.label}
-                </Themes.Text>
+                {
+                    props.label &&
+                    <Themes.Text className="text-sm text-neutral-300">{props.label}</Themes.Text>
+                }
 
                 <Themes.TextField.Root
-                    className="textfield-padding"
+                    className={utility.cn("textfield-padding",
+                        props.type === "datetime-local" ? "textfield-calendar-none" : "")}
                     variant="soft"
                     color={props.disabled ? "red" : "cyan"}
                     size={"2"}
@@ -75,6 +78,7 @@ export default function OutputField(props: Readonly<Props>): react.JSX.Element
                         :
                         props.value
                     }
+                    onChange={() => {}}
                 >
 
                     <Themes.TextField.Slot

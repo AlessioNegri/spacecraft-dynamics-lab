@@ -1,10 +1,12 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 interface IFormIn
 {
@@ -31,14 +33,14 @@ const defaultOut: IOrbitalElements =
     ta: 0
 }
 
-interface CartesianKeplerianDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function CartesianKeplerianDialog */
-export default function CartesianKeplerianDialog(props: Readonly<CartesianKeplerianDialogProps>): react.JSX.Element
+export default function CartesianKeplerianDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -47,8 +49,6 @@ export default function CartesianKeplerianDialog(props: Readonly<CartesianKepler
     const [formOut, setFormOut] = react.useState<IOrbitalElements>(defaultOut)
 
     const [errors, setErrors] = react.useState<Record<string, string>>({})
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
 
@@ -107,9 +107,7 @@ export default function CartesianKeplerianDialog(props: Readonly<CartesianKepler
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -126,14 +124,14 @@ export default function CartesianKeplerianDialog(props: Readonly<CartesianKepler
                 {
                     title: "Cartesian → Keplerian",
                     content:
-                        `Convert a given orbit state vector (position vector & velocity vector) in Geocentric Equatorial
-                        frame, into Keplerian parameters (i.e. orbital elements).`
+                        `Convert a given orbit state vector (position vector & velocity vector) in an Inertial Reference
+                        Frame, into Keplerian parameters (i.e. orbital elements).`
                 }
             }>
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
@@ -157,89 +155,120 @@ export default function CartesianKeplerianDialog(props: Readonly<CartesianKepler
                         ]}
                 />
                 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector</span>
+                <div className="flex flex-col gap-4">
 
-                <InputField
-                    name="position.x"
-                    label="X"
-                    unit="KM"
-                    value={formIn.position.x}
-                    onChange={handleChange}
-                />
+                    <span className="text-center uppercase font-semibold">Position Vector</span>
 
-                <InputField
-                    name="position.y"
-                    label="Y"
-                    unit="KM"
-                    value={formIn.position.y}
-                    onChange={handleChange}
-                />
+                    <InputField
+                        name="position.x"
+                        symbol="r_x"
+                        unit="km"
+                        value={formIn.position.x}
+                        onChange={handleChange}
+                    />
 
-                <InputField
-                    name="position.z"
-                    label="Z"
-                    unit="KM"
-                    value={formIn.position.z}
-                    onChange={handleChange}
-                />
+                    <InputField
+                        name="position.y"
+                        symbol="r_y"
+                        unit="km"
+                        value={formIn.position.y}
+                        onChange={handleChange}
+                    />
 
-                {
-                    errors.position &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.position}</span>
-                }
+                    <InputField
+                        name="position.z"
+                        symbol="r_z"
+                        unit="km"
+                        value={formIn.position.z}
+                        onChange={handleChange}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Velocity Vector</span>
+                    { errors.position && <ErrorText text={errors.position} /> }
 
-                <InputField
-                    name="velocity.x"
-                    label="X"
-                    unit="KM"
-                    value={formIn.velocity.x}
-                    onChange={handleChange}
-                />
+                </div>
 
-                <InputField
-                    name="velocity.y"
-                    label="Y"
-                    unit="KM"
-                    value={formIn.velocity.y}
-                    onChange={handleChange}
-                />
+                <div className="flex flex-col gap-4">
 
-                <InputField
-                    name="velocity.z"
-                    label="Z"
-                    unit="KM"
-                    value={formIn.velocity.z}
-                    onChange={handleChange}
-                />
+                    <span className="text-center uppercase font-semibold">Velocity Vector</span>
 
-                {
-                    errors.velocity &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.velocity}</span>
-                }
+                    <InputField
+                        name="velocity.x"
+                        symbol="v_x"
+                        unit="km/s"
+                        value={formIn.velocity.x}
+                        onChange={handleChange}
+                    />
 
-            </form.Root>
+                    <InputField
+                        name="velocity.y"
+                        symbol="v_y"
+                        unit="km/s"
+                        value={formIn.velocity.y}
+                        onChange={handleChange}
+                    />
+
+                    <InputField
+                        name="velocity.z"
+                        symbol="v_z"
+                        unit="km/s"
+                        value={formIn.velocity.z}
+                        onChange={handleChange}
+                    />
+
+                    { errors.velocity && <ErrorText text={errors.velocity} /> }
+
+                </div>
+
+            </Form.Root>
 
             {/* OUTPUT */}
             
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-3 gap-4 mb-4">
 
                 <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
                 
-                <OutputField name="sma" label="Semi-Major Axis" unit="KM" value={formOut.sma} />
+                <OutputField
+                    label="Semimajor Axis"
+                    symbol="a"
+                    unit="km"
+                    value={formOut.sma}
+                />
 
-                <OutputField name="ecc" label="Eccentricity" value={formOut.ecc} />
+                <OutputField
+                    label="Eccentricity"
+                    symbol="e"
+                    value={formOut.ecc}
+                />
 
-                <OutputField name="inc" label="Inclination" unit="DEG" value={formOut.inc} />
+                <OutputField
+                    label="Inclination"
+                    symbol="i"
+                    unit="DEG"
+                    value={formOut.inc}
+                />
 
-                <OutputField name="raan" label="RAAN" unit="DEG" value={formOut.raan} />
+                <OutputField
+                    label="Right Ascension of Ascending Node"
+                    symbol="\Omega"
+                    unit="DEG"
+                    value={formOut.raan}
+                />
 
-                <OutputField name="aop" label="Argument Periapsis" unit="DEG" value={formOut.aop} />
+                <OutputField
+                    label="Argument Of Periapsis"
+                    symbol="\omega"
+                    unit="DEG"
+                    value={formOut.aop}
+                />
 
-                <OutputField name="ta" label="True Anomaly" unit="DEG" value={formOut.ta} />
+                <OutputField
+                    label="True Anomaly"
+                    symbol="\theta"
+                    unit="DEG"
+                    value={formOut.ta}
+                />
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

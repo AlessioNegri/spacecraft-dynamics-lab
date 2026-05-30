@@ -83,7 +83,35 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
 
     const formRef = react.useRef<HTMLFormElement>(null)
 
-    react.useEffect(() =>
+    // --- USE MEMO ---
+
+    const layout: any = react.useMemo(() => ( //plotly.Layout
+    {
+        autosize: true,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#e5e5e5" },
+        margin: { l: 50, r: 50, t: 50, b: 50 },
+        title:
+        {
+            text: "LVLH Kinematics",
+            font:
+            {
+                color: "#FFFFFF",
+                size: 20,
+                family: "Lucida Console"
+            }
+        },
+        scene:
+        {
+            aspectmode: "data",
+            xaxis: { visible: false },
+            yaxis: { visible: false },
+            zaxis: { visible: false }
+        }
+    }), [])
+
+    const axes = react.useMemo(() =>
     {
         const axisX: plotly.Data =
         {
@@ -118,6 +146,13 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
             name: "Z",
         }
 
+        return [axisX, axisY, axisZ]
+    }, [])
+
+    // --- USE EFFECT ---
+
+    react.useEffect(() =>
+    {
         const trajectory: plotly.Data =
         {
             x: formOut.x,
@@ -129,8 +164,8 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
             name: "Kinematics",
         }
 
-        setKinematics([axisX, axisY, axisZ, trajectory])
-    }, [formOut])
+        setKinematics([...axes, trajectory])
+    }, [axes, formOut])
 
     // --- HANDLE ---
 
@@ -169,32 +204,6 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
     }
 
     // --- RENDERING ---
-
-    const layout: any = //plotly.Layout
-    {
-        autosize: true,
-        paper_bgcolor: "rgba(0,0,0,0)",
-        plot_bgcolor: "rgba(0,0,0,0)",
-        font: { color: "#e5e5e5" },
-        margin: { l: 50, r: 50, t: 50, b: 50 },
-        title:
-        {
-            text: "LVLH Kinematics",
-            font:
-            {
-                color: "#FFFFFF",
-                size: 20,
-                family: "Lucida Console"
-            }
-        },
-        scene:
-        {
-            aspectmode: "data",
-            xaxis: { visible: false },
-            yaxis: { visible: false },
-            zaxis: { visible: false }
-        }
-    }
 
     return (
         <DialogRUI
@@ -399,7 +408,9 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
 
                 <OutputField label="Z" unit="DEG / S" value={formOut.angularVelocity.z} />
 
-                <div className="col-span-full flex flex-col space-y-4 p-4">
+            </form.Root>
+
+            {/* <div className="col-span-full flex flex-col space-y-4 p-4"> */}
 
                     <Plot
                         data={kinematics ?? []}
@@ -407,9 +418,7 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
                         style={{ width: "100%", height: "100%" }}
                     />
 
-                </div>
-
-            </form.Root>
+                {/* </div> */}
 
         </DialogRUI>
     )

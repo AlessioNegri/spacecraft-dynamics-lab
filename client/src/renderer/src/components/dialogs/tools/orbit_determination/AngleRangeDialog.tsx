@@ -1,10 +1,11 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
 
 interface IFormIn
 {
@@ -46,22 +47,20 @@ const defaultOut: IFormOut =
     oe: { sam: 0, sma: 0, ecc: 0, inc: 0, raan: 0, aop: 0, ta: 0 }
 }
 
-interface AngleRangeDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function AngleRangeDialog */
-export default function AngleRangeDialog(props: Readonly<AngleRangeDialogProps>): react.JSX.Element
+export default function AngleRangeDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
         
     const [formIn, setFormIn] = react.useState<IFormIn>(defaultIn)
         
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
-
-    const [_, setAxiosError] = react.useState<string>("")
 
     // --- USE REF ---
     
@@ -90,9 +89,7 @@ export default function AngleRangeDialog(props: Readonly<AngleRangeDialogProps>)
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) setAxiosError(message)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -117,120 +114,218 @@ export default function AngleRangeDialog(props: Readonly<AngleRangeDialogProps>)
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
 
                 <InputField
+                    type="number"
                     name="slantRange"
                     label="Slant Range"
-                    unit="KM"
+                    symbol="\rho"
+                    unit="km"
                     value={formIn.slantRange}
+                    min={0}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="azimuth"
                     label="Azimuth"
-                    unit="DEG"
+                    symbol="A"
+                    unit="deg"
                     value={formIn.azimuth}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="elevationA"
                     label="Elevation"
-                    unit="DEG"
+                    symbol="a"
+                    unit="deg"
                     value={formIn.elevationA}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="rangeRate"
                     label="Range Rate"
-                    unit="KM / S"
+                    symbol="\dot{\rho}"
+                    unit="km / s"
                     value={formIn.rangeRate}
+                    min={0}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="azimuthRate"
                     label="Azimuth Rate"
-                    unit="DEG / S"
+                    symbol="\dot{A}"
+                    unit="deg / s"
                     value={formIn.azimuthRate}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="elevationARate"
                     label="Elevation Rate"
-                    unit="DEG / S"
+                    symbol="\dot{a}"
+                    unit="deg / s"
                     value={formIn.elevationARate}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="localSiderealTime"
                     label="Local Sidereal Time"
-                    unit="DEG"
+                    symbol="\theta"
+                    unit="deg"
                     value={formIn.localSiderealTime}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="latitude"
                     label="Latitude"
-                    unit="DEG"
+                    symbol="\phi"
+                    unit="deg"
                     value={formIn.latitude}
+                    min={-360}
+                    max={360}
                     onChange={handleChange}
                 />
 
                 <InputField
+                    type="number"
                     name="elevationH"
                     label="Elevation Above Sea Level"
-                    unit="KM"
+                    symbol="H"
+                    unit="km"
                     value={formIn.elevationH}
+                    min={0}
                     onChange={handleChange}
                 />
 
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-2 gap-4 mb-4">
 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector</span>
+                <div className="flex flex-col gap-4">
 
-                <OutputField name="position.x" label="X" unit="KM" value={formOut.position.x} />
+                    <span className="text-center uppercase font-semibold">Position Vector</span>
 
-                <OutputField name="position.y" label="Y" unit="KM" value={formOut.position.y} />
+                    <OutputField
+                        symbol="r_x"
+                        unit="km"
+                        value={formOut.position.x}
+                    />
 
-                <OutputField name="position.z" label="Z" unit="KM" value={formOut.position.z} />
+                    <OutputField
+                        symbol="r_y"
+                        unit="km"
+                        value={formOut.position.y}
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Velocity Vector</span>
+                    <OutputField
+                        symbol="r_z"
+                        unit="km"
+                        value={formOut.position.z}
+                    />
 
-                <OutputField name="velocity.x" label="X" unit="KM / S" value={formOut.velocity.x} />
+                </div>
 
-                <OutputField name="velocity.y" label="Y" unit="KM / S" value={formOut.velocity.y} />
+                <div className="flex flex-col gap-4">
 
-                <OutputField name="velocity.z" label="Z" unit="KM / S" value={formOut.velocity.z} />
+                    <span className="text-center uppercase font-semibold">Velocity Vector</span>
 
-                <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
+                    <OutputField
+                        symbol="v_x"
+                        unit="km / s"
+                        value={formOut.velocity.x}
+                    />
 
-                <OutputField name="sma" label="Semi-Major Axis" unit="KM" value={formOut.oe.sma} />
+                    <OutputField
+                        symbol="v_y"
+                        unit="km / s"
+                        value={formOut.velocity.y}
+                    />
 
-                <OutputField name="ecc" label="Eccentricity" value={formOut.oe.ecc} />
+                    <OutputField
+                        symbol="v_z"
+                        unit="km / s"
+                        value={formOut.velocity.z}
+                    />
 
-                <OutputField name="inc" label="Inclination" unit="DEG" value={formOut.oe.inc} />
+                </div>
 
-                <OutputField name="raan" label="RAAN" unit="DEG" value={formOut.oe.raan} />
+                <div className="col-span-full grid grid-cols-3 gap-4">
 
-                <OutputField name="aop" label="Argument Periapsis" unit="DEG" value={formOut.oe.aop} />
+                    <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
 
-                <OutputField name="ta" label="True Anomaly" unit="DEG" value={formOut.oe.ta} />
+                    <OutputField
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        value={formOut.oe.sma}
+                    />
 
-            </form.Root>
+                    <OutputField
+                        label="Eccentricity"
+                        symbol="e"
+                        value={formOut.oe.ecc}
+                    />
+
+                    <OutputField
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={formOut.oe.inc}
+                    />
+
+                    <OutputField
+                        label="Right Ascension Of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={formOut.oe.raan}
+                    />
+
+                    <OutputField
+                        label="Argument Of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={formOut.oe.aop}
+                    />
+
+                    <OutputField
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={formOut.oe.ta}
+                    />
+
+                </div>
+
+            </Form.Root>
 
         </DialogRUI>
     )

@@ -65,8 +65,8 @@ def test_rendezvous():
     assert np.isclose(hyperbola.periapse_radius.to_value(u.km), 5456, atol=1e0)
     assert np.isclose(hyperbola.aiming_radius.to_value(u.km), 9817, atol=1e0)
     assert np.isclose(hyperbola.asymptote_angle.to_value(u.deg), 58.13, atol=1e-2)
-    assert np.isclose(oe.a.to_value(u.km), 8832, atol=1e0)
-    assert np.isclose(oe.ecc.to_value(), 0.3822, atol=1e-4)
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 8832, atol=1e0)
+    assert np.isclose(oe.eccentricity.to_value(), 0.3822, atol=1e-4)
 
 def test_flyby():
     """EXAMPLE 8.6"""
@@ -77,14 +77,14 @@ def test_flyby():
                                                                        nu_1=-30 * u.deg,
                                                                        side=it.FlybySide.DARK_SIDE)
     
-    assert np.isclose(oe_1.h.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
-    assert np.isclose(oe_1.ecc.to_value(), 0.1702, atol=1e-4)
+    assert np.isclose(oe_1.specific_angular_momentum.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
+    assert np.isclose(oe_1.eccentricity.to_value(), 0.1702, atol=1e-4)
     assert np.isclose(hyperbola_params.specific_angular_momentum.to_value(u.km**2 / u.s), 68480, atol=1e0)
     assert np.isclose(hyperbola_params.eccentricity.to_value(), 1.272, atol=1e-3)
     assert np.isclose(hyperbola_params.turn_angle.to_value(u.deg), 103.6, atol=1e-1)
     assert np.isclose(hyperbola_params.aiming_radius.to_value(u.km), 18342, atol=1e0)
-    assert np.isclose(oe_2.h.to_value(u.km**2 / u.s), 3.434e9, atol=1e6)
-    assert np.isclose(oe_2.ecc.to_value(), 0.1847, atol=1e-4)
+    assert np.isclose(oe_2.specific_angular_momentum.to_value(u.km**2 / u.s), 3.434e9, atol=1e6)
+    assert np.isclose(oe_2.eccentricity.to_value(), 0.1847, atol=1e-4)
     
     oe_1, hyperbola_params, oe_2 = it.InterplanetaryTrajectories.flyby(departure_planet=bd.Attractor.EARTH,
                                                                        arrival_planet=bd.Attractor.VENUS,
@@ -92,14 +92,14 @@ def test_flyby():
                                                                        nu_1=-30 * u.deg,
                                                                        side=it.FlybySide.SUNLIT_SIDE)
     
-    assert np.isclose(oe_1.h.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
-    assert np.isclose(oe_1.ecc.to_value(), 0.1702, atol=1e-4)
+    assert np.isclose(oe_1.specific_angular_momentum.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
+    assert np.isclose(oe_1.eccentricity.to_value(), 0.1702, atol=1e-4)
     assert np.isclose(hyperbola_params.specific_angular_momentum.to_value(u.km**2 / u.s), 68480, atol=1e0)
     assert np.isclose(hyperbola_params.eccentricity.to_value(), 1.272, atol=1e-3)
     assert np.isclose(hyperbola_params.turn_angle.to_value(u.deg), 103.6, atol=1e-1)
     assert np.isclose(hyperbola_params.aiming_radius.to_value(u.km), 18342, atol=1e0)
-    assert np.isclose(oe_2.h.to_value(u.km**2 / u.s), 4.019e9, atol=1e6)
-    assert np.isclose(oe_2.ecc.to_value(), 0.1556, atol=1e-4)
+    assert np.isclose(oe_2.specific_angular_momentum.to_value(u.km**2 / u.s), 4.019e9, atol=1e6)
+    assert np.isclose(oe_2.eccentricity.to_value(), 0.1556, atol=1e-4)
 
 def test_ephemeris():
     """EXAMPLE 8.7"""

@@ -126,17 +126,17 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
     raan: list = []
     aop: list = []
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(h=0 * u.km**2 / u.s,
-                                                    a=payload.orbitalElements.sma * u.km,
-                                                    ecc=payload.orbitalElements.ecc * u.dimensionless_unscaled,
-                                                    inc=payload.orbitalElements.inc * u.deg,
-                                                    raan=payload.orbitalElements.raan * u.deg,
-                                                    argp=payload.orbitalElements.aop * u.deg,
-                                                    nu=payload.orbitalElements.ta * u.deg)
+    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                    semimajor_axis=payload.orbitalElements.sma * u.km,
+                                                    eccentricity=payload.orbitalElements.ecc * u.dimensionless_unscaled,
+                                                    inclination=payload.orbitalElements.inc * u.deg,
+                                                    right_ascension_of_ascending_node=payload.orbitalElements.raan * u.deg,
+                                                    argument_of_periapsis=payload.orbitalElements.aop * u.deg,
+                                                    true_anomaly=payload.orbitalElements.ta * u.deg)
     
-    oe_0.h = oe_0.specific_angular_momentum(attractor=attractor)
+    oe_0.calc_specific_angular_momentum(attractor=attractor)
 
-    r_0, v_0 = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_0)
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     oe_ini: o3d.OrbitalElements = copy.deepcopy(oe_0)
     
@@ -179,24 +179,24 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
         for i in range(len(result.oe)):
             
             times.append((timestamp + result.t[i]).isot)
-            sam.append((result.oe[i].h - oe_ini.h).to_value(u.km**2 / u.s))
-            sma.append((result.oe[i].a - oe_ini.a).to_value(u.km))
-            ecc.append((result.oe[i].ecc - oe_ini.ecc).to_value(u.dimensionless_unscaled))
-            inc.append((result.oe[i].inc - oe_ini.inc).to_value(u.deg))
-            raan.append((result.oe[i].raan - oe_ini.raan).to_value(u.deg))
-            aop.append((result.oe[i].argp - oe_ini.argp).to_value(u.deg))
+            sam.append((result.oe[i].specific_angular_momentum - oe_ini.specific_angular_momentum).to_value(u.km**2 / u.s))
+            sma.append((result.oe[i].semimajor_axis - oe_ini.semimajor_axis).to_value(u.km))
+            ecc.append((result.oe[i].eccentricity - oe_ini.eccentricity).to_value(u.dimensionless_unscaled))
+            inc.append((result.oe[i].inclination - oe_ini.inclination).to_value(u.deg))
+            raan.append((result.oe[i].right_ascension_of_ascending_node - oe_ini.right_ascension_of_ascending_node).to_value(u.deg))
+            aop.append((result.oe[i].argument_of_periapsis - oe_ini.argument_of_periapsis).to_value(u.deg))
 
         # * New initial conditions for next iteration
         
-        oe_0 = o3d.OrbitalElements(h=result.oe[-1].h,
-                                   a=result.oe[-1].a,
-                                   ecc=result.oe[-1].ecc,
-                                   inc=cm.wrap_angle(result.oe[-1].inc, low=-90, high=180),
-                                   raan=cm.wrap_angle(result.oe[-1].raan, low=0, high=360),
-                                   argp=cm.wrap_angle(result.oe[-1].argp, low=0, high=360),
-                                   nu=cm.wrap_angle(result.oe[-1].nu, low=0, high=360)) # ! Do not use [-180 ; 360]
+        oe_0 = o3d.OrbitalElements(specific_angular_momentum=result.oe[-1].specific_angular_momentum,
+                                   semimajor_axis=result.oe[-1].semimajor_axis,
+                                   eccentricity=result.oe[-1].eccentricity,
+                                   inclination=cm.wrap_angle(result.oe[-1].inclination, low=-90, high=180),
+                                   right_ascension_of_ascending_node=cm.wrap_angle(result.oe[-1].right_ascension_of_ascending_node, low=0, high=360),
+                                   argument_of_periapsis=cm.wrap_angle(result.oe[-1].argument_of_periapsis, low=0, high=360),
+                                   true_anomaly=cm.wrap_angle(result.oe[-1].true_anomaly, low=0, high=360)) # ! Do not use [-180 ; 360]
         
-        r_0, v_0 = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_0)
+        r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
         
         # * Notify progress to WebSocket
         

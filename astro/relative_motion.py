@@ -79,9 +79,9 @@ class RelativeMotion():
             typing.List[u.Quantity]: [r_rel_lvlh, v_rel_lvlh, a_rel_lvlh, omega_lvlh]
         """
         
-        r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+        r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
         
-        r_chaser, v_chaser = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_chaser)
+        r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_chaser)
         
         cm.check_attractor(attractor)
         
@@ -239,13 +239,13 @@ class RelativeMotion():
         
         # >>> 1. Calculate state vectors from orbital elements
         
-        oe_target.a = oe_target.semi_major_axis(attractor=attractor)
+        oe_target.calc_semimajor_axis(attractor=attractor)
         
-        oe_chaser.a = oe_chaser.semi_major_axis(attractor=attractor)
+        oe_chaser.calc_semimajor_axis(attractor=attractor)
         
-        r_target, v_target = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_target)
+        r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
         
-        r_chaser, v_chaser = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe_chaser)
+        r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_chaser)
         
         cm.check_attractor(attractor)
         
@@ -257,13 +257,13 @@ class RelativeMotion():
         
         # >>> 2. Target period
         
-        t_target: u.Quantity = oe_target.orbital_period(attractor=attractor)
+        t_target: u.Quantity = oe_target.calc_orbital_period(attractor=attractor)
         
         # >>> 3. Target initial time
         
-        t_0: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_target.nu,
+        t_0: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_target.true_anomaly,
                                                                    T=t_target,
-                                                                   e=oe_target.ecc.to_value())
+                                                                   e=oe_target.eccentricity.to_value())
         
         # >>> 4. Final time
         
@@ -307,9 +307,9 @@ class RelativeMotion():
             
             # >>> c. Update Target-Chaser orbital elements
             
-            oe_target = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r_target, v=v_target)
+            oe_target = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r_target, velocity=v_target)
             
-            oe_chaser = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r_chaser, v=v_chaser)
+            oe_chaser = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r_chaser, velocity=v_chaser)
         
         # >>> 6. Result
         

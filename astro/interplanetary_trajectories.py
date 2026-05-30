@@ -507,7 +507,7 @@ class InterplanetaryTrajectories():
                                                       argument_of_perihelion,
                                                       nu)
         
-        r_HEF, v_HEF = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=bd.Attractor.SUN, oe=oe)
+        r_HEF, v_HEF = o3d.Orbit3D.keplerian_to_cartesian(attractor=bd.Attractor.SUN, orbital_elements=oe)
         
         return r_HEF, v_HEF
     

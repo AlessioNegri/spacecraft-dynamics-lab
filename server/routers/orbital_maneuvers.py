@@ -45,13 +45,13 @@ def fill_orbital_elements(oe_schema: schema.OrbitalElements) -> o3d.OrbitalEleme
     
     oe: o3d.OrbitalElements = o3d.OrbitalElements()
     
-    oe.h = oe_schema.sam * u.km**2 / u.s
-    oe.a = oe_schema.sma * u.km
-    oe.ecc = oe_schema.ecc * u.dimensionless_unscaled
-    oe.inc = oe_schema.inc * u.deg
-    oe.raan = oe_schema.raan * u.deg
-    oe.argp = oe_schema.aop * u.deg
-    oe.nu = oe_schema.ta * u.deg
+    oe.specific_angular_momentum = oe_schema.sam * u.km**2 / u.s
+    oe.semimajor_axis = oe_schema.sma * u.km
+    oe.eccentricity = oe_schema.ecc * u.dimensionless_unscaled
+    oe.inclination = oe_schema.inc * u.deg
+    oe.right_ascension_of_ascending_node = oe_schema.raan * u.deg
+    oe.argument_of_periapsis = oe_schema.aop * u.deg
+    oe.true_anomaly = oe_schema.ta * u.deg
     
     return oe
 
@@ -67,7 +67,7 @@ def propagate_orbit(attractor: bodies.Attractor, oe: o3d.OrbitalElements, dt: ti
         typing.List[schema.Vector3D]: Simulation points
     """
     
-    r_gef, v_gef = o3d.Orbit3D.perifocal_to_geocentric_equatorial(attractor=attractor, oe=oe)
+    r_gef, v_gef = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
     orbit: tbp.Orbit = tbp.Orbit()
     
@@ -100,12 +100,12 @@ def calculate_simulation_time(attractor: bodies.Attractor,
     """
     
     t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_1,
-                                                               T=oe.orbital_period(attractor),
-                                                               e=oe.ecc.to_value())
+                                                               T=oe.calc_orbital_period(attractor),
+                                                               e=oe.eccentricity.to_value())
     
     t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_2,
-                                                               T=oe.orbital_period(attractor),
-                                                               e=oe.ecc.to_value())
+                                                               T=oe.calc_orbital_period(attractor),
+                                                               e=oe.eccentricity.to_value())
     
     if t_2 > t_1:
         
@@ -113,7 +113,7 @@ def calculate_simulation_time(attractor: bodies.Attractor,
         
     else:
         
-        t_sim = oe.orbital_period(attractor) - (t_1 - t_2)
+        t_sim = oe.calc_orbital_period(attractor) - (t_1 - t_2)
     
     return t_sim
 
@@ -171,7 +171,7 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe_1,
-                                                                  dt=time.TimeDelta(oe_1.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -179,7 +179,7 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=oe_1,
-                                                              nu_1=oe_1.nu,
+                                                              nu_1=oe_1.true_anomaly,
                                                               nu_2=maneuver.nu[0])
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
@@ -188,25 +188,25 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=maneuver.oe[0],
-                                          dt=time.TimeDelta(maneuver.oe[0].orbital_period(attractor) / 2)))
+                                          dt=time.TimeDelta(maneuver.oe[0].calc_orbital_period(attractor) / 2)))
     
     # * Final Orbit
     
     final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                 oe=oe_2,
-                                                                dt=time.TimeDelta(oe_2.orbital_period(attractor)))
+                                                                dt=time.TimeDelta(oe_2.calc_orbital_period(attractor)))
     
     # * Result
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe_2.h.to_value(),
-            sma=oe_2.a.to_value(),
-            ecc=oe_2.ecc.to_value(),
-            inc=oe_2.inc.to_value(),
-            raan=oe_2.raan.to_value(),
-            aop=oe_2.argp.to_value(),
-            ta=oe_2.nu.to_value()
+            sam=oe_2.specific_angular_momentum.to_value(),
+            sma=oe_2.semimajor_axis.to_value(),
+            ecc=oe_2.eccentricity.to_value(),
+            inc=oe_2.inclination.to_value(),
+            raan=oe_2.right_ascension_of_ascending_node.to_value(),
+            aop=oe_2.argument_of_periapsis.to_value(),
+            ta=oe_2.true_anomaly.to_value()
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -260,7 +260,7 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe_1,
-                                                                  dt=time.TimeDelta(oe_1.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -268,8 +268,8 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=oe_1,
-                                                              nu_1=oe_1.nu,
-                                                              nu_2=maneuver.oe[0].nu)
+                                                              nu_1=oe_1.true_anomaly,
+                                                              nu_2=maneuver.oe[0].true_anomaly)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=oe_1,
@@ -277,29 +277,29 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=maneuver.oe[0],
-                                          dt=time.TimeDelta(maneuver.oe[0].orbital_period(attractor) / 2)))
+                                          dt=time.TimeDelta(maneuver.oe[0].calc_orbital_period(attractor) / 2)))
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=maneuver.oe[1],
-                                          dt=time.TimeDelta(maneuver.oe[1].orbital_period(attractor) / 2)))
+                                          dt=time.TimeDelta(maneuver.oe[1].calc_orbital_period(attractor) / 2)))
     
     # * Final Orbit
     
     final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                 oe=oe_2,
-                                                                dt=time.TimeDelta(oe_2.orbital_period(attractor)))
+                                                                dt=time.TimeDelta(oe_2.calc_orbital_period(attractor)))
     
     # * Result
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe_2.h.to_value(),
-            sma=oe_2.a.to_value(),
-            ecc=oe_2.ecc.to_value(),
-            inc=oe_2.inc.to_value(),
-            raan=oe_2.raan.to_value(),
-            aop=oe_2.argp.to_value(),
-            ta=oe_2.nu.to_value()
+            sam=oe_2.specific_angular_momentum.to_value(),
+            sma=oe_2.semimajor_axis.to_value(),
+            ecc=oe_2.eccentricity.to_value(),
+            inc=oe_2.inclination.to_value(),
+            raan=oe_2.right_ascension_of_ascending_node.to_value(),
+            aop=oe_2.argument_of_periapsis.to_value(),
+            ta=oe_2.true_anomaly.to_value()
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -346,7 +346,7 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe,
-                                                                  dt=time.TimeDelta(oe.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -354,8 +354,8 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=oe,
-                                                              nu_1=oe.nu,
-                                                              nu_2=maneuver.oe[0].nu)
+                                                              nu_1=oe.true_anomaly,
+                                                              nu_2=maneuver.oe[0].true_anomaly)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=oe,
@@ -363,7 +363,7 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=maneuver.oe[0],
-                                          dt=time.TimeDelta(maneuver.oe[0].orbital_period(attractor))))
+                                          dt=time.TimeDelta(maneuver.oe[0].calc_orbital_period(attractor))))
     
     # * Final Orbit
     
@@ -373,13 +373,13 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe.h.to_value(),
-            sma=oe.a.to_value(),
-            ecc=oe.ecc.to_value(),
-            inc=oe.inc.to_value(),
-            raan=oe.raan.to_value(),
-            aop=oe.argp.to_value(),
-            ta=oe.nu.to_value()
+            sam=oe.specific_angular_momentum.to_value(),
+            sma=oe.semimajor_axis.to_value(),
+            ecc=oe.eccentricity.to_value(),
+            inc=oe.inclination.to_value(),
+            raan=oe.right_ascension_of_ascending_node.to_value(),
+            aop=oe.argument_of_periapsis.to_value(),
+            ta=oe.true_anomaly.to_value()
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -426,7 +426,7 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe,
-                                                                  dt=time.TimeDelta(oe.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -434,7 +434,7 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=maneuver.oe[0],
-                                                              nu_1=maneuver.oe[0].nu,
+                                                              nu_1=maneuver.oe[0].true_anomaly,
                                                               nu_2=nu_2)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
@@ -449,13 +449,13 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe.h.to_value(),
-            sma=oe.a.to_value(),
-            ecc=oe.ecc.to_value(),
-            inc=oe.inc.to_value(),
-            raan=oe.raan.to_value(),
-            aop=oe.argp.to_value(),
-            ta=oe.nu.to_value()
+            sam=oe.specific_angular_momentum.to_value(),
+            sma=oe.semimajor_axis.to_value(),
+            ecc=oe.eccentricity.to_value(),
+            inc=oe.inclination.to_value(),
+            raan=oe.right_ascension_of_ascending_node.to_value(),
+            aop=oe.argument_of_periapsis.to_value(),
+            ta=oe.true_anomaly.to_value()
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -500,16 +500,16 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
                                                                                   rocket_motor=rocket_motor,
                                                                                   oe_1=oe_1,
                                                                                   oe_2=oe_2,
-                                                                                  eta=oe_2.argp - oe_1.argp,
+                                                                                  eta=oe_2.argument_of_periapsis - oe_1.argument_of_periapsis,
                                                                                   second_intersection_point=sip)
     
-    oe_2.nu = maneuver.oe[0].nu
+    oe_2.nu = maneuver.oe[0].true_anomaly
     
     # * Initial Orbit
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe_1,
-                                                                  dt=time.TimeDelta(oe_1.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -517,8 +517,8 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=oe_1,
-                                                              nu_1=oe_1.nu,
-                                                              nu_2=maneuver.oe[0].nu)
+                                                              nu_1=oe_1.true_anomaly,
+                                                              nu_2=maneuver.oe[0].true_anomaly)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=oe_1,
@@ -528,19 +528,19 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
     
     final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                 oe=oe_2,
-                                                                dt=time.TimeDelta(oe_2.orbital_period(attractor)))
+                                                                dt=time.TimeDelta(oe_2.calc_orbital_period(attractor)))
     
     # * Result
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe_2.h.to_value(),
-            sma=oe_2.a.to_value(),
-            ecc=oe_2.ecc.to_value(),
-            inc=oe_2.inc.to_value(),
-            raan=oe_2.raan.to_value(),
-            aop=oe_2.argp.to_value(),
-            ta=maneuver.oe[0].nu.to_value(u.deg)
+            sam=oe_2.specific_angular_momentum.to_value(),
+            sma=oe_2.semimajor_axis.to_value(),
+            ecc=oe_2.eccentricity.to_value(),
+            inc=oe_2.inclination.to_value(),
+            raan=oe_2.right_ascension_of_ascending_node.to_value(),
+            aop=oe_2.argument_of_periapsis.to_value(),
+            ta=maneuver.oe[0].true_anomaly.to_value(u.deg)
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -587,7 +587,7 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe,
-                                                                  dt=time.TimeDelta(oe.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -595,8 +595,8 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     dt_maneuver: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                         oe=maneuver.oe[0],
-                                                        nu_1=maneuver.oe[0].nu,
-                                                        nu_2=maneuver.oe[1].nu)
+                                                        nu_1=maneuver.oe[0].true_anomaly,
+                                                        nu_2=maneuver.oe[1].true_anomaly)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=maneuver.oe[0],
@@ -610,13 +610,13 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=oe.h.to_value(),
-            sma=oe.a.to_value(),
-            ecc=oe.ecc.to_value(),
-            inc=oe.inc.to_value(),
-            raan=oe.raan.to_value(),
-            aop=oe.argp.to_value(),
-            ta=oe.nu.to_value()
+            sam=oe.specific_angular_momentum.to_value(),
+            sma=oe.semimajor_axis.to_value(),
+            ecc=oe.eccentricity.to_value(),
+            inc=oe.inclination.to_value(),
+            raan=oe.right_ascension_of_ascending_node.to_value(),
+            aop=oe.argument_of_periapsis.to_value(),
+            ta=oe.true_anomaly.to_value()
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),
@@ -665,7 +665,7 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                   oe=oe_1,
-                                                                  dt=time.TimeDelta(oe_1.orbital_period(attractor)))
+                                                                  dt=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
         
     # * Transfer Orbit
     
@@ -673,8 +673,8 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     dt_maneuver_point: u.Quantity = calculate_simulation_time(attractor=attractor,
                                                               oe=oe_1,
-                                                              nu_1=oe_1.nu,
-                                                              nu_2=maneuver.oe[0].nu)
+                                                              nu_1=oe_1.true_anomaly,
+                                                              nu_2=maneuver.oe[0].true_anomaly)
     
     transfer_orbit.extend(propagate_orbit(attractor=attractor,
                                           oe=oe_1,
@@ -684,19 +684,19 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
                                                                 oe=maneuver.oe[0],
-                                                                dt=time.TimeDelta(maneuver.oe[0].orbital_period(attractor)))
+                                                                dt=time.TimeDelta(maneuver.oe[0].calc_orbital_period(attractor)))
     
     # * Result
     
     result: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
         orbitalElements=schema.OrbitalElements(
-            sam=maneuver.oe[0].h.to_value(u.km**2 / u.s),
-            sma=maneuver.oe[0].a.to_value(u.km),
-            ecc=maneuver.oe[0].ecc.to_value(u.dimensionless_unscaled),
-            inc=maneuver.oe[0].inc.to_value(u.deg),
-            raan=maneuver.oe[0].raan.to_value(u.deg),
-            aop=maneuver.oe[0].argp.to_value(u.deg),
-            ta=maneuver.oe[0].nu.to_value(u.deg)
+            sam=maneuver.oe[0].specific_angular_momentum.to_value(u.km**2 / u.s),
+            sma=maneuver.oe[0].semimajor_axis.to_value(u.km),
+            ecc=maneuver.oe[0].eccentricity.to_value(u.dimensionless_unscaled),
+            inc=maneuver.oe[0].inclination.to_value(u.deg),
+            raan=maneuver.oe[0].right_ascension_of_ascending_node.to_value(u.deg),
+            aop=maneuver.oe[0].argument_of_periapsis.to_value(u.deg),
+            ta=maneuver.oe[0].true_anomaly.to_value(u.deg)
         ),
         maneuver=schema.Maneuver(
             dv=sum([x.to_value() for x in maneuver.dv]),

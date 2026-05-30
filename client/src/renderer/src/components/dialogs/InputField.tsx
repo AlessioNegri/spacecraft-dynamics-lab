@@ -14,36 +14,7 @@ import saturn from "@renderer/assets/planets/saturn.png"
 import sun from "@renderer/assets/planets/sun.png"
 import uranus from "@renderer/assets/planets/uranus.png"
 import venus from "@renderer/assets/planets/venus.png"
-
-type AllowedTextFieldType =
-    | "text"
-    | "number"
-    | "email"
-    | "password"
-    | "search"
-    | "tel"
-    | "url"
-    | "date"
-    | "time"
-    | "datetime-local"
-    | "month"
-    | "week"
-
-const allowedTypes: AllowedTextFieldType[] =
-[
-    "text",
-    "number",
-    "email",
-    "password",
-    "search",
-    "tel",
-    "url",
-    "date",
-    "time",
-    "datetime-local",
-    "month",
-    "week"
-]
+import utility from "@renderer/common/utility"
 
 interface Props
 {
@@ -152,91 +123,183 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
                 </Themes.Flex>
 
-                // <select
-                //     required
-                //     disabled={props.disabled}
-                //     name={props.name}
-                //     className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
-                //             focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
-                //             transition h-8"
-                //     value={String(props.value)}
-                //     onChange={props.onChange}
-                // >
-
-                //     {props.options?.map(opt => (<option key={opt.value} value={String(opt.value)}>{opt.label}</option>))}
-
-                // </select>
-
                 :
 
-                <Form.Control asChild>
+                <Themes.Flex direction={"column"} gap={"2"}>
 
-                    <Themes.Flex direction={"column"} gap={"2"}>
+                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
 
-                        {
-                            props.label &&
-                            <Themes.Text className="text-sm text-neutral-300">{props.label}</Themes.Text>
-                        }
+                        {props.label}
 
-                        <Themes.TextField.Root
-                            className="textfield-padding"
-                            variant="soft"
-                            size={"2"}
-                            style={{ fontFamily: "Oxanium" }}
-                            required
-                            disabled={props.disabled}
-                            name={props.name}
-                            type={allowedTypes.find(t => t === props.type) ?? "text"}
-                            placeholder="Insert value..."
-                            value={props.value}
-                            onChange={props.onChange}
-                            min={props.min}
-                            max={props.max}
-                            pattern={props.pattern}
+                        {icon && <img src={icon} alt="icon" width={20} />}
+
+                    </Themes.Text>
+
+                    <div
+                        className={utility.cn(
+                            "flex items-center rounded bg-orange-400/10 h-8 overflow-hidden",
+                            "focus-within:ring-2 focus-within:ring-orange-400/50 focus-within:border-orange-400",
+                            "transition mx-0.5",
+                            props.disabled && "opacity-50 cursor-not-allowed"
+                        )}
                         >
 
-                            <Themes.TextField.Slot className="bg-orange-900 rounded-l">
-                                <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
-                            </Themes.TextField.Slot>
+                        {/* LEFT SLOT (symbol) */}
 
-                            <Themes.TextField.Slot className="bg-orange-900 rounded-r text-xs">
-                                <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
-                            </Themes.TextField.Slot>
+                        <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                            <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                        </div>
 
-                        </Themes.TextField.Root>
+                        {/* INPUT */}
 
-                    </Themes.Flex>
+                        <Form.Control asChild>
+                            <input
+                                style={{ fontFamily: "Oxanium" }}
+                                required
+                                disabled={props.disabled}
+                                name={props.name}
+                                type={props.type ?? "text"}
+                                placeholder="Insert value..."
+                                value={props.value}
+                                onChange={props.onChange}
+                                min={props.min}
+                                max={props.max}
+                                pattern={props.pattern}
+                                step="any"
+                                className="w-full px-2 bg-transparent outline-none text-orange-200"
+                            />
+                        </Form.Control>
 
-                    {/* <input
-                        required
-                        disabled={props.disabled}
-                        name={props.name}
-                        type={props.type ?? "text"}
-                        className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
-                            focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
-                            transition h-8"
-                        placeholder="Insert value..."
-                        value={props.value}
-                        onChange={props.onChange}
-                        min={props.min}
-                        max={props.max}
-                        pattern={props.pattern}
-                    /> */}
+                        {/* RIGHT SLOT (unit) */}
 
-                </Form.Control>
+                        <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
+                            <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+                        </div>
+
+                    </div>
+
+                </Themes.Flex>
 
             }
 
             <Form.Message className="text-sm text-red-400" match="valueMissing">Required</Form.Message>
 
-            <Form.Message className="text-sm text-red-400" match="rangeUnderflow">Underflow</Form.Message>
+            <Form.Message className="text-sm text-red-400" match="rangeUnderflow">
+                {`Underflow ${props.min}`}
+            </Form.Message>
 
-            <Form.Message className="text-sm text-red-400" match="rangeOverflow">Overflow</Form.Message>
+            <Form.Message className="text-sm text-red-400" match="rangeOverflow">
+                {`Overflow ${props.max}`}
+            </Form.Message>
 
             <Form.Message className="text-sm text-red-400" match="patternMismatch">
-                {`Patter Mismatch ${props.pattern}`}
+                {`Pattern Mismatch ${props.pattern}`}
             </Form.Message>
 
         </Form.Field>
     )
 }
+
+/*
+type AllowedTextFieldType =
+    | "text"
+    | "number"
+    | "email"
+    | "password"
+    | "search"
+    | "tel"
+    | "url"
+    | "date"
+    | "time"
+    | "datetime-local"
+    | "month"
+    | "week"
+
+const allowedTypes: AllowedTextFieldType[] =
+[
+    "text",
+    "number",
+    "email",
+    "password",
+    "search",
+    "tel",
+    "url",
+    "date",
+    "time",
+    "datetime-local",
+    "month",
+    "week"
+]
+
+<select
+    required
+    disabled={props.disabled}
+    name={props.name}
+    className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
+            focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
+            transition h-8"
+    value={String(props.value)}
+    onChange={props.onChange}
+>
+
+    {props.options?.map(opt => (<option key={opt.value} value={String(opt.value)}>{opt.label}</option>))}
+
+</select>
+
+
+<input
+    required
+    disabled={props.disabled}
+    name={props.name}
+    type={props.type ?? "text"}
+    className="bg-neutral-700 border-2 border-neutral-600 rounded px-2 py-1 font-mono
+        focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400
+        transition h-8"
+    placeholder="Insert value..."
+    value={props.value}
+    onChange={props.onChange}
+    min={props.min}
+    max={props.max}
+    pattern={props.pattern}
+/>
+
+<Form.Control asChild>
+
+    <Themes.Flex direction={"column"} gap={"2"}>
+
+        {
+            props.label &&
+            <Themes.Text className="text-sm text-neutral-300">{props.label}</Themes.Text>
+        }
+
+        <Themes.TextField.Root
+            className="textfield-padding"
+            variant="soft"
+            size={"2"}
+            style={{ fontFamily: "Oxanium" }}
+            required
+            disabled={props.disabled}
+            name={props.name}
+            type={allowedTypes.find(t => t === props.type) ?? "text"}
+            placeholder="Insert value..."
+            value={props.value}
+            onChange={props.onChange}
+            min={props.min}
+            max={props.max}
+            pattern={props.pattern}
+        >
+
+            <Themes.TextField.Slot className="bg-orange-900 rounded-l">
+                <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+            </Themes.TextField.Slot>
+
+            <Themes.TextField.Slot className="bg-orange-900 rounded-r text-xs">
+                <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+            </Themes.TextField.Slot>
+
+        </Themes.TextField.Root>
+
+    </Themes.Flex>                    
+
+</Form.Control>
+*/

@@ -6,6 +6,9 @@ Implementation of orbital maneuver algorithms.
 References:
 - Howard D. Curtis, "Orbital Mechanics for Engineering Students"
     - Chapter 6: Orbital Maneuvers
+
+- Craig A. Kluever, "Space Flight Dynamics"
+    - Chapter 3: Orbit Determination
 """
 
 __author__      = "Alessio Negri"
@@ -172,29 +175,29 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe_1.a.to_value(u.km),
-                                      oe_1.ecc.to_value(),
-                                      oe_1.inc.to_value(u.deg),
-                                      oe_1.raan.to_value(u.deg),
-                                      oe_1.argp.to_value(u.deg),
-                                      oe_1.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_1.semimajor_axis.to_value(u.km),
+                                      oe_1.eccentricity.to_value(),
+                                      oe_1.inclination.to_value(u.deg),
+                                      oe_1.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_1.argument_of_periapsis.to_value(u.deg),
+                                      oe_1.true_anomaly.to_value(u.deg))
         
-        cm.check_keplerian_parameters(oe_2.a.to_value(u.km),
-                                      oe_2.ecc.to_value(),
-                                      oe_2.inc.to_value(u.deg),
-                                      oe_2.raan.to_value(u.deg),
-                                      oe_2.argp.to_value(u.deg),
-                                      oe_2.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_2.semimajor_axis.to_value(u.km),
+                                      oe_2.eccentricity.to_value(),
+                                      oe_2.inclination.to_value(u.deg),
+                                      oe_2.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_2.argument_of_periapsis.to_value(u.deg),
+                                      oe_2.true_anomaly.to_value(u.deg))
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
         # >>> 0. Pericenter/Apocenter radii
         
-        r_p_1: float = oe_1.a.to_value(u.km) * (1 - oe_1.ecc.to_value())
-        r_a_1: float = oe_1.a.to_value(u.km) * (1 + oe_1.ecc.to_value())
+        r_p_1: float = oe_1.calc_perigee_radius().to_value(u.km)
+        r_a_1: float = oe_1.calc_apogee_radius().to_value(u.km)
         
-        r_p_2: float = oe_2.a.to_value(u.km) * (1 - oe_2.ecc.to_value())
-        r_a_2: float = oe_2.a.to_value(u.km) * (1 + oe_2.ecc.to_value())
+        r_p_2: float = oe_2.calc_perigee_radius().to_value(u.km)
+        r_a_2: float = oe_2.calc_apogee_radius().to_value(u.km)
         
         # >>> 1. Orbit 1 (Specific Angular Momentum, Velocity at Pericenter and Apocenter)
         
@@ -272,7 +275,7 @@ class OrbitalManeuvers():
             
             nu_t = 180.0 if not swap else 0.0
         
-        argp_t: float = oe_1.argp.to_value(u.deg)
+        argp_t: float = oe_1.argument_of_periapsis.to_value(u.deg)
         
         if swap:
             
@@ -293,13 +296,13 @@ class OrbitalManeuvers():
         maneuver.dv=[dv_1 * u.km / u.s, dv_2 * u.km / u.s]
         maneuver.dt=[0.5 * T_t * u.s]
         maneuver.dm=[dm_1, dm_2]
-        maneuver.oe=[o3d.OrbitalElements(h=h_t * u.km**2 / u.s,
-                                         a=a_t * u.km,
-                                         ecc=e_t * u.dimensionless_unscaled,
-                                         inc=oe_1.inc,
-                                         raan=oe_1.raan,
-                                         argp=argp_t * u.deg,
-                                         nu=nu_t * u.deg)]
+        maneuver.oe=[o3d.OrbitalElements(specific_angular_momentum=h_t * u.km**2 / u.s,
+                                         semimajor_axis=a_t * u.km,
+                                         eccentricity=e_t * u.dimensionless_unscaled,
+                                         inclination=oe_1.inclination,
+                                         right_ascension_of_ascending_node=oe_1.right_ascension_of_ascending_node,
+                                         argument_of_periapsis=argp_t * u.deg,
+                                         true_anomaly=nu_t * u.deg)]
         maneuver.nu=[nu_1 * u.deg]
         
         return maneuver
@@ -335,7 +338,7 @@ class OrbitalManeuvers():
         
         oe_t_1: o3d.OrbitalElements = copy.deepcopy(oe_1)
         
-        oe_t_1.update_from_perigee_apogee(r_p=oe_1.perigee_radius(), r_a=r_3)
+        oe_t_1.update_from_perigee_apogee(periapsis_radius=oe_1.calc_perigee_radius(), apoapsis_radius=r_3)
         
         maneuver_1: ManeuverResult = OrbitalManeuvers.hohmann_transfer(attractor=attractor,
                                                                        rocket_motor=rocket_motor,
@@ -345,7 +348,7 @@ class OrbitalManeuvers():
         
         oe_t_2: o3d.OrbitalElements = copy.deepcopy(oe_2)
         
-        oe_t_2.update_from_perigee_apogee(r_p=oe_2.perigee_radius(), r_a=r_3)
+        oe_t_2.update_from_perigee_apogee(periapsis_radius=oe_2.calc_perigee_radius(), apoapsis_radius=r_3)
         
         maneuver_2: ManeuverResult = OrbitalManeuvers.hohmann_transfer(attractor=attractor,
                                                                       rocket_motor=rocket_motor,
@@ -398,12 +401,12 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe.a.to_value(u.km),
-                                      oe.ecc.to_value(),
-                                      oe.inc.to_value(u.deg),
-                                      oe.raan.to_value(u.deg),
-                                      oe.argp.to_value(u.deg),
-                                      oe.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe.semimajor_axis.to_value(u.km),
+                                      oe.eccentricity.to_value(),
+                                      oe.inclination.to_value(u.deg),
+                                      oe.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe.argument_of_periapsis.to_value(u.deg),
+                                      oe.true_anomaly.to_value(u.deg))
         
         cm.check_angle(nu_target.to_value(u.deg))
         
@@ -411,15 +414,15 @@ class OrbitalManeuvers():
         
         # >>> 1. Chaser Orbit period and velocity at pericenter
         
-        T_1: float = 2 * np.pi / float(np.sqrt(mu)) * oe.a.to_value(u.km)**(3/2)
+        oe.calc_specific_angular_momentum(attractor)
         
-        oe.h = oe.specific_angular_momentum(attractor)
+        T_1: float = oe.calc_orbital_period(attractor=attractor).to_value(u.s)
         
-        v_p_1: float = oe.h.to_value(u.km**2 / u.s) / oe.perigee_radius().to_value(u.km)
+        v_p_1: float = oe.specific_angular_momentum.to_value(u.km**2 / u.s) / oe.calc_perigee_radius().to_value(u.km)
         
         # >>> 2. Time from A (pericenter - chaser) to B (target) placed at nu_target w.r.t. A
         
-        t_AB: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_target, T=T_1 * u.s, e=oe.ecc.to_value())
+        t_AB: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_target, T=T_1 * u.s, e=oe.eccentricity.to_value())
         
         # >>> 3. Orbit 2 (Phasing Orbit with kick at pericenter)
         
@@ -427,7 +430,7 @@ class OrbitalManeuvers():
         
         a_2: float = (float(np.sqrt(mu)) * T_2 / (2 * np.pi))**(2/3)
         
-        r_A: float = oe.perigee_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
+        r_A: float = oe.calc_perigee_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
         
         r_D: float = 2 * a_2 - r_A # ? Opposite point of the phasing orbit
         
@@ -456,13 +459,13 @@ class OrbitalManeuvers():
         maneuver.dv=[dv_1 * u.km / u.s, dv_2 * u.km / u.s]
         maneuver.dt=[num_revolutions * T_2 * u.s]
         maneuver.dm=[dm_1, dm_2]
-        maneuver.oe=[o3d.OrbitalElements(h=h_2 * u.km**2 / u.s,
-                                         a=a_2 * u.km,
-                                         ecc=(r_D - r_A) / (r_D + r_A) * u.dimensionless_unscaled,
-                                         inc=oe.inc,
-                                         raan=oe.raan,
-                                         argp=oe.argp,
-                                         nu=0 * u.deg)]
+        maneuver.oe=[o3d.OrbitalElements(specific_angular_momentum=h_2 * u.km**2 / u.s,
+                                         semimajor_axis=a_2 * u.km,
+                                         eccentricity=(r_D - r_A) / (r_D + r_A) * u.dimensionless_unscaled,
+                                         inclination=oe.inclination,
+                                         right_ascension_of_ascending_node=oe.right_ascension_of_ascending_node,
+                                         argument_of_periapsis=oe.argument_of_periapsis,
+                                         true_anomaly=0 * u.deg)]
         
         return maneuver
     
@@ -500,12 +503,12 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe_1.a.to_value(u.km),
-                                      oe_1.ecc.to_value(),
-                                      oe_1.inc.to_value(u.deg),
-                                      oe_1.raan.to_value(u.deg),
-                                      oe_1.argp.to_value(u.deg),
-                                      oe_1.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_1.semimajor_axis.to_value(u.km),
+                                      oe_1.eccentricity.to_value(),
+                                      oe_1.inclination.to_value(u.deg),
+                                      oe_1.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_1.argument_of_periapsis.to_value(u.deg),
+                                      oe_1.true_anomaly.to_value(u.deg))
         
         cm.check_angle(nu_2.to_value(u.deg))
         
@@ -516,16 +519,16 @@ class OrbitalManeuvers():
         
         # >>> 1. Orbit 1 (Starting Orbit)
         
-        r_p_1: float = oe_1.perigee_radius().to_value(u.km)
-        r_a_1: float = oe_1.apogee_radius().to_value(u.km)
+        r_p_1: float = oe_1.calc_perigee_radius().to_value(u.km)
+        r_a_1: float = oe_1.calc_apogee_radius().to_value(u.km)
         
         h_1: float = np.sqrt(2 * mu) * np.sqrt(r_a_1 * r_p_1 / (r_a_1 + r_p_1))
         
-        r_1: float = h_1**2 / mu * 1 / (1 + oe_1.ecc.to_value() * np.cos(oe_1.nu.to_value(u.rad))) # ? Radius at maneuver point
+        r_1: float = h_1**2 / mu * 1 / (1 + oe_1.eccentricity.to_value() * np.cos(oe_1.true_anomaly.to_value(u.rad))) # ? Radius at maneuver point
         
         v_t_1: float = h_1 / r_1 # ? Transversal velocity at maneuver point
         
-        v_r_1: float = mu / h_1 * oe_1.ecc.to_value() * np.sin(oe_1.nu.to_value(u.rad)) # ? Radial velocity at maneuver point
+        v_r_1: float = mu / h_1 * oe_1.eccentricity.to_value() * np.sin(oe_1.true_anomaly.to_value(u.rad)) # ? Radial velocity at maneuver point
         
         v_1: float = np.sqrt(v_r_1**2 + v_t_1**2) # ? Velocity at maneuver point
         
@@ -533,14 +536,14 @@ class OrbitalManeuvers():
         
         # >>> 2. Transfer Orbit
         
-        e_T: float = - (r_2 - r_1) / (r_2 * np.cos(nu_2) - r_1 * np.cos(oe_1.nu.to_value(u.rad)))
+        e_T: float = - (r_2 - r_1) / (r_2 * np.cos(nu_2) - r_1 * np.cos(oe_1.true_anomaly.to_value(u.rad)))
         
-        h_T: float = np.sqrt(mu * r_1 * r_2) * np.sqrt((np.cos(nu_2) - np.cos(oe_1.nu.to_value(u.rad))) /\
-            (r_2 * np.cos(nu_2) - r_1 * np.cos(oe_1.nu.to_value(u.rad))))
+        h_T: float = np.sqrt(mu * r_1 * r_2) * np.sqrt((np.cos(nu_2) - np.cos(oe_1.true_anomaly.to_value(u.rad))) /\
+            (r_2 * np.cos(nu_2) - r_1 * np.cos(oe_1.true_anomaly.to_value(u.rad))))
         
         v_t_T: float = h_T / r_1
         
-        v_r_T: float = mu / h_T * e_T * np.sin(oe_1.nu.to_value(u.rad))
+        v_r_T: float = mu / h_T * e_T * np.sin(oe_1.true_anomaly.to_value(u.rad))
         
         v_T: float = np.sqrt(v_r_T**2 + v_t_T**2)
         
@@ -566,7 +569,7 @@ class OrbitalManeuvers():
             
             phi += np.pi
         
-        t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_1.nu, T=T_T * u.s, e=e_T)
+        t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_1.true_anomaly, T=T_T * u.s, e=e_T)
         
         dm: u.Quantity = rocket_motor.consumed_propellant_mass(dv=dv * u.km / u.s, g_0=bd.BODIES[attractor].g_0)
         
@@ -577,13 +580,13 @@ class OrbitalManeuvers():
         maneuver.dv = [dv * u.km / u.s]
         maneuver.dt = [T_T * u.s - t_1]
         maneuver.dm = [dm]
-        maneuver.oe = [o3d.OrbitalElements(h=h_T * u.km**2 / u.s,
-                                           a=a_T * u.km,
-                                           ecc=e_T * u.dimensionless_unscaled,
-                                           inc=oe_1.inc,
-                                           raan=oe_1.raan,
-                                           argp=oe_1.argp,
-                                           nu=oe_1.nu)]
+        maneuver.oe = [o3d.OrbitalElements(specific_angular_momentum=h_T * u.km**2 / u.s,
+                                           semimajor_axis=a_T * u.km,
+                                           eccentricity=e_T * u.dimensionless_unscaled,
+                                           inclination=oe_1.inclination,
+                                           right_ascension_of_ascending_node=oe_1.right_ascension_of_ascending_node,
+                                           argument_of_periapsis=oe_1.argument_of_periapsis,
+                                           true_anomaly=oe_1.true_anomaly)]
         maneuver.fpa = [phi * u.rad]
         
         return maneuver
@@ -623,19 +626,19 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe_1.a.to_value(u.km),
-                                      oe_1.ecc.to_value(),
-                                      oe_1.inc.to_value(u.deg),
-                                      oe_1.raan.to_value(u.deg),
-                                      oe_1.argp.to_value(u.deg),
-                                      oe_1.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_1.semimajor_axis.to_value(u.km),
+                                      oe_1.eccentricity.to_value(),
+                                      oe_1.inclination.to_value(u.deg),
+                                      oe_1.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_1.argument_of_periapsis.to_value(u.deg),
+                                      oe_1.true_anomaly.to_value(u.deg))
         
-        cm.check_keplerian_parameters(oe_2.a.to_value(u.km),
-                                      oe_2.ecc.to_value(),
-                                      oe_2.inc.to_value(u.deg),
-                                      oe_2.raan.to_value(u.deg),
-                                      oe_2.argp.to_value(u.deg),
-                                      oe_2.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_2.semimajor_axis.to_value(u.km),
+                                      oe_2.eccentricity.to_value(),
+                                      oe_2.inclination.to_value(u.deg),
+                                      oe_2.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_2.argument_of_periapsis.to_value(u.deg),
+                                      oe_2.true_anomaly.to_value(u.deg))
         
         cm.check_angle(eta.to_value(u.deg))
         
@@ -645,13 +648,13 @@ class OrbitalManeuvers():
         
         # >>> 1. Orbit parameters
         
-        e_1: float = oe_1.ecc.to_value()
+        e_1: float = oe_1.eccentricity.to_value()
         
-        h_1: float = oe_1.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_1: float = oe_1.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
-        e_2: float = oe_2.ecc.to_value()
+        e_2: float = oe_2.eccentricity.to_value()
         
-        h_2: float = oe_2.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_2: float = oe_2.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
         # >>> 2. Coefficients a, b, c of the quadratic equation for the true anomaly at the intersection point
         
@@ -720,13 +723,13 @@ class OrbitalManeuvers():
         maneuver.dv = [dv * u.km / u.s]
         maneuver.dt = [0 * u.s]
         maneuver.dm = [dm]
-        maneuver.oe = [o3d.OrbitalElements(h=0 * u.km**2 / u.s,
-                                           a=0 * u.km,
-                                           ecc=0 * u.dimensionless_unscaled,
-                                           inc=0 * u.deg,
-                                           raan=0 * u.deg,
-                                           argp=0 * u.deg,
-                                           nu=nu_1 * u.rad)]
+        maneuver.oe = [o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                           semimajor_axis=0 * u.km,
+                                           eccentricity=0 * u.dimensionless_unscaled,
+                                           inclination=0 * u.deg,
+                                           right_ascension_of_ascending_node=0 * u.deg,
+                                           argument_of_periapsis=0 * u.deg,
+                                           true_anomaly=nu_1 * u.rad)]
         maneuver.fpa = [phi * u.rad]
         
         return maneuver
@@ -765,12 +768,12 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe.a.to_value(u.km),
-                                      oe.ecc.to_value(),
-                                      oe.inc.to_value(u.deg),
-                                      oe.raan.to_value(u.deg),
-                                      oe.argp.to_value(u.deg),
-                                      oe.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe.semimajor_axis.to_value(u.km),
+                                      oe.eccentricity.to_value(),
+                                      oe.inclination.to_value(u.deg),
+                                      oe.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe.argument_of_periapsis.to_value(u.deg),
+                                      oe.true_anomaly.to_value(u.deg))
         
         cm.check_angle(fpa.to_value(u.deg))
         
@@ -778,11 +781,11 @@ class OrbitalManeuvers():
         
         # >>> 1. Orbit 1
         
-        e_1: float = oe.ecc.to_value()
+        e_1: float = oe.eccentricity.to_value()
         
-        h_1: float = oe.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_1: float = oe.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
-        nu_1: float = oe.nu.to_value(u.rad)
+        nu_1: float = oe.true_anomaly.to_value(u.rad)
         
         r_1: float = h_1**2 / mu * 1 / (1 + e_1 * np.cos(nu_1))
         
@@ -826,13 +829,13 @@ class OrbitalManeuvers():
         maneuver.dv = [dv]
         maneuver.dt = [0 * u.s]
         maneuver.dm = [dm]
-        maneuver.oe = [o3d.OrbitalElements(h=h_2 * u.km**2 / u.s,
-                                           a=0.5 * (r_p_2 + r_a_2) * u.km,
-                                           ecc=e_2 * u.dimensionless_unscaled,
-                                           inc=oe.inc,
-                                           raan=oe.raan,
-                                           argp=(oe.argp.to_value(u.rad) + eta) * u.rad,
-                                           nu=nu_2 * u.rad)]
+        maneuver.oe = [o3d.OrbitalElements(specific_angular_momentum=h_2 * u.km**2 / u.s,
+                                           semimajor_axis=0.5 * (r_p_2 + r_a_2) * u.km,
+                                           eccentricity=e_2 * u.dimensionless_unscaled,
+                                           inclination=oe.inclination,
+                                           right_ascension_of_ascending_node=oe.right_ascension_of_ascending_node,
+                                           argument_of_periapsis=(oe.argument_of_periapsis.to_value(u.rad) + eta) * u.rad,
+                                           true_anomaly=nu_2 * u.rad)]
         maneuver.fpa = [fpa]
         
         return maneuver
@@ -867,26 +870,26 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe.a.to_value(u.km),
-                                      oe.ecc.to_value(),
-                                      oe.inc.to_value(u.deg),
-                                      oe.raan.to_value(u.deg),
-                                      oe.argp.to_value(u.deg),
-                                      oe.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe.semimajor_axis.to_value(u.km),
+                                      oe.eccentricity.to_value(),
+                                      oe.inclination.to_value(u.deg),
+                                      oe.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe.argument_of_periapsis.to_value(u.deg),
+                                      oe.true_anomaly.to_value(u.deg))
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
         # >>> 1. Parameters of the chaser and target orbits
         
-        h: float = oe.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h: float = oe.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
-        T: float = oe.orbital_period(attractor=attractor).to_value(u.s)
+        T: float = oe.calc_orbital_period(attractor=attractor).to_value(u.s)
         
         # >>> 2. Perifocal Frame state vector for Chaser C
         
-        e: float = oe.ecc.to_value()
+        e: float = oe.eccentricity.to_value()
         
-        nu_C: float = oe.nu.to_value(u.rad)
+        nu_C: float = oe.true_anomaly.to_value(u.rad)
         
         r_C: float = h**2 / mu * 1 / (1 + e * np.cos(nu_C)) * np.array([np.cos(nu_C), np.sin(nu_C), 0])
         
@@ -908,10 +911,10 @@ class OrbitalManeuvers():
         
         # >>> 4. Lambert problem solution for the transfer from C to T in time dt
         
-        r_C: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(oe=oe, r_PF=r_C * u.km)
-        r_T: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(oe=oe, r_PF=r_T * u.km)
+        r_C: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=oe, perifocal_position=r_C * u.km)
+        r_T: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=oe, perifocal_position=r_T * u.km)
         
-        if oe.inc <= 90.0 * u.deg:
+        if oe.inclination <= 90.0 * u.deg:
             
             direction : od.OrbitDirection = od.OrbitDirection.PROGRADE
             
@@ -983,19 +986,19 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe_1.a.to_value(u.km),
-                                      oe_1.ecc.to_value(),
-                                      oe_1.inc.to_value(u.deg),
-                                      oe_1.raan.to_value(u.deg),
-                                      oe_1.argp.to_value(u.deg),
-                                      oe_1.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_1.semimajor_axis.to_value(u.km),
+                                      oe_1.eccentricity.to_value(),
+                                      oe_1.inclination.to_value(u.deg),
+                                      oe_1.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_1.argument_of_periapsis.to_value(u.deg),
+                                      oe_1.true_anomaly.to_value(u.deg))
         
-        cm.check_keplerian_parameters(oe_2.a.to_value(u.km),
-                                      oe_2.ecc.to_value(),
-                                      oe_2.inc.to_value(u.deg),
-                                      oe_2.raan.to_value(u.deg),
-                                      oe_2.argp.to_value(u.deg),
-                                      oe_2.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_2.semimajor_axis.to_value(u.km),
+                                      oe_2.eccentricity.to_value(),
+                                      oe_2.inclination.to_value(u.deg),
+                                      oe_2.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_2.argument_of_periapsis.to_value(u.deg),
+                                      oe_2.true_anomaly.to_value(u.deg))
         
         cm.check_angle(dihedral_angle.to_value(u.deg))
         
@@ -1005,11 +1008,11 @@ class OrbitalManeuvers():
         
         # >>> 1. Orbit 1
         
-        e_1: float = oe_1.ecc.to_value()
+        e_1: float = oe_1.eccentricity.to_value()
         
-        nu_1: float = oe_1.nu.to_value(u.rad)
+        nu_1: float = oe_1.true_anomaly.to_value(u.rad)
         
-        h_1: float = oe_1.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_1: float = oe_1.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
         r_1: float = h_1**2 / mu * 1 / (1 + e_1 * np.cos(nu_1))
         
@@ -1019,11 +1022,11 @@ class OrbitalManeuvers():
         
         # >>> 2. Orbit 2
         
-        e_2: float = oe_2.ecc.to_value()
+        e_2: float = oe_2.eccentricity.to_value()
         
-        nu_2: float = oe_2.nu.to_value(u.rad)
+        nu_2: float = oe_2.true_anomaly.to_value(u.rad)
         
-        h_2: float = oe_2.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_2: float = oe_2.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
         r_2: float = h_2**2 / mu * 1 / (1 + e_2 * np.cos(nu_2))
         
@@ -1073,29 +1076,29 @@ class OrbitalManeuvers():
         
         cm.check_attractor(attractor)
         
-        cm.check_keplerian_parameters(oe_1.a.to_value(u.km),
-                                      oe_1.ecc.to_value(),
-                                      oe_1.inc.to_value(u.deg),
-                                      oe_1.raan.to_value(u.deg),
-                                      oe_1.argp.to_value(u.deg),
-                                      oe_1.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_1.semimajor_axis.to_value(u.km),
+                                      oe_1.eccentricity.to_value(),
+                                      oe_1.inclination.to_value(u.deg),
+                                      oe_1.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_1.argument_of_periapsis.to_value(u.deg),
+                                      oe_1.true_anomaly.to_value(u.deg))
         
-        cm.check_keplerian_parameters(oe_2.a.to_value(u.km),
-                                      oe_2.ecc.to_value(),
-                                      oe_2.inc.to_value(u.deg),
-                                      oe_2.raan.to_value(u.deg),
-                                      oe_2.argp.to_value(u.deg),
-                                      oe_2.nu.to_value(u.deg))
+        cm.check_keplerian_parameters(oe_2.semimajor_axis.to_value(u.km),
+                                      oe_2.eccentricity.to_value(),
+                                      oe_2.inclination.to_value(u.deg),
+                                      oe_2.right_ascension_of_ascending_node.to_value(u.deg),
+                                      oe_2.argument_of_periapsis.to_value(u.deg),
+                                      oe_2.true_anomaly.to_value(u.deg))
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        inc_1: float = oe_1.inc.to_value(u.rad)
-        inc_2: float = oe_2.inc.to_value(u.rad)
+        inc_1: float = oe_1.inclination.to_value(u.rad)
+        inc_2: float = oe_2.inclination.to_value(u.rad)
         
-        raan_1: float = oe_1.raan.to_value(u.rad)
-        raan_2: float = oe_2.raan.to_value(u.rad)
+        raan_1: float = oe_1.right_ascension_of_ascending_node.to_value(u.rad)
+        raan_2: float = oe_2.right_ascension_of_ascending_node.to_value(u.rad)
         
-        argp_1: float = oe_1.argp.to_value(u.rad)
+        argp_1: float = oe_1.argument_of_periapsis.to_value(u.rad)
         argp_2: float = 0.0
         
         # >>> 1. Differences
@@ -1140,9 +1143,9 @@ class OrbitalManeuvers():
         
         # >>> 3. Orbit 1 at the maneuver point
         
-        e_1: float = oe_1.ecc.to_value()
+        e_1: float = oe_1.eccentricity.to_value()
         
-        h_1: float = oe_1.specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        h_1: float = oe_1.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
         r_1: float = h_1**2 / mu * 1 / (1 + e_1 * np.cos(nu_1))
         
@@ -1161,13 +1164,13 @@ class OrbitalManeuvers():
         maneuver.dv = [dv * u.km / u.s]
         maneuver.dt = [0 * u.s]
         maneuver.dm = [dm]
-        maneuver.oe = [o3d.OrbitalElements(h=oe_1.h,
-                                           a=oe_1.a,
-                                           ecc=oe_1.ecc,
-                                           inc=inc_2 * u.rad,
-                                           raan=raan_2 * u.rad,
-                                           argp=argp_2 * u.rad,
-                                           nu=nu_1 * u.rad)]
+        maneuver.oe = [o3d.OrbitalElements(specific_angular_momentum=oe_1.specific_angular_momentum,
+                                           semimajor_axis=oe_1.semimajor_axis,
+                                           eccentricity=oe_1.eccentricity,
+                                           inclination=inc_2 * u.rad,
+                                           right_ascension_of_ascending_node=raan_2 * u.rad,
+                                           argument_of_periapsis=argp_2 * u.rad,
+                                           true_anomaly=nu_1 * u.rad)]
         
         return maneuver
     
@@ -1331,13 +1334,13 @@ class OrbitalManeuvers():
             
             # >>> 2. Calculate orbital elements
             
-            oe: o3d.OrbitalElements = o3d.Orbit3D.orbital_elements(attractor=attractor, r=r, v=v)
+            oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
             
             # >>> 3. Update state vector
             
             if semi_major_axis_target:
                 
-                epsilon: float = oe.a.to_value(u.km) - np.linalg.norm(r_f.to_value(u.km))
+                epsilon: float = oe.semimajor_axis.to_value(u.km) - np.linalg.norm(r_f.to_value(u.km))
                 
                 maneuver.r_x = r[0]
                 maneuver.r_y = r[1]
@@ -1349,7 +1352,7 @@ class OrbitalManeuvers():
                 
             else:
             
-                delta_theta: u.Quantity = u.Quantity(180.0, u.deg) - oe.nu
+                delta_theta: u.Quantity = u.Quantity(180.0, u.deg) - oe.true_anomaly
             
                 l_r_f, l_v_f = lc.LagrangeCoefficients.propagate_of_angle(attractor=attractor,
                                                                           r_0=r,
