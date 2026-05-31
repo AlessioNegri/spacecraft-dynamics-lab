@@ -37,11 +37,18 @@ def test_lambert():
     r_1: u.Quantity = np.array([5_000, 10_000, 2_100]) * u.km
     r_2: u.Quantity = np.array([-14_600, 2_500, 7_000]) * u.km
     
-    v_1, v_2, oe, _ = od.OrbitDetermination.lambert(attractor=attractor, r_1=r_1, r_2=r_2, dt=time.TimeDelta(u.Quantity(1, u.hour)))
+    v_1, v_2, oe, _ = od.OrbitDetermination.lambert(attractor=attractor,
+                                                    departure_position=r_1,
+                                                    arrival_position=r_2,
+                                                    delta_time=time.TimeDelta(u.Quantity(1, u.hour)))
     
-    orb_par: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor, position=r_1, velocity=v_1)
+    orb_par: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
+                                                                           position=r_1,
+                                                                           velocity=v_1)
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe.true_anomaly, T=orb_par.period, e=oe.eccentricity.to_value())
+    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe.true_anomaly,
+                                                               period=orb_par.period,
+                                                               eccentricity=oe.eccentricity)
     
     assert np.isclose(v_1[0].to_value(u.km / u.s), -5.9925, atol=1e-4)
     assert np.isclose(v_1[1].to_value(u.km / u.s), 1.9254, atol=1e-4)

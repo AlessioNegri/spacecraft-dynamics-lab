@@ -422,7 +422,7 @@ class OrbitalManeuvers():
         
         # >>> 2. Time from A (pericenter - chaser) to B (target) placed at nu_target w.r.t. A
         
-        t_AB: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_target, T=T_1 * u.s, e=oe.eccentricity.to_value())
+        t_AB: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=nu_target, period=T_1 * u.s, eccentricity=oe.eccentricity)
         
         # >>> 3. Orbit 2 (Phasing Orbit with kick at pericenter)
         
@@ -569,7 +569,7 @@ class OrbitalManeuvers():
             
             phi += np.pi
         
-        t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_1.true_anomaly, T=T_T * u.s, e=e_T)
+        t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe_1.true_anomaly, period=T_T * u.s, eccentricity=e_T * u.one)
         
         dm: u.Quantity = rocket_motor.consumed_propellant_mass(dv=dv * u.km / u.s, g_0=bd.BODIES[attractor].g_0)
         
@@ -897,13 +897,13 @@ class OrbitalManeuvers():
         
         # >>> 3. New Perifocal Frame state vector for Target T after dt
         
-        t_T: float = op.OrbitalPosition.elliptical_orbit_time(nu=nu_T, T=T * u.s, e=e).to_value(u.s)
+        t_T: float = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=nu_T, period=T * u.s, eccentricity=e * u.one).to_value(u.s)
         
         t_T_new: float = t_T + dt.to_value(u.s)
         
-        nu_T_new: float = op.OrbitalPosition.elliptical_orbit_true_anomaly(t=t_T_new * u.s,
-                                                                           T=T * u.s,
-                                                                           e=e).to_value(u.rad)
+        nu_T_new: float = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_T_new * u.s,
+                                                                           period=T * u.s,
+                                                                           eccentricity=e * u.one).to_value(u.rad)
         
         r_T: float = h**2 / mu * 1 / (1 + e * np.cos(nu_T_new)) * np.array([np.cos(nu_T_new), np.sin(nu_T_new), 0])
         
@@ -923,9 +923,9 @@ class OrbitalManeuvers():
             direction = od.OrbitDirection.RETROGRADE
         
         v_t_C, v_t_T, oe_t, nu_t_2 = od.OrbitDetermination.lambert(attractor=attractor,
-                                                                   r_1=r_C,
-                                                                   r_2=r_T,
-                                                                   dt=dt,
+                                                                   departure_position=r_C,
+                                                                   arrival_position=r_T,
+                                                                   delta_time=dt,
                                                                    direction=direction)
         
         oe_t_2: o3d.OrbitalElements = copy.deepcopy(oe_t)
@@ -1355,9 +1355,9 @@ class OrbitalManeuvers():
                 delta_theta: u.Quantity = u.Quantity(180.0, u.deg) - oe.true_anomaly
             
                 l_r_f, l_v_f = lc.LagrangeCoefficients.propagate_of_angle(attractor=attractor,
-                                                                          r_0=r,
-                                                                          v_0=v,
-                                                                          delta=delta_theta)
+                                                                          initial_position=r,
+                                                                          initial_velocity=v,
+                                                                          delta_true_anomaly=delta_theta)
             
                 epsilon: float = np.linalg.norm(l_r_f.to_value(u.km)) - np.linalg.norm(r_f.to_value(u.km))
                 

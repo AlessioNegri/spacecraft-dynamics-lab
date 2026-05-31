@@ -150,7 +150,7 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
 
             # * Lambert solution
             
-            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=r1, r_2=r2, dt=time.TimeDelta(tof))
+            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=r1, arrival_position=r2, delta_time=time.TimeDelta(tof))
             
             # * Solution
             
@@ -261,7 +261,7 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
             
             # * Lambert solution
             
-            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=r1, r_2=rfb, dt=time.TimeDelta(tof_1))
+            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=r1, arrival_position=rfb, delta_time=time.TimeDelta(tof_1))
             
             # * Incoming hyperbola excess velocity
             
@@ -296,7 +296,7 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
                 
                 # * Lambert solution
                 
-                v_2_l, v_3_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, r_1=rfb, r_2=r2, dt=time.TimeDelta(tof_2))
+                v_2_l, v_3_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=rfb, arrival_position=r2, delta_time=time.TimeDelta(tof_2))
                 
                 # * Outgoing hyperbola excess velocity
                 

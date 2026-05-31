@@ -489,13 +489,17 @@ class InterplanetaryTrajectories():
         
         mean_anomaly: u.Quantity = mean_longitude - longitude_of_perihelion
         
+        if mean_anomaly < 0 * u.rad:
+            
+            mean_anomaly += 2 * np.pi * u.rad
+        
         # >>> 6. True anomaly
         
         period: u.Quantity = 2 * np.pi * np.sqrt(semi_major_axis.to_value(u.km)**3 / mu_sun) * u.s
         
         t: u.Quantity = mean_anomaly.to(u.rad) * period / (2 * np.pi * u.rad)
         
-        nu: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(t=t, T=period, e=eccentricity.to_value())
+        nu: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t, period=period, eccentricity=eccentricity)
         
         # >>> 7. State vector
         
@@ -562,9 +566,9 @@ class InterplanetaryTrajectories():
         # >>> 2. Lambert problem
         
         V_D_v, V_A_v, _, _ = od.OrbitDetermination.lambert(attractor=bd.Attractor.SUN,
-                                                           r_1=R_1,
-                                                           r_2=R_2,
-                                                           dt=time_of_flight)
+                                                           departure_position=R_1,
+                                                           arrival_position=R_2,
+                                                           delta_time=time_of_flight)
         
         # >>> 3. Hyperbolic excess velocities
         

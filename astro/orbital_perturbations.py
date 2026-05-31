@@ -461,9 +461,9 @@ class OrbitalPerturbations():
         # >>> 2. Compute the first osculating state vector
         
         r_osc, v_osc = lc.LagrangeCoefficients.propagate_position_velocity(attractor=self.attractor,
-                                                                           r_0=r_0 * u.km,
-                                                                           v_0=v_0 * u.km / u.s,
-                                                                           dt=step)
+                                                                           initial_position=r_0 * u.km,
+                                                                           initial_velocity=v_0 * u.km / u.s,
+                                                                           delta_time=step)
         
         state_vector: typing.List[np.ndarray] = [np.concat([r_0, v_0])]
         
@@ -489,9 +489,9 @@ class OrbitalPerturbations():
             # >>> b. Evaluate new osculating state vector
             
             r_osc, v_osc = lc.LagrangeCoefficients.propagate_position_velocity(attractor=self.attractor,
-                                                                               r_0=r_0 * u.km,
-                                                                               v_0=v_0 * u.km / u.s,
-                                                                               dt=step)
+                                                                               initial_position=r_0 * u.km,
+                                                                               initial_velocity=v_0 * u.km / u.s,
+                                                                               delta_time=step)
         
             r_0 = r_osc.to_value(u.km) + solution['y'][:3, -1]
             v_0 = v_osc.to_value(u.km / u.s) + solution['y'][3:, -1]

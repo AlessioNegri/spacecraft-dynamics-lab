@@ -116,13 +116,13 @@ def test_example_4_11():
     
     n: float = 2 * np.pi / parameters.period.to_value(u.s) # ? Mean motion [rad/s]
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(oe.true_anomaly, parameters.period, oe.eccentricity.to_value())
+    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(oe.true_anomaly, parameters.period, oe.eccentricity)
     
     assert np.isclose(t_1.to_value(u.s), 631.00, atol=1e-0)
     
     t_2: u.Quantity = t_1 + 96 * u.hour
     
-    nu_32: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(t_2, parameters.period, oe.eccentricity.to_value())
+    nu_32: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(t_2, parameters.period, oe.eccentricity)
     
     assert np.isclose(nu_32.to_value(u.deg), 360-148.75, atol=1e-1)
     

@@ -99,13 +99,13 @@ def calculate_simulation_time(attractor: bodies.Attractor,
         u.Quantity: Simulation time from first true anomaly
     """
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_1,
-                                                               T=oe.calc_orbital_period(attractor),
-                                                               e=oe.eccentricity.to_value())
+    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=nu_1,
+                                                               period=oe.calc_orbital_period(attractor),
+                                                               eccentricity=oe.eccentricity)
     
-    t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=nu_2,
-                                                               T=oe.calc_orbital_period(attractor),
-                                                               e=oe.eccentricity.to_value())
+    t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=nu_2,
+                                                               period=oe.calc_orbital_period(attractor),
+                                                               eccentricity=oe.eccentricity)
     
     if t_2 > t_1:
         

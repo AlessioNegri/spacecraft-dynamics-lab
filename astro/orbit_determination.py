@@ -123,33 +123,47 @@ class OrbitDetermination():
         return oe
     
     @staticmethod
-    def lambert(attractor: bd.Attractor, r_1 : u.Quantity, r_2 : u.Quantity, dt : time.TimeDelta,
-                direction : OrbitDirection = OrbitDirection.PROGRADE)\
+    def lambert(attractor: bd.Attractor,
+                departure_position: u.Quantity,
+                arrival_position: u.Quantity,
+                delta_time: time.TimeDelta,
+                direction: OrbitDirection = OrbitDirection.PROGRADE)\
                     -> typing.Tuple[u.Quantity, u.Quantity, o3d.OrbitalElements, u.Quantity]:
-        """Lambert's problem
+        """
+        Solve Lambert's problem.
+
+        Given two position vectors `departure_position` and `arrival_position` and a time-of-flight `delta_time`,
+        compute the velocity vectors that connect the two positions in the specified time under the gravitational
+        parameter of `attractor`.
+
+        The implementation uses the universal variable formulation and solves for the universal anomaly with Newton's
+        method.
 
         Args:
             attractor (bd.Attractor): Main attractor
-            r_1 (u.Quantity): Position vector 1
-            r_2 (u.Quantity): Position vector 2
-            dt (time.TimeDelta): Delta time
+            departure_position (u.Quantity): Position vector at departure (km)
+            arrival_position (u.Quantity): Position vector at arrival (km)
+            delta_time (time.TimeDelta): Time of flight between `departure_position` and `arrival_position` (s)
             direction (OrbitDirection, optional): Type of orbit direction. Defaults to OrbitDirection.PROGRADE.
 
         Returns:
-            list: [v_1, v_2, orbital elements, nu_2]
+            tuple: (`v_1`, `v_2`, `oe`, `theta_2`) where
+                - `v_1`, `v_2` (u.Quantity): velocity vectors at `departure_position` and `arrival_position` (km/s)
+                - `oe` (o3d.OrbitalElements): orbital elements for the resulting trajectory
+                - `theta_2` (u.Quantity): true anomaly at `arrival_position`
         """
         
-        r_1: np.ndarray = r_1.to_value(u.km)
-        r_2: np.ndarray = r_2.to_value(u.km)
+        r_1: np.ndarray = departure_position.to_value(u.km)
+        r_2: np.ndarray = arrival_position.to_value(u.km)
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
         cm.check_attractor(attractor)
         cm.check_position_vector(r_1)
         cm.check_position_vector(r_2)
-        cm.check_time_delta(dt)
+        cm.check_time_delta(delta_time)
         
-        dt: float = dt.to_value(u.s)
+        dt: float = delta_time.to_value(u.s)
         
         # >>> 1. Norm
         
@@ -200,9 +214,9 @@ class OrbitDetermination():
         try:
             
             z = opt.newton(func=OrbitDetermination._lambert_equation,
-                            x0=z_0,
-                            fprime=OrbitDetermination._lambert_equation_first_derivative,
-                            args=(mu, r_1_m, r_2_m, A, dt))
+                           x0=z_0,
+                           fprime=OrbitDetermination._lambert_equation_first_derivative,
+                           args=(mu, r_1_m, r_2_m, A, dt))
         
         # except Warning:
             
@@ -235,9 +249,13 @@ class OrbitDetermination():
         
         # >>> 8. Orbital elements
         
-        oe_1: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r_1 * u.km, velocity=v_1 * u.km / u.s)
+        oe_1: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                       position=r_1 * u.km,
+                                                                       velocity=v_1 * u.km / u.s)
         
-        oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
+        oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                       position=r_2 * u.km,
+                                                                       velocity=v_2 * u.km / u.s)
         
         return [v_1 * u.km / u.s, v_2 * u.km / u.s, oe_1, oe_2.true_anomaly]
     
@@ -992,33 +1010,33 @@ class OrbitDetermination():
             # >>> 4. Universal variables
             
             chi_1: u.Quantity = lc.LagrangeCoefficients.universal_kepler_solution(attractor=attractor,
-                                                                                  r_0=r_2_m * u.km,
-                                                                                  v_r_0=v_r_2 * u.km / u.s,
-                                                                                  alpha=Alpha,
-                                                                                  dt=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'))
+                                                                                  initial_position=r_2_m * u.km,
+                                                                                  initial_radial_velocity=v_r_2 * u.km / u.s,
+                                                                                  alpha=Alpha * 1 / u.km,
+                                                                                  delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'))
             
             chi_3: u.Quantity = lc.LagrangeCoefficients.universal_kepler_solution(attractor=attractor,
-                                                                                  r_0=r_2_m * u.km,
-                                                                                  v_r_0=v_r_2 * u.km / u.s,
-                                                                                  alpha=Alpha,
-                                                                                  dt=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'))
+                                                                                  initial_position=r_2_m * u.km,
+                                                                                  initial_radial_velocity=v_r_2 * u.km / u.s,
+                                                                                  alpha=Alpha * 1 / u.km,
+                                                                                  delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'))
             
             # >>> 5. Lagrange coefficients
             
             f_1, g_1 = lc.LagrangeCoefficients.lagrange_coefficients(attractor=attractor,
-                                                                     r_0=r_2_m * u.km,
-                                                                     alpha=Alpha,
-                                                                     dt=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'),
-                                                                     chi=chi_1.to_value(u.km**0.5))
+                                                                     initial_position=r_2_m * u.km,
+                                                                     alpha=Alpha * 1 / u.km,
+                                                                     delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'),
+                                                                     universal_anomaly=chi_1)
             
             f_1 = float(f_1.to_value(u.dimensionless_unscaled))
             g_1 = float(g_1.to_value(u.s))
             
             f_3, g_3 = lc.LagrangeCoefficients.lagrange_coefficients(attractor=attractor,
-                                                                     r_0=r_2_m * u.km,
-                                                                     alpha=Alpha,
-                                                                     dt=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'),
-                                                                     chi=chi_3.to_value(u.km**0.5))
+                                                                     initial_position=r_2_m * u.km,
+                                                                     alpha=Alpha * 1 / u.km,
+                                                                     delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'),
+                                                                     universal_anomaly=chi_3)
             
             f_3 = float(f_3.to_value(u.dimensionless_unscaled))
             g_3 = float(g_3.to_value(u.s))
@@ -1076,7 +1094,8 @@ class OrbitDetermination():
     
     @staticmethod
     def _lambert_equation(z : float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
-        """Lambert equation
+        """
+        Lambert equation
 
         Args:
             z (float): Variable

@@ -261,9 +261,9 @@ class RelativeMotion():
         
         # >>> 3. Target initial time
         
-        t_0: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(nu=oe_target.true_anomaly,
-                                                                   T=t_target,
-                                                                   e=oe_target.eccentricity.to_value())
+        t_0: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe_target.true_anomaly,
+                                                                   period=t_target,
+                                                                   eccentricity=oe_target.eccentricity.to_value())
         
         # >>> 4. Final time
         
@@ -296,14 +296,14 @@ class RelativeMotion():
             # >>> b. Update Target-Chaser vectors
             
             r_target, v_target = lc.LagrangeCoefficients.propagate_position_velocity(attractor=attractor,
-                                                                                     r_0=r_target,
-                                                                                     v_0=v_target,
-                                                                                     dt=time.TimeDelta(dt * u.s))
+                                                                                     initial_position=r_target,
+                                                                                     initial_velocity=v_target,
+                                                                                     delta_time=time.TimeDelta(dt * u.s))
             
             r_chaser, v_chaser = lc.LagrangeCoefficients.propagate_position_velocity(attractor=attractor,
-                                                                                     r_0=r_chaser,
-                                                                                     v_0=v_chaser,
-                                                                                     dt=time.TimeDelta(dt * u.s))
+                                                                                     initial_position=r_chaser,
+                                                                                     initial_velocity=v_chaser,
+                                                                                     delta_time=time.TimeDelta(dt * u.s))
             
             # >>> c. Update Target-Chaser orbital elements
             

@@ -529,13 +529,13 @@ class Orbit3D():
         
         if ecc == 0:
             
-            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(nu=orbital_elements.true_anomaly, T=op.period)
+            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(true_anomaly=orbital_elements.true_anomaly, period=op.period)
             
         elif ecc < 1.0:
             
-            t_0 = orbital_position.OrbitalPosition.elliptical_orbit_time(nu=orbital_elements.true_anomaly,
-                                                                         T=op.period,
-                                                                         e=orbital_elements.eccentricity.to_value())
+            t_0 = orbital_position.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements.true_anomaly,
+                                                                         period=op.period,
+                                                                         eccentricity=orbital_elements.eccentricity)
         
         # >>> 3. Propagation
         
@@ -547,13 +547,13 @@ class Orbit3D():
         
         if ecc == 0:
             
-            ta = orbital_position.OrbitalPosition.circular_orbit_true_anomaly(t=t, T=op.period)
+            ta = orbital_position.OrbitalPosition.circular_orbit_true_anomaly(time_of_flight=t, period=op.period)
             
         elif ecc < 1.0:
             
-            ta = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(t=t,
-                                                                                T=op.period,
-                                                                                e=orbital_elements.eccentricity.to_value())
+            ta = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t,
+                                                                                period=op.period,
+                                                                                eccentricity=orbital_elements.eccentricity)
         
         # >>> b) New Orbital Elements
         
