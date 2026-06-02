@@ -270,15 +270,27 @@ class Orbit3D():
         
         # >>> 12. Argument of periapsis
         
-        argp: float = np.arccos(np.dot(N, ecc) / (N_m * ecc_m))
+        if ecc_m < tol:
+            
+            oe.argument_of_periapsis = 0 * u.deg
         
-        oe.argument_of_periapsis = u.Quantity(argp if ecc[2] >= 0 else (2 * np.pi - argp), u.rad).to(u.deg)
+        else: 
+        
+            argp: float = np.arccos(np.dot(N, ecc) / (N_m * ecc_m))
+        
+            oe.argument_of_periapsis = u.Quantity(argp if ecc[2] >= 0 else (2 * np.pi - argp), u.rad).to(u.deg)
         
         # >>> 13. True anomaly
         
-        theta: float = np.arccos(np.dot(ecc, r) / (ecc_m * r_m))
+        if ecc_m < tol:
+            
+            oe.true_anomaly = 0 * u.deg
+            
+        else:
         
-        oe.true_anomaly = u.Quantity(theta if v_r >= 0 else (2 * np.pi - theta), u.rad).to(u.deg)
+            theta: float = np.arccos(np.dot(ecc, r) / (ecc_m * r_m))
+        
+            oe.true_anomaly = u.Quantity(theta if v_r >= 0 else (2 * np.pi - theta), u.rad).to(u.deg)
         
         return oe
     

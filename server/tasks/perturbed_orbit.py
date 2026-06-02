@@ -128,7 +128,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
     
     oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                     semimajor_axis=payload.orbitalElements.sma * u.km,
-                                                    eccentricity=payload.orbitalElements.ecc * u.dimensionless_unscaled,
+                                                    eccentricity=payload.orbitalElements.ecc * u.one,
                                                     inclination=payload.orbitalElements.inc * u.deg,
                                                     right_ascension_of_ascending_node=payload.orbitalElements.raan * u.deg,
                                                     argument_of_periapsis=payload.orbitalElements.aop * u.deg,
@@ -162,11 +162,11 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
         orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
         
         orbit.init(attractor=attractor,
-                r=r_0,
-                v=v_0,
-                julian_day=JD_0,
-                ballistic_coefficient=payload.ballisticCoefficient * u.m**2 / u.kg,
-                ballistic_coefficient_srp=payload.ballisticCoefficientSRP * u.m**2 / u.kg)
+                   position=r_0,
+                   velocity=v_0,
+                   julian_day=JD_0,
+                   ballistic_coefficient=payload.ballisticCoefficient * u.m**2 / u.kg,
+                   ballistic_coefficient_srp=payload.ballisticCoefficientSRP * u.m**2 / u.kg)
         
         orbit.choose_perturbations(atmospheric_drag=payload.atmosphericDrag,
                                    gravitational_perturbation=payload.gravitationalPerturbation,
@@ -176,25 +176,27 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
         
         result: op.Result = orbit.propagate_gauss_for(delta=delta)
         
-        for i in range(len(result.oe)):
+        for i, oe_i in enumerate(result.orbital_elements):
             
-            times.append((timestamp + result.t[i]).isot)
-            sam.append((result.oe[i].specific_angular_momentum - oe_ini.specific_angular_momentum).to_value(u.km**2 / u.s))
-            sma.append((result.oe[i].semimajor_axis - oe_ini.semimajor_axis).to_value(u.km))
-            ecc.append((result.oe[i].eccentricity - oe_ini.eccentricity).to_value(u.dimensionless_unscaled))
-            inc.append((result.oe[i].inclination - oe_ini.inclination).to_value(u.deg))
-            raan.append((result.oe[i].right_ascension_of_ascending_node - oe_ini.right_ascension_of_ascending_node).to_value(u.deg))
-            aop.append((result.oe[i].argument_of_periapsis - oe_ini.argument_of_periapsis).to_value(u.deg))
+            times.append((timestamp + result.time[i]).isot)
+            sam.append((oe_i.specific_angular_momentum - oe_ini.specific_angular_momentum).to_value(u.km**2 / u.s))
+            sma.append((oe_i.semimajor_axis - oe_ini.semimajor_axis).to_value(u.km))
+            ecc.append((oe_i.eccentricity - oe_ini.eccentricity).to_value(u.dimensionless_unscaled))
+            inc.append((oe_i.inclination - oe_ini.inclination).to_value(u.deg))
+            raan.append((oe_i.right_ascension_of_ascending_node - oe_ini.right_ascension_of_ascending_node).to_value(u.deg))
+            aop.append((oe_i.argument_of_periapsis - oe_ini.argument_of_periapsis).to_value(u.deg))
 
         # * New initial conditions for next iteration
         
-        oe_0 = o3d.OrbitalElements(specific_angular_momentum=result.oe[-1].specific_angular_momentum,
-                                   semimajor_axis=result.oe[-1].semimajor_axis,
-                                   eccentricity=result.oe[-1].eccentricity,
-                                   inclination=cm.wrap_angle(result.oe[-1].inclination, low=-90, high=180),
-                                   right_ascension_of_ascending_node=cm.wrap_angle(result.oe[-1].right_ascension_of_ascending_node, low=0, high=360),
-                                   argument_of_periapsis=cm.wrap_angle(result.oe[-1].argument_of_periapsis, low=0, high=360),
-                                   true_anomaly=cm.wrap_angle(result.oe[-1].true_anomaly, low=0, high=360)) # ! Do not use [-180 ; 360]
+        oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+        
+        oe_0 = o3d.OrbitalElements(specific_angular_momentum=oe_f.specific_angular_momentum,
+                                   semimajor_axis=oe_f.semimajor_axis,
+                                   eccentricity=oe_f.eccentricity,
+                                   inclination=cm.wrap_angle(oe_f.inclination, low=-90, high=180),
+                                   right_ascension_of_ascending_node=cm.wrap_angle(oe_f.right_ascension_of_ascending_node, low=0, high=360),
+                                   argument_of_periapsis=cm.wrap_angle(oe_f.argument_of_periapsis, low=0, high=360),
+                                   true_anomaly=cm.wrap_angle(oe_f.true_anomaly, low=0, high=360)) # ! Do not use [-180 ; 360]
         
         r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
         

@@ -3,6 +3,8 @@ import * as katex from "react-katex"
 import * as Form from "@radix-ui/react-form"
 import * as Themes from "@radix-ui/themes"
 
+import Tooltip from "@renderer/components/Tooltip"
+
 import earth from "@renderer/assets/planets/earth.png"
 import jupiter from "@renderer/assets/planets/jupiter.png"
 import mars from "@renderer/assets/planets/mars.png"
@@ -31,6 +33,7 @@ interface Props
     options?: Array<{ label: string; value: string | number }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
     className?: string
+    tooltip?: boolean
 }
 
 /** @function InputField */
@@ -127,6 +130,9 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
                 <Themes.Flex direction={"column"} gap={"2"}>
 
+                {
+                    !props.tooltip &&
+
                     <Themes.Text className="flex justify-between text-sm text-neutral-300">
 
                         {props.label}
@@ -134,6 +140,8 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                         {icon && <img src={icon} alt="icon" width={20} />}
 
                     </Themes.Text>
+
+                }
 
                     <div
                         className={utility.cn(
@@ -146,9 +154,25 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
                         {/* LEFT SLOT (symbol) */}
 
-                        <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
-                            <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
-                        </div>
+                        {
+                            props.tooltip
+                            
+                            ?
+                            
+                            <Tooltip title={props.label ?? ""} side="top">
+
+                                <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                                    <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                                </div>
+
+                            </Tooltip>
+
+                            :
+                            
+                            <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                                <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                            </div>
+                        }
 
                         {/* INPUT */}
 

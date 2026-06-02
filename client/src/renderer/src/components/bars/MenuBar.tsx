@@ -28,6 +28,9 @@ import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_moti
 import SynodicPeriodDialog from "../dialogs/tools/interplanetary_trajectory/SynodicPeriodDialog"
 import SphereOfInfluenceDialog from "../dialogs/tools/interplanetary_trajectory/SphereOfInfluenceDialog"
 import TransferDialog from "../dialogs/tools/interplanetary_trajectory/TransferDialog"
+import NodalRegressionDialog from "../dialogs/tools/orbital_perturbations/NodalRegressionDialog"
+import ApsidalRotationDialog from "../dialogs/tools/orbital_perturbations/ApsidalRotationDialog"
+import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSynchronousDialog"
 
 const DIALOGS =
 {
@@ -38,6 +41,9 @@ const DIALOGS =
     cartesianPerifocalDialog: CartesianPerifocalDialog,
     keplerianCartesianDialog: KeplerianCartesianDialog,
     groundTrackPropagationDialog: GroundTrackPropagationDialog,
+    nodalRegressionDialog: NodalRegressionDialog,
+    apsidalRotationDialog: ApsidalRotationDialog,
+    sunSynchronousDialog: SunSynchronousDialog,
 
     gibbsMethodDialog: GibbsMethodDialog,
     julianDayDialog: JulianDayDialog,
@@ -142,6 +148,15 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
                 { label: "Topocentric Frame", action: () => setOpenDialog("topocentricFrameDialog") },
                 { label: "Angle Range", action: () => setOpenDialog("angleRangeDialog") },
                 { label: "Gauss Method", action: () => setOpenDialog("gaussMethodDialog") }
+            ]
+        },
+        {
+            label: "Orbital Perturbations",
+            children:
+            [
+                { label: "Nodal Regression", action: () => setOpenDialog("nodalRegressionDialog") },
+                { label: "Apsidal Rotation", action: () => setOpenDialog("apsidalRotationDialog") },
+                { label: "Sun-Synchronous Orbit", action: () => setOpenDialog("sunSynchronousDialog") }
             ]
         },
         {

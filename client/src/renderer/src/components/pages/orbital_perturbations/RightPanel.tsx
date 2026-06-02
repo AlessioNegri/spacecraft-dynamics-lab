@@ -2,6 +2,16 @@ import * as react from "react"
 import * as plotly from "plotly.js"
 import Plot from "react-plotly.js"
 
+/**
+ * @description Create a Plotly trace for visualization
+ * 
+ * @param x Array of time strings
+ * @param y Array of values
+ * @param name Name of the trace
+ * @param color Color of the trace
+ * @param width Width of the trace
+ * @returns A Plotly data trace
+ */
 function makeTrace(x: string[], y: number[], name: string, color: string, width: number): plotly.Data
 {
     const start = new Date(x[0]).getTime();
@@ -156,7 +166,7 @@ export default function RightPanel(): react.JSX.Element
 
     let layoutSemiMajorAxis = structuredClone(layout)
 
-    layoutSemiMajorAxis.title.text = "Semi-Major Axis"
+    layoutSemiMajorAxis.title.text = "Semimajor Axis"
     layoutSemiMajorAxis.yaxis.title.text = "a [km]"
 
     let layoutEccentricity = structuredClone(layout)
@@ -171,7 +181,7 @@ export default function RightPanel(): react.JSX.Element
 
     let layoutRaan = structuredClone(layout)
 
-    layoutRaan.title.text = "RAAN"
+    layoutRaan.title.text = "Right Ascension of the Ascending Node"
     layoutRaan.yaxis.title.text = "Ω [deg]"
 
     let layoutArgPeriapsis = structuredClone(layout)

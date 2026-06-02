@@ -1,7 +1,7 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
-import * as form from "@radix-ui/react-form"
-import * as themes from "@radix-ui/themes"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
 
@@ -148,7 +148,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
             {
                 !hide && 
                 
-                <form.Root className="space-y-6">
+                <Form.Root className="space-y-6">
 
                     {/* Orbital Elements */}
 
@@ -165,61 +165,77 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
 
                     <InputField
                         name="orbitalElements.sma"
-                        label="Semi-Major Axis"
-                        unit="KM"
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
                         type="text"
                         value={formIn.orbitalElements.sma}
                         onChange={handleChange}
                         pattern="^(?!0$).*"
+                        tooltip
                     />
 
                     <InputField
                         name="orbitalElements.ecc"
                         label="Eccentricity"
-                        unit="KM"
+                        symbol="e"
+                        unit=""
                         value={formIn.orbitalElements.ecc}
                         onChange={handleChange}
                         min={0}
+                        tooltip
                     />
     
                     <InputField
+                        type="number"
                         name="orbitalElements.inc"
                         label="Inclination"
-                        unit="DEG"
+                        symbol="i"
+                        unit="deg"
                         value={formIn.orbitalElements.inc}
                         onChange={handleChange}
                         min={-360}
                         max={360}
+                        tooltip
                     />
     
                     <InputField
+                        type="number"
                         name="orbitalElements.raan"
-                        label="RAAN"
-                        unit="DEG"
+                        label="Right Ascension of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
                         value={formIn.orbitalElements.raan}
                         onChange={handleChange}
                         min={-360}
                         max={360}
+                        tooltip
                     />
     
                     <InputField
+                        type="number"
                         name="orbitalElements.aop"
-                        label="Argument Periapsis"
-                        unit="DEG"
+                        label="Argument of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
                         value={formIn.orbitalElements.aop}
                         onChange={handleChange}
                         min={-360}
                         max={360}
+                        tooltip
                     />
     
                     <InputField
+                        type="number"
                         name="orbitalElements.ta"
                         label="True Anomaly"
-                        unit="DEG"
+                        symbol="\theta"
+                        unit="deg"
                         value={formIn.orbitalElements.ta}
                         onChange={handleChange}
                         min={-360}
                         max={360}
+                        tooltip
                     />
 
                     {/* Dates */}
@@ -239,6 +255,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                         label="Start Date"
                         type="datetime-local"
                         name="startDate"
+                        symbol="t_0"
                         value={formIn.startDate}
                         onChange={handleChange}
                     />
@@ -247,6 +264,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                         label="End Date"
                         type="datetime-local"
                         name="endDate"
+                        symbol="t_f"
                         value={formIn.endDate}
                         onChange={handleChange}
                     />
@@ -268,112 +286,108 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
 
                     </div>
 
-                    <div>
-                        <themes.Text as="label" size="2">
-                            <themes.Flex as="span" gap="2">
-                                <themes.Checkbox
-                                    size="3"
-                                    variant="soft"
-                                    checked={formIn.atmosphericDrag}
-                                    onCheckedChange={(checked) => {
-                                        setFormIn({ ...formIn, atmosphericDrag: checked as boolean });
-                                    }} /> Atmospheric Drag
-                            </themes.Flex>
-                        </themes.Text>
-                    </div>
+                    <PerturbationToggle
+                        label="Atmospheric Drag"
+                        value={formIn.atmosphericDrag}
+                        onChange={(checked: boolean) => setFormIn({ ...formIn, atmosphericDrag: checked })}
+                    />
 
                     <InputField
                         name="ballisticCoefficient"
-                        label="Ballistic Coefficient"
-                        unit="M^2 / KG"
+                        label="Ballistic Coefficient (Drag)"
+                        symbol="B_{DRG}"
+                        unit="m^2 / kg"
                         value={formIn.ballisticCoefficient}
                         onChange={handleChange}
                         min={0}
                         disabled={!formIn.atmosphericDrag}
                     />
 
-                    <div>
-                        <themes.Text as="label" size="2">
-                            <themes.Flex as="span" gap="2">
-                                <themes.Checkbox
-                                    size="3"
-                                    variant="soft"
-                                    checked={formIn.gravitationalPerturbation}
-                                    onCheckedChange={(checked) => {
-                                        setFormIn({ ...formIn, gravitationalPerturbation: checked as boolean });
-                                    }} /> Gravitational Perturbation
-                            </themes.Flex>
-                        </themes.Text>
-                    </div>
+                    <PerturbationToggle
+                        label="Gravitational Perturbation"
+                        value={formIn.gravitationalPerturbation}
+                        onChange={(checked: boolean) => setFormIn({ ...formIn, gravitationalPerturbation: checked })}
+                    />
 
-                    <div>
-                        <themes.Text as="label" size="2">
-                            <themes.Flex as="span" gap="2">
-                                <themes.Checkbox
-                                    size="3"
-                                    variant="soft"
-                                    checked={formIn.solarRadiationPressure}
-                                    onCheckedChange={(checked) => {
-                                        setFormIn({ ...formIn, solarRadiationPressure: checked as boolean });
-                                    }} /> Solar Radiation Pressure
-                            </themes.Flex>
-                        </themes.Text>
-                    </div>
+                    <PerturbationToggle
+                        label="Solar Radiation Pressure"
+                        value={formIn.solarRadiationPressure}
+                        onChange={(checked: boolean) => setFormIn({ ...formIn, solarRadiationPressure: checked })}
+                    />
 
                     <InputField
                         name="ballisticCoefficientSRP"
                         label="Ballistic Coefficient (SRP)"
-                        unit="M^2 / KG"
+                        symbol="B_{SRP}"
+                        unit="m^2 / kg"
                         value={formIn.ballisticCoefficientSRP}
                         onChange={handleChange}
                         min={0}
                         disabled={!formIn.solarRadiationPressure}
                     />
 
-                    <div>
-                        <themes.Text as="label" size="2">
-                            <themes.Flex as="span" gap="2">
-                                <themes.Checkbox
-                                    size="3"
-                                    variant="soft"
-                                    checked={formIn.lunarGravity}
-                                    onCheckedChange={(checked) => {
-                                        setFormIn({ ...formIn, lunarGravity: checked as boolean });
-                                    }} /> Lunar Gravity
-                            </themes.Flex>
-                        </themes.Text>
-                    </div>
+                    <PerturbationToggle
+                        label="Lunar Gravity"
+                        value={formIn.lunarGravity}
+                        onChange={(checked: boolean) => setFormIn({ ...formIn, lunarGravity: checked })}
+                    />
 
-                    <div>
-                        <themes.Text as="label" size="2">
-                            <themes.Flex as="span" gap="2">
-                                <themes.Checkbox
-                                    size="3"
-                                    variant="soft"
-                                    checked={formIn.solarGravity}
-                                    onCheckedChange={(checked) => {
-                                        setFormIn({ ...formIn, solarGravity: checked as boolean });
-                                    }} /> Solar Gravity
-                            </themes.Flex>
-                        </themes.Text>
-                    </div>
+                    <PerturbationToggle
+                        label="Solar Gravity"
+                        value={formIn.solarGravity}
+                        onChange={(checked: boolean) => setFormIn({ ...formIn, solarGravity: checked })}
+                    />
 
                     {/* Buttons */}
                     
                     <div className="flex justify-between">
         
-                        <themes.Button color="green" variant="outline" disabled={running} onClick={handleSubmit}>
+                        <Themes.Button color="green" variant="outline" disabled={running} onClick={handleSubmit}>
                             Run Analysis
-                        </themes.Button>
+                        </Themes.Button>
         
-                        <themes.Button color="red" variant="outline" disabled={!running} onClick={handleStop}>
+                        <Themes.Button color="red" variant="outline" disabled={!running} onClick={handleStop}>
                             Stop Analysis
-                        </themes.Button>
+                        </Themes.Button>
         
                     </div>
 
-                </form.Root>
+                </Form.Root>
             }
+
+        </div>
+    )
+}
+
+interface PerturbationToggleProps
+{
+    label: string
+    value: boolean
+    onChange: (checked: boolean) => void
+}
+
+/** @function PerturbationToggle */
+function PerturbationToggle(props: Readonly<PerturbationToggleProps>): react.JSX.Element
+{
+    return (
+        <div>
+
+            <Themes.Text as="label" size="2">
+
+                <Themes.Flex as="span" gap="2">
+
+                <Themes.Checkbox
+                    size="3"
+                    variant="soft"
+                    checked={props.value}
+                    onCheckedChange={(checked) => props.onChange(checked as boolean)}
+                />
+
+                {props.label}
+
+                </Themes.Flex>
+
+            </Themes.Text>
 
         </div>
     )

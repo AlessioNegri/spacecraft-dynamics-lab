@@ -11,32 +11,32 @@ import astro.orbit_determination as od
 
 def test_density():
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=1 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=1 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 1.068, atol=1e-3)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=3.981 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=3.981 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 7.106e-1, atol=1e-4)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=15.849 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=15.849 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 1.401e-1, atol=1e-4)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=63.096 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=63.096 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 2.059e-4, atol=1e-7)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=251.189 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=251.189 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 5.909e-11, atol=1e-14)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(z=1001.0 * u.km)
+    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=1001.0 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 3.561e-15, atol=1e-18)
 
 @pytest.mark.skip(reason="Too long to run")
-def test_cowell_method():
+def test_cowell_method_atmospheric_drag():
     """EXAMPLE 12.1"""
     
     attractor: bd.Attractor = bd.Attractor.EARTH
@@ -47,7 +47,7 @@ def test_cowell_method():
     
     delta: t.TimeDelta = t.TimeDelta(108 * u.day)
     
-    drag_coefficient: u.Quantity = 2.2 * u.dimensionless_unscaled
+    drag_coefficient: u.Quantity = 2.2 * u.one
     
     diameter: u.Quantity = 1 * u.m
     
@@ -57,14 +57,124 @@ def test_cowell_method():
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0, ballistic_coefficient=ballistic_coefficient)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0, ballistic_coefficient=ballistic_coefficient)
     orbit.choose_perturbations(atmospheric_drag=True)
     
     result: op.Result = orbit.propagate_cowell_for(delta=delta)
     
-    altitude: np.ndarray = np.sqrt(result.r_x**2 + result.r_y**2 + result.r_z**2) - bd.BODIES[attractor].R_E
+    altitude: np.ndarray = np.sqrt(result.position_x**2 + result.position_y**2 + result.position_z**2) -\
+        bd.BODIES[attractor].R_E
     
     assert np.isclose(altitude[-1].to_value(u.km), 100, atol=1e-0)
+
+def test_cowell_method_gravitational_perturbation():
+    """EXAMPLE 5.1 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    r_0: np.ndarray = np.array([-5134.41, 4405.01, 2420.05]) * u.km
+    
+    v_0: np.ndarray = np.array([-5.5265, -5.5142, 0.7385]) * u.km / u.s
+    
+    delta: t.TimeDelta = t.TimeDelta(10 * u.hour)
+    
+    orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
+    
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0)
+    orbit.choose_perturbations(gravitational_perturbation=True)
+    
+    result: op.Result = orbit.propagate_cowell_for(delta=delta)
+    
+    r_f: np.ndarray = np.array([result.position_x[-1].to_value(u.km),
+                                result.position_y[-1].to_value(u.km),
+                                result.position_z[-1].to_value(u.km)])
+    
+    v_f: np.ndarray = np.array([result.velocity_x[-1].to_value(u.km / u.s),
+                                result.velocity_y[-1].to_value(u.km / u.s),
+                                result.velocity_z[-1].to_value(u.km / u.s)])
+    
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                 position=r_f * u.km,
+                                                                 velocity=v_f * u.km / u.s)
+    
+    assert np.isclose(oe.semimajor_axis.to_value(u.km), 8059, atol=1e-0)
+    assert np.isclose(oe.eccentricity.to_value(), 0.15, atol=1e-2)
+    assert np.isclose(oe.inclination.to_value(u.deg), 20, atol=1e-0)
+    assert np.isclose(oe.right_ascension_of_ascending_node.to_value(u.deg), 58.25, atol=1e-1)
+    assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 33.25, atol=1e-1)
+
+def test_nodal_regression():
+    """EXAMPLE 5.2 - BOOK 2"""
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=6790.6 * u.km,
+                                                  eccentricity=0.0005 * u.one,
+                                                  inclination=51.65 * u.deg,
+                                                  right_ascension_of_ascending_node=295 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=0 * u.deg)
+    
+    dOmega_dt_g, _, _ = op.OrbitalPerturbations.nodal_regression_rate(attractor=bd.Attractor.EARTH,
+                                                                      orbital_elements=oe)
+    
+    Omega_final: u.Quantity = oe.right_ascension_of_ascending_node + dOmega_dt_g * t.TimeDelta(7 * u.day)
+    
+    assert np.isclose(Omega_final.to_value(u.deg), 260.245, atol=1e-3)
+
+def test_sun_synchronous_inclination():
+    """EXAMPLE 5.3 - BOOK 2"""
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=(6378 + 400) * u.km,
+                                                  eccentricity=0 * u.one,
+                                                  inclination=0 * u.deg,
+                                                  right_ascension_of_ascending_node=0 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=0 * u.deg)
+    
+    inc: u.Quantity = op.OrbitalPerturbations.sun_synchronous_inclination(attractor=bd.Attractor.EARTH,
+                                                                          orbital_elements=oe,
+                                                                          nodal_regression_rate=1.991021e-7 * u.rad / u.s)
+    
+    assert np.isclose(inc.to_value(u.deg), 97, atol=1e-0)
+
+def test_apsidal_rotation_rate():
+    """EXAMPLE 5.3 - BOOK 2"""
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=8059 * u.km,
+                                                  eccentricity=0.15 * u.one,
+                                                  inclination=20 * u.deg,
+                                                  right_ascension_of_ascending_node=0 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=0 * u.deg)
+    
+    domega_dt, _, _ = op.OrbitalPerturbations.apsidal_rotation_rate(attractor=bd.Attractor.EARTH,
+                                                                          orbital_elements=oe)
+    
+    assert np.isclose(domega_dt.to_value(u.deg / u.day), 7.85, atol=1e-2)
+
+def test_lunar_solar_regressions():
+    """EXAMPLE 5.5 - BOOK 2"""
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=8059 * u.km,
+                                                  eccentricity=0.15 * u.one,
+                                                  inclination=20 * u.deg,
+                                                  right_ascension_of_ascending_node=0 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=0 * u.deg)
+    
+    _, dOmega_dt_l, dOmega_dt_s = op.OrbitalPerturbations.nodal_regression_rate(attractor=bd.Attractor.EARTH,
+                                                                                orbital_elements=oe)
+    
+    _, domega_dt_l, domega_dt_s = op.OrbitalPerturbations.apsidal_rotation_rate(attractor=bd.Attractor.EARTH,
+                                                                                orbital_elements=oe)
+    
+    assert np.isclose(dOmega_dt_l.to_value(u.deg / u.day), -0.0002647, atol=1e-7)
+    assert np.isclose(dOmega_dt_s.to_value(u.deg / u.day), -0.0001206, atol=1e-7)
+    assert np.isclose(domega_dt_l.to_value(u.deg / u.day), +0.0004810, atol=1e-7)
+    assert np.isclose(domega_dt_s.to_value(u.deg / u.day), +0.0002191, atol=1e-7)
 
 def test_encke_method():
     """EXAMPLE 12.2"""
@@ -81,16 +191,56 @@ def test_encke_method():
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0)
     orbit.choose_perturbations(gravitational_perturbation=True)
     
     result: op.Result = orbit.propagate_encke_for(delta=delta, step=step)
     
-    draan_dhour: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg) / delta.to_value(u.hour)
-    dargp_dhour: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg) / delta.to_value(u.hour)
+    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
+    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    
+    delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
+    
+    draan_dhour: float = delta_raan / delta.to_value(u.hour)
+    dargp_dhour: float = delta_argp / delta.to_value(u.hour)
     
     assert np.isclose(draan_dhour, -0.166, atol=1e-3)
     assert np.isclose(dargp_dhour, 0.263, atol=1e-3)
+
+def test_gauss_method_atmospheric_drag():
+    """EXAMPLE 5.6 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+                                                  semimajor_axis=(6378 + 300) * u.km,
+                                                  eccentricity=0.000001 * u.one,
+                                                  inclination=0.000001 * u.deg,
+                                                  right_ascension_of_ascending_node=0 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=0 * u.deg)
+    
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+    
+    delta: t.TimeDelta = t.TimeDelta(45 * u.day)
+    
+    drag_coefficient: u.Quantity = 2 * u.one
+    
+    area: u.Quantity = 367 * u.m**2
+    
+    mass: u.Quantity = 90_000 * u.kg
+    
+    ballistic_coefficient: u.Quantity = drag_coefficient * area / mass
+    
+    orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
+    
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0, ballistic_coefficient=ballistic_coefficient)
+    orbit.choose_perturbations(atmospheric_drag=True)
+    
+    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    
+    assert np.isclose(result.orbital_elements[-1].semimajor_axis.to_value(u.km), 6378 + 257, atol=1e-0)
 
 def test_gauss_method_gravitational_perturbation():
     """EXAMPLE 12.6"""
@@ -105,13 +255,19 @@ def test_gauss_method_gravitational_perturbation():
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0)
     orbit.choose_perturbations(gravitational_perturbation=True)
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    draan_dhour: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg) / delta.to_value(u.hour)
-    dargp_dhour: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg) / delta.to_value(u.hour)
+    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
+    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    
+    delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
+    
+    draan_dhour: float = delta_raan / delta.to_value(u.hour)
+    dargp_dhour: float = delta_argp / delta.to_value(u.hour)
     
     assert np.isclose(draan_dhour, -0.172, atol=1e-3)
     assert np.isclose(dargp_dhour, 0.282, atol=1e-3)
@@ -136,7 +292,7 @@ def test_earth_shadow():
     
     r_sun: u.Quantity = np.array([-11_747_041, 139_486_985, 60_472_278]) * u.km
     
-    condition: int = op.OrbitalPerturbations.earth_shadow(r_sc=r_sc, r_sun=r_sun)
+    condition: int = op.OrbitalPerturbations.earth_shadow(spacecraft_position=r_sc, sun_position=r_sun)
     
     assert condition == 0
 
@@ -166,19 +322,21 @@ def test_gauss_method_solar_radiation_pressure():
     
     mass: u.Quantity = 100 * u.kg
     
-    ballistic_coefficient_srp: u.Quantity = radiation_pressure_coefficient * frontal_area / mass
+    B_srp: u.Quantity = radiation_pressure_coefficient * frontal_area / mass
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0, julian_day=JD_0, ballistic_coefficient_srp=ballistic_coefficient_srp)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0, ballistic_coefficient_srp=B_srp)
     orbit.choose_perturbations(solar_radiation_pressure=True)
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - result.oe[0].right_ascension_of_ascending_node).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argument_of_periapsis - result.oe[0].argument_of_periapsis).to_value(u.deg)
-    delta_a: float = (result.oe[-1].semimajor_axis - result.oe[0].semimajor_axis).to_value(u.km)
-    print(delta_raan, delta_argp, delta_a)
+    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
+    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    
+    delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
+    
     assert np.isclose(delta_raan, -0.035, atol=1e-3)
     assert np.isclose(delta_argp, -84.27, atol=1e-2)
 
@@ -215,15 +373,17 @@ def test_gauss_method_lunar_gravity():
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0, julian_day=JD_0)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0)
     orbit.choose_perturbations(lunar_gravity=True)
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - oe_0.right_ascension_of_ascending_node).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argument_of_periapsis - oe_0.argument_of_periapsis).to_value(u.deg)
-    delta_inc: float = (result.oe[-1].inclination - oe_0.inclination).to_value(u.deg)
-    print(delta_raan, delta_argp, delta_inc)
+    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
+    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    
+    delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
+    
     assert np.isclose(delta_raan, -0.035, atol=1e-3)
     assert np.isclose(delta_argp, -84.27, atol=1e-2)
 
@@ -249,14 +409,16 @@ def test_gauss_method_sun_gravity():
     
     orbit: op.OrbitalPerturbations = op.OrbitalPerturbations()
     
-    orbit.init(attractor=attractor, r=r_0, v=v_0, julian_day=JD_0)
+    orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0)
     orbit.choose_perturbations(solar_gravity=True)
     
     result: op.Result = orbit.propagate_gauss_for(delta=delta)
     
-    delta_raan: float = (result.oe[-1].right_ascension_of_ascending_node - oe_0.right_ascension_of_ascending_node).to_value(u.deg)
-    delta_argp: float = (result.oe[-1].argument_of_periapsis - oe_0.argument_of_periapsis).to_value(u.deg)
-    delta_inc: float = (result.oe[-1].inclination - oe_0.inclination).to_value(u.deg)
-    print(delta_raan, delta_argp, delta_inc)
+    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
+    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    
+    delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
+    delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
+    
     assert np.isclose(delta_raan, -0.15, atol=1e-2)
     assert np.isclose(delta_argp, 0.2, atol=1e-2)

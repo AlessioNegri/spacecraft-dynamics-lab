@@ -44,6 +44,8 @@ interface Props
     type?: react.HTMLInputTypeAttribute
     value: number | string
     disabled?: boolean
+    minimumFractionDigits?: number
+    maximumFractionDigits?: number
 }
 
 /** @function OutputField */
@@ -74,7 +76,10 @@ export default function OutputField(props: Readonly<Props>): react.JSX.Element
                         typeof props.value !== "string"
                         ?
                         Number(props.value).toLocaleString("it-IT",
-                            {minimumFractionDigits: 0, maximumFractionDigits: 5})
+                            {
+                                minimumFractionDigits: props.minimumFractionDigits ?? 0,
+                                maximumFractionDigits: props.maximumFractionDigits ?? 5
+                            })
                         :
                         props.value
                     }
