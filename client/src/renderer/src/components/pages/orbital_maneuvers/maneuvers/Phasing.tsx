@@ -10,14 +10,14 @@ const defaultManeuver: IPhasing =
     numRevolutions: 1
 }
 
-interface PhasingProps
+interface Props
 {
     data: IPhasing
     onChange: (data: IPhasing) => void
 }
 
 /** @function Phasing */
-export default function Phasing(props: Readonly<PhasingProps>): react.JSX.Element
+export default function Phasing(props: Readonly<Props>): react.JSX.Element
 {
     const { data, handleChange } = useManeuverState<IPhasing>(defaultManeuver, props.onChange)
 
@@ -25,9 +25,11 @@ export default function Phasing(props: Readonly<PhasingProps>): react.JSX.Elemen
         <react.Fragment>
 
             <InputField
+                type="number"
                 name="targetTrueAnomaly"
                 label="Target True Anomaly"
-                unit="DEG"
+                symbol="\theta"
+                unit="deg"
                 value={data.targetTrueAnomaly}
                 onChange={handleChange}
                 min={-360}
@@ -35,9 +37,11 @@ export default function Phasing(props: Readonly<PhasingProps>): react.JSX.Elemen
             />
 
             <InputField
+                type="number"
                 name="numRevolutions"
                 label="Number of Revolutions"
-                type="text"
+                symbol="n"
+                unit=""
                 value={data.numRevolutions}
                 onChange={handleChange}
                 min={1}

@@ -10,14 +10,14 @@ const defaultManeuver: IApseLineRotation =
     intersectionPoint: 0
 }
 
-interface ApseLineRotationProps
+interface Props
 {
     data: IApseLineRotation
     onChange: (data: IApseLineRotation) => void
 }
 
 /** @function ApseLineRotation */
-export default function ApseLineRotation(props: Readonly<ApseLineRotationProps>): react.JSX.Element
+export default function ApseLineRotation(props: Readonly<Props>): react.JSX.Element
 {
     const { data, handleChange } = useManeuverState<IApseLineRotation>(defaultManeuver, props.onChange)
 
@@ -25,9 +25,11 @@ export default function ApseLineRotation(props: Readonly<ApseLineRotationProps>)
         <react.Fragment>
 
             <InputField
+                type="number"
                 name="aop"
-                label="Argument Periapsis"
-                unit="DEG"
+                label="Argument of Periapsis"
+                symbol="\omega"
+                unit="deg"
                 value={data.aop}
                 onChange={handleChange}
                 min={-360}

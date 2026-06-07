@@ -320,19 +320,22 @@ class Orbit:
             
         else:
         
-            if rocket_motor.T.to_value(u.N) <= 0:
+            if rocket_motor.thrust.to_value(u.N) <= 0:
                 
                 raise ValueError("Rocket motor thrust must be greater than 0")
             
-            if rocket_motor.I_sp.to_value(u.s) <= 0:
+            if rocket_motor.specific_impulse.to_value(u.s) <= 0:
                 
                 raise ValueError("Rocket motor specific impulse must be greater than 0")
             
             solution: dict = ode.solve_ivp(fun=self._equations_relative_motion_with_thrust,
                                            t_span=[0, delta],
-                                           y0=np.hstack([self.position, self.velocity, np.array([rocket_motor.m_sc.to_value(u.kg)])]),
+                                           y0=np.hstack([self.position,
+                                                         self.velocity,
+                                                         np.array([rocket_motor.spacecraft_mass.to_value(u.kg)])]),
                                            method='RK45',
-                                           args=(rocket_motor.T.to_value(u.N) * 1e-3, rocket_motor.I_sp.to_value(u.s)),
+                                           args=(rocket_motor.thrust.to_value(u.N) * 1e-3,
+                                                 rocket_motor.specific_impulse.to_value(u.s)),
                                            rtol=1e-8,
                                            atol=1e-8)
             

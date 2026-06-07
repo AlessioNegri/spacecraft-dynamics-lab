@@ -10,14 +10,14 @@ const defaultManeuver: IPlaneChange =
     raan: 146.024
 }
 
-interface PlaneChangeProps
+interface Props
 {
     data: IPlaneChange
     onChange: (data: IPlaneChange) => void
 }
 
 /** @function PlaneChange */
-export default function PlaneChange(props: Readonly<PlaneChangeProps>): react.JSX.Element
+export default function PlaneChange(props: Readonly<Props>): react.JSX.Element
 {
     const { data, handleChange } = useManeuverState<IPlaneChange>(defaultManeuver, props.onChange)
 
@@ -25,11 +25,11 @@ export default function PlaneChange(props: Readonly<PlaneChangeProps>): react.JS
         <react.Fragment>
 
             <InputField
+                type="number"
                 name="inc"
                 label="Inclination"
-                unit="DEG"
-                type="text"
-                pattern="^(?!0$).*"
+                symbol="i"
+                unit="deg"
                 value={data.inc}
                 onChange={handleChange}
                 min={-360}
@@ -37,9 +37,11 @@ export default function PlaneChange(props: Readonly<PlaneChangeProps>): react.JS
             />
 
             <InputField
+                type="number"
                 name="raan"
-                label="RAAN"
-                unit="DEG"
+                label="Right Ascension of Ascending Node"
+                symbol="\Omega"
+                unit="deg"
                 value={data.raan}
                 onChange={handleChange}
                 min={-360}

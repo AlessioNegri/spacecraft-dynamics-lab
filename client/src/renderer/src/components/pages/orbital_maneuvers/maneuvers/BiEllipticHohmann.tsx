@@ -27,8 +27,9 @@ export default function BiEllipticHohmann(props: Readonly<BiEllipticHohmannProps
 
             <InputField
                 name="sma"
-                label="Semi-Major Axis"
-                unit="KM"
+                label="Semimajor Axis"
+                symbol="a"
+                unit="km"
                 type="text"
                 pattern="^(?!0$).*"
                 value={data.sma}
@@ -36,18 +37,22 @@ export default function BiEllipticHohmann(props: Readonly<BiEllipticHohmannProps
             />
 
             <InputField
+                type="number"
                 name="ecc"
                 label="Eccentricity"
-                unit="KM"
+                symbol="e"
+                unit=""
                 value={data.ecc}
                 onChange={handleChange}
                 min={0}
             />
 
             <InputField
+                type="number"
                 name="supportApocenterRadius"
                 label="Support Apocenter"
-                unit="KM"
+                symbol="r_A"
+                unit="km"
                 value={data.supportApocenterRadius}
                 onChange={handleChange}
                 min={0}

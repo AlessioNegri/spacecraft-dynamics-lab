@@ -1,10 +1,13 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
-import * as themes from "@radix-ui/themes"
 import * as iconify from "@iconify/react"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
+
+import Tooltip from "@renderer/components/Tooltip"
 import InputField from "@renderer/components/dialogs/InputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 import OrbitalManeuver from "./OrbitalManeuver"
 
@@ -55,28 +58,58 @@ const defaultOutput: IOrbitalManeuverFormOutput =
     {
         dv: 0,
         dt: 0,
-        dm: 0
+        dm: 0,
+        burnTime: 0
     },
     initialOrbit: [],
     transferOrbit: [],
     finalOrbit: []
 }
 
-interface LeftPanelProps
+interface Props
 {
+    onHide: (hide: boolean) => void
     onOrbitsChange: (orbits: IOrbits) => void
+    onResultChange: (result: IOrbitalManeuverFormOutput) => void
 }
 
 /** @function LeftPanel */
-export default function LeftPanel(props: Readonly<LeftPanelProps>): react.JSX.Element
+export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
 {
-    // --- USE EFFECT ---
+    // --- USE STATE ---
+
+    const [hide, setHide] = react.useState<boolean>(false)
 
     const [formIn, setFormIn] = react.useState<IOrbitalManeuverFormInput>(defaultIn)
 
     const [formOut, setFormOut] = react.useState<IOrbitalManeuverFormOutput>(defaultOutput)
 
+    const [errors, setErrors] = react.useState<Record<string, string>>({})
+
+    // --- USE EFFECT ---
+
+    react.useEffect(() => { props.onHide(hide) }, [hide])
+
     // --- HANDLE ---
+
+    const validate = () : boolean =>
+    {
+        const newErrors: Record<string, string> = {}
+
+        if (formIn.maneuver.type === "non-hohmann")
+        {
+            const data: INonHohmann = formIn.maneuver.data as INonHohmann
+
+            if (data.targetTrueAnomaly - formIn.orbitalElements.ta < 15)
+            {
+                newErrors.generic = "Target true anomaly should be at least 15 degress ahead"
+            }
+        }
+
+        setErrors(newErrors)
+
+        return Object.keys(newErrors).length === 0
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     {
@@ -103,6 +136,8 @@ export default function LeftPanel(props: Readonly<LeftPanelProps>): react.JSX.El
     {
         e.preventDefault()
 
+        if (!validate()) return
+
         try
         {
             let response: any = await http.api.put(`/orbital-maneuvers/${formIn.maneuver.type}`, formIn)
@@ -117,6 +152,8 @@ export default function LeftPanel(props: Readonly<LeftPanelProps>): react.JSX.El
             })
             
             setFormOut(result)
+
+            props.onResultChange(result)
         }
         catch (err)
         {
@@ -127,163 +164,205 @@ export default function LeftPanel(props: Readonly<LeftPanelProps>): react.JSX.El
     // --- RENDERING ---
 
     return (
-        <form.Root
-            className="w-[50%] h-full flex flex-col space-y-4 p-4 overflow-auto custom-scrollbar
-                border-r border-neutral-700">
-
-            <div className="grid grid-flow-row auto-rows-max grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                <div className="flex space-x-4 col-span-full justify-center items-center">
-
-                    <iconify.Icon
-                        icon="emojione-monotone:satellite"
-                        width={48}
-                    />
-
-                    <span className="font-bold">SPACECRAFT</span>
-
-                </div>
-
-                <InputField
-                    name="spacecraft.mass"
-                    label="Spacecraft Mass"
-                    unit="KG"
-                    value={formIn.spacecraft.mass}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="spacecraft.specificImpulse"
-                    label="Specific Impulse"
-                    unit="S"
-                    value={formIn.spacecraft.specificImpulse}
-                    onChange={handleChange}
-                />
-
-                <InputField
-                    name="spacecraft.thrust"
-                    label="Thrust"
-                    unit="N"
-                    value={formIn.spacecraft.thrust}
-                    onChange={handleChange}
-                />
-
-                <div className="flex space-x-4 col-span-full justify-center items-center">
-
-                    <iconify.Icon
-                        icon="game-icons:orbit"
-                        width={48}
-                    />
-
-                    <span className="font-bold">ORBIT</span>
-
-                </div>
-
-                <InputField
-                    className=""
-                    name="attractor"
-                    label="Attractor"
-                    type="select"
-                    value={formIn.attractor}
-                    onChange={handleChange}
-                    options={
-                        [
-                            { label: "Mercury", value: "mercury" },
-                            { label: "Venus", value: "venus" },
-                            { label: "Earth", value: "earth" },
-                            { label: "Mars", value: "mars" },
-                            { label: "Jupiter", value: "jupiter" },
-                            { label: "Saturn", value: "saturn" },
-                            { label: "Uranus", value: "uranus" },
-                            { label: "Neptune", value: "neptune" }
-                        ]}
-                />
-
-                <span></span>
-
-                <span></span>
-
-                <InputField
-                    name="orbitalElements.sma"
-                    label="Semi-Major Axis"
-                    unit="KM"
-                    type="text"
-                    value={formIn.orbitalElements.sma}
-                    onChange={handleChange}
-                    pattern="^(?!0$).*"
-                />
-
-                <InputField
-                    name="orbitalElements.ecc"
-                    label="Eccentricity"
-                    unit="KM"
-                    value={formIn.orbitalElements.ecc}
-                    onChange={handleChange}
-                    min={0}
-                />
-
-                <InputField
-                    name="orbitalElements.inc"
-                    label="Inclination"
-                    unit="DEG"
-                    value={formIn.orbitalElements.inc}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
-
-                <InputField
-                    name="orbitalElements.raan"
-                    label="RAAN"
-                    unit="DEG"
-                    value={formIn.orbitalElements.raan}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
-
-                <InputField
-                    name="orbitalElements.aop"
-                    label="Argument Periapsis"
-                    unit="DEG"
-                    value={formIn.orbitalElements.aop}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
-
-                <InputField
-                    name="orbitalElements.ta"
-                    label="True Anomaly"
-                    unit="DEG"
-                    value={formIn.orbitalElements.ta}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
-
-            </div>
-
-            <div className="flex space-x-4 col-span-full justify-center items-center">
+        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+        
+            <Tooltip title={hide ? "Show" : "Hide"} side="top">
 
                 <iconify.Icon
-                    icon="game-icons:rocket-thruster"
-                    width={48}
+                    icon={hide ? "tabler:layout-sidebar" : "tabler:layout-sidebar-filled"}
+                    width={20}
+                    className="absolute top-2 right-2 cursor-pointer hover:text-orange-300"
+                    onClick={() => setHide(prev => !prev)}
                 />
 
-                <span className="font-bold">MANEUVER</span>
+            </Tooltip>
 
-            </div>
+            {
+                !hide && 
 
-            <OrbitalManeuver
-                maneuver={formIn.maneuver}
-                result={formOut}
-                onChange={handleManeuverChange} />
+                <Form.Root className="space-y-6">
+
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+
+                        <iconify.Icon
+                            icon="emojione-monotone:satellite"
+                            width={32}
+                        />
+
+                        <span className="font-bold">SPACECRAFT</span>
+
+                    </div>
+
+                    <InputField
+                        type="number"
+                        name="spacecraft.mass"
+                        label="Spacecraft Mass"
+                        symbol="m_{SC}"
+                        unit="kg"
+                        value={formIn.spacecraft.mass}
+                        onChange={handleChange}
+                        min={1}
+                        tooltip
+                    />
+
+                    <InputField
+                        type="number"
+                        name="spacecraft.specificImpulse"
+                        label="Specific Impulse"
+                        symbol="I_{SP}"
+                        unit="s"
+                        value={formIn.spacecraft.specificImpulse}
+                        onChange={handleChange}
+                        min={1}
+                        tooltip
+                    />
+
+                    <InputField
+                        name="spacecraft.thrust"
+                        label="Thrust"
+                        symbol="T"
+                        unit="N"
+                        value={formIn.spacecraft.thrust}
+                        onChange={handleChange}
+                        min={1}
+                        tooltip
+                    />
+
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+
+                        <iconify.Icon
+                            icon="game-icons:orbit"
+                            width={32}
+                        />
+
+                        <span className="font-bold">ORBIT</span>
+
+                    </div>
+
+                    <InputField
+                        className=""
+                        name="attractor"
+                        label="Attractor"
+                        type="select"
+                        value={formIn.attractor}
+                        onChange={handleChange}
+                        options={
+                            [
+                                { label: "Mercury", value: "mercury" },
+                                { label: "Venus", value: "venus" },
+                                { label: "Earth", value: "earth" },
+                                { label: "Mars", value: "mars" },
+                                { label: "Jupiter", value: "jupiter" },
+                                { label: "Saturn", value: "saturn" },
+                                { label: "Uranus", value: "uranus" },
+                                { label: "Neptune", value: "neptune" }
+                            ]}
+                    />
+
+                    <span></span>
+
+                    <span></span>
+
+                    <InputField
+                        name="orbitalElements.sma"
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        value={formIn.orbitalElements.sma}
+                        onChange={handleChange}
+                        pattern="^(?!0$).*"
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElements.ecc"
+                        label="Eccentricity"
+                        symbol="e"
+                        unit=""
+                        value={formIn.orbitalElements.ecc}
+                        onChange={handleChange}
+                        min={0}
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElements.inc"
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={formIn.orbitalElements.inc}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElements.raan"
+                        label="Right Ascension of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={formIn.orbitalElements.raan}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElements.aop"
+                        label="Argument of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={formIn.orbitalElements.aop}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElements.ta"
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={formIn.orbitalElements.ta}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+
+                        <iconify.Icon
+                            icon="game-icons:rocket-thruster"
+                            width={32}
+                        />
+
+                        <span className="font-bold">MANEUVER</span>
+
+                    </div>
+
+                    <OrbitalManeuver
+                        maneuver={formIn.maneuver}
+                        result={formOut}
+                        onChange={handleManeuverChange}
+                    />
+
+                    { errors.generic && <ErrorText text={errors.generic} /> }
                     
-            <themes.Button variant="outline" color="orange" onClick={handleRun}>
-                Run Simulation
-            </themes.Button>
+                    <div className="flex justify-center">
 
-        </form.Root>
+                        <Themes.Button variant="outline" color="orange" onClick={handleRun}>
+                            Run Simulation
+                        </Themes.Button>
+
+                    </div>
+
+                </Form.Root>
+            }
+
+        </div>
     )
 }

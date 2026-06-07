@@ -16,6 +16,7 @@ class Maneuver(pydantic.BaseModel):
     dv: float
     dt: float
     dm: float
+    burnTime: float
     
 class OrbitalManeuverOutModelInfo(pydantic.BaseModel):
     
@@ -89,7 +90,8 @@ class NonHohmannInModelInfo(BaseInModelInfo):
     
         class Data(pydantic.BaseModel):
         
-            targetRadius: float
+            sma: float
+            ecc: float
             targetTrueAnomaly: float
         
         type: typing.Literal['non-hohmann']
@@ -125,6 +127,21 @@ class ChaseInModelInfo(BaseInModelInfo):
             dt: float
         
         type: typing.Literal['chase']
+        data: Data
+
+    maneuver: ManeuverInfo
+
+# * Inclination Change
+
+class InclinationChangeInModelInfo(BaseInModelInfo):
+    
+    class ManeuverInfo(pydantic.BaseModel):
+    
+        class Data(pydantic.BaseModel):
+        
+            inc: float
+        
+        type: typing.Literal['inclination-change']
         data: Data
 
     maneuver: ManeuverInfo

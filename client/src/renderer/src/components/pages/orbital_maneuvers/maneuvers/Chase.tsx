@@ -10,14 +10,14 @@ const defaultManeuver: IChase =
     dt: 1
 }
 
-interface ChaseProps
+interface Props
 {
     data: IChase
     onChange: (data: IChase) => void
 }
 
 /** @function Chase */
-export default function Chase(props: Readonly<ChaseProps>): react.JSX.Element
+export default function Chase(props: Readonly<Props>): react.JSX.Element
 {
     const { data, handleChange } = useManeuverState<IChase>(defaultManeuver, props.onChange)
 
@@ -25,9 +25,11 @@ export default function Chase(props: Readonly<ChaseProps>): react.JSX.Element
         <react.Fragment>
 
             <InputField
+                type="number"
                 name="trueAnomalyTarget"
                 label="Target True Anomaly"
-                unit="DEG"
+                symbol="\theta"
+                unit="deg"
                 value={data.trueAnomalyTarget}
                 onChange={handleChange}
                 min={-360}
@@ -35,11 +37,14 @@ export default function Chase(props: Readonly<ChaseProps>): react.JSX.Element
             />
 
             <InputField
+                type="number"
                 name="dt"
                 label="Delta Time"
-                unit="H"
+                symbol="\Delta t"
+                unit="hours"
                 value={data.dt}
                 onChange={handleChange}
+                min={0.01}
             />
             
         </react.Fragment>

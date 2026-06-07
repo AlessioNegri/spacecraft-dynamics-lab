@@ -1,7 +1,6 @@
 import * as react from "react"
 
 import InputField from "@renderer/components/dialogs/InputField"
-import OutputField from "@renderer/components/dialogs/OutputField"
 
 import Hohmann from "./maneuvers/Hohmann"
 import BiEllipticHohmann from "./maneuvers/BiEllipticHohmann"
@@ -10,8 +9,9 @@ import NonHohmann from "./maneuvers/NonHohmann"
 import ApseLineRotation from "./maneuvers/ApseLineRotation"
 import Chase from "./maneuvers/Chase"
 import PlaneChange from "./maneuvers/PlaneChange"
+import InclinationChange from "./maneuvers/InclinationChange"
 
-interface OrbitalManeuverProps
+interface Props
 {
     maneuver: IOrbitalManeuver
     result: IOrbitalManeuverFormOutput
@@ -19,13 +19,13 @@ interface OrbitalManeuverProps
 }
 
 /** @function OrbitalManeuver */
-export default function OrbitalManeuver(props: Readonly<OrbitalManeuverProps>): react.JSX.Element
+export default function OrbitalManeuver(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
     const [maneuver, setManeuver] = react.useState<IOrbitalManeuver>(props.maneuver)
 
-    const [result, setResult] = react.useState<IOrbitalManeuverFormOutput>(props.result)
+    const [_, setResult] = react.useState<IOrbitalManeuverFormOutput>(props.result)
 
     // --- USE EFFECT ---
 
@@ -43,7 +43,7 @@ export default function OrbitalManeuver(props: Readonly<OrbitalManeuverProps>): 
     // --- RENDERING ---
 
     return (
-        <div className="grid grid-flow-row auto-rows-max grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-6">
             
             <InputField
                 name="type"
@@ -59,12 +59,10 @@ export default function OrbitalManeuver(props: Readonly<OrbitalManeuverProps>): 
                         { label: "Non-Hohmann", value: 'non-hohmann' },
                         { label: "Apse Line Rotation", value: 'apse-line-rotation' },
                         { label: "Chase", value: 'chase' },
+                        { label: "Inclination Change", value: 'inclination-change' },
                         { label: "Plane Change", value: 'plane-change' }
                     ]}
             />
-
-            <span></span>
-            <span></span>
 
             {
                 maneuver.type === 'hohmann' &&
@@ -97,64 +95,14 @@ export default function OrbitalManeuver(props: Readonly<OrbitalManeuverProps>): 
             }
 
             {
+                maneuver.type === 'inclination-change' &&
+                <InclinationChange data={maneuver.data as IInclinationChange} onChange={handleChange} />
+            }
+
+            {
                 maneuver.type === 'plane-change' &&
                 <PlaneChange data={maneuver.data as IPlaneChange} onChange={handleChange} />
             }
-
-            <span className="col-span-full border-b-2 border-dashed border-neutral-500"></span>
-
-            <OutputField
-                label="Semi-Major Axis"
-                unit="KM"
-                value={result.orbitalElements.sma}
-            />
-            
-            <OutputField
-                label="Eccentricity"
-                value={result.orbitalElements.ecc}
-            />
-
-            <OutputField
-                label="Inclination"
-                unit="DEG"
-                value={result.orbitalElements.inc}
-            />
-
-            <OutputField
-                label="RAAN"
-                unit="DEG"
-                value={result.orbitalElements.raan}
-            />
-
-            <OutputField
-                label="Argument Periapsis"
-                unit="DEG"
-                value={result.orbitalElements.aop}
-            />
-
-            <OutputField
-                label="True Anomaly"
-                unit="DEG"
-                value={result.orbitalElements.ta}
-            />
-
-            <OutputField
-                label="Δv"
-                unit="KM / S"
-                value={result.maneuver.dv}
-            />
-            
-            <OutputField
-                label="Δt"
-                unit="H"
-                value={result.maneuver.dt}
-            />
-
-            <OutputField
-                label="Δm"
-                unit="KG"
-                value={result.maneuver.dm}
-            />
 
         </div>
     )

@@ -20,7 +20,7 @@ export default function OrbitalPerturbationsPage(): react.JSX.Element
             <div className="flex flex-1 overflow-hidden">
 
                 <div className={utility.cn(hideLeftBar ? "w-18" : "w-90",
-                    "border-r border-neutral-700 p-4 overflow-y-auto")}>
+                    "border-r border-neutral-700 p-4 overflow-y-auto bg-orange-300/5")}>
 
                     <LeftPanel onHide={(hide: boolean) => setHideLeftBar(hide)} />
 

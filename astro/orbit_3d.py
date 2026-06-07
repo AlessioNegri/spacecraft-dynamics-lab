@@ -67,12 +67,18 @@ class OrbitalElements:
         
         common.check_attractor(attractor)
         
-        r_p: u.Quantity = self.calc_perigee_radius()
-        r_a: u.Quantity = self.calc_apogee_radius()
-        
-        mu: u.Quantity = bodies.BODIES[attractor].mu
-        
-        self.specific_angular_momentum = np.sqrt(2 * mu) * np.sqrt(r_a * r_p / (r_a + r_p))
+        if self.eccentricity < 1:
+            
+            r_p: u.Quantity = self.calc_perigee_radius()
+            r_a: u.Quantity = self.calc_apogee_radius()
+            
+            mu: u.Quantity = bodies.BODIES[attractor].mu
+            
+            self.specific_angular_momentum = np.sqrt(2 * mu) * np.sqrt(r_a * r_p / (r_a + r_p))
+            
+        else:
+            
+            self.specific_angular_momentum = 0 * u.km**2 / u.s
         
         return self.specific_angular_momentum
     

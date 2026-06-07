@@ -1,211 +1,147 @@
 import * as react from "react"
-import * as plotly from "plotly.js"
-import Plot from "react-plotly.js"
+import * as iconify from "@iconify/react"
+import * as Form from "@radix-ui/react-form"
 
-function makeOrbitTrace(positions: IVector3D[], name: string, color: string, width: number): plotly.Data
+import Tooltip from "@renderer/components/Tooltip"
+import OutputField from "@renderer/components/dialogs/OutputField"
+
+interface Props
 {
-    const orbit: plotly.Data =
-    {
-        x: positions.map(p => p.x),
-        y: positions.map(p => p.y),
-        z: positions.map(p => p.z),
-        type: "scatter3d",
-        mode: "lines",
-        line: { color: color, width: width },
-        name: name,
-    }
-
-    return orbit
-}
-
-function makeMarker(position: IVector3D | undefined, name: string, color: string, size: number = 10): plotly.Data
-{
-    const marker: plotly.Data =
-    {
-        x: [position?.x ?? 0],
-        y: [position?.y ?? 0],
-        z: [position?.z ?? 0],
-        type: "scatter3d",
-        mode: "markers",
-        marker: { color: color, size: size },
-        name: name,
-    }
-
-    return marker
-}
-
-interface RightPanelProps
-{
-    orbits: IOrbits
+    result?: IOrbitalManeuverFormOutput | null
+    onHide: (hide: boolean) => void
 }
 
 /** @function RightPanel */
-export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.Element
+export default function RightPanel(props: Readonly<Props>): react.JSX.Element
 {
-    // --- USE STATE ---
+    const [hide, setHide] = react.useState<boolean>(false)
 
-    const [orbits, setOrbits] = react.useState<plotly.Data[]>()
-
-    // --- USE EFFECT ---
-
-    react.useEffect(() =>
-    {
-        if (props.orbits === null) return
-
-        const axisX: plotly.Data =
-        {
-            x: [0, 10000],
-            y: [0, 0],
-            z: [0, 0],
-            type: "scatter3d",
-            mode: "lines",
-            line: { color: "#ff0000", width: 3, dash: "longdashdot" },
-            name: "X",
-        }
-
-        const axisY: plotly.Data =
-        {
-            x: [0, 0],
-            y: [0, 10000],
-            z: [0, 0],
-            type: "scatter3d",
-            mode: "lines",
-            line: { color: "#00ff00", width: 3, dash: "longdashdot" },
-            name: "Y",
-        }
-
-        const axisZ: plotly.Data =
-        {
-            x: [0, 0],
-            y: [0, 0],
-            z: [0, 10000],
-            type: "scatter3d",
-            mode: "lines",
-            line: { color: "#00A0ff", width: 3, dash: "longdashdot" },
-            name: "Z",
-        }
-
-        const planet: plotly.Data =
-        {
-            x: [0],
-            y: [0],
-            z: [0],
-            type: "scatter3d",
-            mode: "markers",
-            marker: { color: "yellow", size: 30 },
-            name: "Attractor",
-        }
-
-        const initialPosition: plotly.Data = makeMarker(props.orbits.initial[0], "Initial Position", "#00ccff", 10)
-
-        const initialOrbit: plotly.Data = makeOrbitTrace(props.orbits.initial, "Initial Orbit", "#00ccff", 10)
-
-        const transferOrbit: plotly.Data = makeOrbitTrace(props.orbits.transfer, "Transfer Orbit", "#ffffff", 5)
-
-        const finalPosition: plotly.Data = makeMarker(props.orbits.final[0], "Final Position", "#ff00ff", 10)
-
-        const finalOrbit: plotly.Data = makeOrbitTrace(props.orbits.final, "Final Orbit", "#ff00ff", 10)
-
-        setOrbits([axisX, axisY, axisZ, planet, initialOrbit, initialPosition, finalOrbit, finalPosition, transferOrbit])
-    }, [props.orbits])
-
-    // --- CONST ---
-
-    const layout: any = //plotly.Layout
-    {
-        autosize: true,
-        paper_bgcolor: "rgba(0,0,0,0)",
-        plot_bgcolor: "rgba(0,0,0,0)",
-        font: { color: "#e5e5e5" },
-        margin: { l: 50, r: 50, t: 50, b: 50 },
-        title:
-        {
-            text: "Orbit Transfer",
-            font:
-            {
-                color: "#FFFFFF",
-                size: 20,
-                family: "Lucida Console"
-            }
-        },
-        scene:
-        {
-            aspectmode: "data",
-            xaxis:
-            {
-                visible: false,
-                title:
-                {
-                    text: "X (km)",
-                    font:
-                    {
-                        color: "#FFFFFF",
-                        size: 16,
-                        family: "Lucida Console"
-                    }
-                }
-            },
-            yaxis:
-            {
-                visible: false,
-                title:
-                {
-                    text: "Y (km)",
-                    font:
-                    {
-                        color: "#FFFFFF",
-                        size: 16,
-                        family: "Lucida Console"
-                    }
-                }
-            },
-            zaxis:
-            {
-                visible: false,
-                title:
-                {
-                    text: "Z (km)",
-                    font:
-                    {
-                        color: "#FFFFFF",
-                        size: 16,
-                        family: "Lucida Console"
-                    }
-                }
-            },
-        },
-        // updatemenus:
-        // [
-        //     {
-        //         type: "buttons",
-        //         showactive: false,
-        //         buttons: [
-        //             {
-        //                 label: "Play",
-        //                 method: "animate",
-        //                 args: [null, { frame: { duration: 30, redraw: false }, fromcurrent: true }],
-        //             },
-        //             {
-        //                 label: "Pause",
-        //                 method: "animate",
-        //                 args: [[null], { mode: "immediate", frame: { duration: 0 } }],
-        //             },
-        //         ],
-        //     },
-        // ]
-    }
-
-    // --- RENDERING ---
+    react.useEffect(() => { props.onHide(hide) }, [hide])
 
     return (
-        <div className="w-[50%] h-full flex flex-col space-y-4 p-4 overflow-auto custom-scrollbar">
+        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
 
-            <Plot
-                data={orbits ?? []}
-                layout={layout}
-                style={{ width: "100%", height: "100%" }}
-            />
-            
+            <Tooltip title={hide ? "Show" : "Hide"} side="top">
+
+                <iconify.Icon
+                    icon={hide ? "tabler:layout-sidebar-right" : "tabler:layout-sidebar-right-filled"}
+                    width={20}
+                    className="absolute top-2 left-2 cursor-pointer hover:text-cyan-300"
+                    onClick={() => setHide(prev => !prev)}
+                />
+
+            </Tooltip>
+
+            {
+                !hide &&
+
+                <Form.Root className="space-y-6">
+
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    
+                        <iconify.Icon
+                            icon="game-icons:orbit"
+                            width={32}
+                        />
+
+                        <span className="font-bold">NEW ORBIT</span>
+
+                    </div>
+
+                    <OutputField
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        value={props.result?.orbitalElements.sma ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Eccentricity"
+                        symbol="e"
+                        unit=""
+                        value={props.result?.orbitalElements.ecc ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={props.result?.orbitalElements.inc ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Right Ascension of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={props.result?.orbitalElements.raan ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Argument of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={props.result?.orbitalElements.aop ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={props.result?.orbitalElements.ta ?? 0}
+                        tooltip
+                    />
+
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    
+                        <iconify.Icon
+                            icon="iconoir:coins"
+                            width={32}
+                        />
+
+                        <span className="font-bold">COST</span>
+
+                    </div>
+
+                    <OutputField
+                        label="Delta Velocity"
+                        symbol="\Delta v"
+                        unit="km / s"
+                        value={props.result?.maneuver.dv ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Delta Time"
+                        symbol="\Delta t"
+                        unit="hours"
+                        value={props.result?.maneuver.dt ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Delta Mass"
+                        symbol="\Delta m"
+                        unit="kg"
+                        value={props.result?.maneuver.dm ?? 0}
+                        tooltip
+                    />
+
+                    <OutputField
+                        label="Burn Time"
+                        symbol="t_{burn}"
+                        unit="s"
+                        value={props.result?.maneuver.burnTime ?? 0}
+                        tooltip
+                    />
+
+                </Form.Root>
+            }
+
         </div>
     )
 }

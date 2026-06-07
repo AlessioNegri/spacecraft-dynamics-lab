@@ -14,6 +14,7 @@ The **Orbital Maneuvers Page** allows to study different classical orbital maneu
 | **Non‑Hohmann** | **Target Radius**, **Target True Anomaly** | Generalized transfer when Hohmann assumptions don’t apply (e.g., elliptical targets) |
 | **Apse Line Rotation** | **Argument of Periapsis**, **Intersection Point** | Rotates the line of apsides (ω) to align pericenter/apocenter with mission geometry |
 | **Chase** | **Target True Anomaly**, **Delta Time** | Computes the maneuver needed to intercept or rendezvous with a target after Δt |
+| **Inclination Change** | **Inclination** | Changes orbital tilt relative to the equatorial plane, performed at nodes |
 | **Plane Change** | **Inclination**, **RAAN** | Rotates the orbital plane by adjusting inclination and ascending node |
 
 <br/>

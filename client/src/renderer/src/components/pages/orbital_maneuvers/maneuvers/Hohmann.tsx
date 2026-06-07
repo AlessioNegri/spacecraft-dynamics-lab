@@ -11,14 +11,14 @@ const defaultManeuver: IHohmann =
     direction: 0
 }
 
-interface HohmannProps
+interface Props
 {
     data: IHohmann
     onChange: (data: IHohmann) => void
 }
 
 /** @function Hohmann */
-export default function Hohmann(props: Readonly<HohmannProps>): react.JSX.Element
+export default function Hohmann(props: Readonly<Props>): react.JSX.Element
 {
     const { data, handleChange } = useManeuverState<IHohmann>(defaultManeuver, props.onChange)
 
@@ -27,8 +27,9 @@ export default function Hohmann(props: Readonly<HohmannProps>): react.JSX.Elemen
 
             <InputField
                 name="sma"
-                label="Semi-Major Axis"
-                unit="KM"
+                label="Semimajor Axis"
+                symbol="a"
+                unit="km"
                 type="text"
                 pattern="^(?!0$).*"
                 value={data.sma}
@@ -36,9 +37,11 @@ export default function Hohmann(props: Readonly<HohmannProps>): react.JSX.Elemen
             />
 
             <InputField
+                type="number"
                 name="ecc"
                 label="Eccentricity"
-                unit="KM"
+                symbol="e"
+                unit=""
                 value={data.ecc}
                 onChange={handleChange}
                 min={0}

@@ -4,6 +4,7 @@ type IOrbitalManeuverType = 'hohmann' |
                             'non-hohmann' |
                             'apse-line-rotation' |
                             'chase' |
+                            'inclination-change' |
                             'plane-change'
 
 type HohmannDirection = 0 | 1
@@ -30,7 +31,8 @@ interface IPhasing
 
 interface INonHohmann
 {
-    targetRadius: number
+    sma: number
+    ecc: number
     targetTrueAnomaly: number
 }
 
@@ -48,6 +50,11 @@ interface IChase
     dt: number
 }
 
+interface IInclinationChange
+{
+    inc: number
+}
+
 interface IPlaneChange
 {
     inc: number
@@ -60,6 +67,7 @@ type IOrbitalManeuverData = IHohmann |
                             INonHohmann |
                             IApseLineRotation |
                             IChase |
+                            IInclinationChange |
                             IPlaneChange
 
 interface IOrbitalManeuver
@@ -89,6 +97,7 @@ interface IOrbitalManeuverFormOutput
         dv: number
         dt: number
         dm: number
+        burnTime: number
     }
     initialOrbit: IVector3D[]
     transferOrbit: IVector3D[]

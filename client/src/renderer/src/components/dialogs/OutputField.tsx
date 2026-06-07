@@ -5,6 +5,8 @@ import * as Themes from "@radix-ui/themes"
 
 import utility from "@renderer/common/utility"
 
+import Tooltip from "@renderer/components/Tooltip"
+
 type AllowedTextFieldType =
     | "text"
     | "number"
@@ -46,6 +48,7 @@ interface Props
     disabled?: boolean
     minimumFractionDigits?: number
     maximumFractionDigits?: number
+    tooltip?: boolean
 }
 
 /** @function OutputField */
@@ -57,7 +60,7 @@ export default function OutputField(props: Readonly<Props>): react.JSX.Element
             <Themes.Flex direction={"column"} gap={"2"}>
             
                 {
-                    props.label &&
+                    !props.tooltip && props.label &&
                     <Themes.Text className="text-sm text-neutral-300">{props.label}</Themes.Text>
                 }
 
@@ -90,7 +93,23 @@ export default function OutputField(props: Readonly<Props>): react.JSX.Element
                         className={utility.cn(props.disabled ? "bg-red-900" : "bg-cyan-900", "rounded-l")}
                     >
 
-                        <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                        {
+                            props.tooltip
+                            
+                            ?
+                            
+                            <Tooltip title={props.label ?? ""} side="top">
+
+                                <div>
+                                    <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                                </div>
+
+                            </Tooltip>
+
+                            :
+
+                            <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                        }
 
                     </Themes.TextField.Slot>
 
