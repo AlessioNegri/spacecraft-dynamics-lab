@@ -4,9 +4,10 @@ import * as plotly from "plotly.js"
 import Plot from "react-plotly.js"
 
 import http from "@renderer/common/http"
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
 
 interface IFormIn
 {
@@ -62,14 +63,14 @@ const defaultOut: IFormOut =
     z: []
 }
 
-interface LvlhKinematicsDialogProps
+interface Props
 {
     opened: boolean
     setOpened: (opened: boolean) => void
 }
 
 /** @function LvlhKinematicsDialog */
-export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialogProps>): react.JSX.Element
+export default function LvlhKinematicsDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -191,7 +192,7 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
 
         try
         {
-            let response: any = await http.api.put(`/tools/lvlh-kinematics`, formIn)
+            let response: any = await http.api.put(`/relative-motion/lvlh-kinematics`, formIn)
 
             const result: IFormOut = response.data
 
@@ -204,6 +205,13 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
     }
 
     // --- RENDERING ---
+
+    const config: any = //plotly.Config
+    {
+        responsive: true,
+        displaylogo: false,
+        scrollZoom: true
+    }
 
     return (
         <DialogRUI
@@ -227,198 +235,241 @@ export default function LvlhKinematicsDialog(props: Readonly<LvlhKinematicsDialo
             <form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
-                className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
+                className="grid grid-cols-2 gap-4 border-b pb-4 mb-4">
 
-                <InputField
-                    name="attractor"
-                    label="Attractor"
-                    type="select"
-                    value={formIn.attractor}
-                    onChange={handleChange}
-                    options={
-                        [
-                            { label: "Mercury", value: "mercury" },
-                            { label: "Venus", value: "venus" },
-                            { label: "Earth", value: "earth" },
-                            { label: "Mars", value: "mars" },
-                            { label: "Jupiter", value: "jupiter" },
-                            { label: "Saturn", value: "saturn" },
-                            { label: "Uranus", value: "uranus" },
-                            { label: "Neptune", value: "neptune" }
-                        ]}
-                />
+                <div className="col-span-full flex justify-center">
 
-                <span className="col-span-3 text-center uppercase font-semibold">Target Orbital Elements</span>
+                    <InputField
+                        className="w-[50%]"
+                        name="attractor"
+                        label="Attractor"
+                        type="select"
+                        value={formIn.attractor}
+                        onChange={handleChange}
+                        options={
+                            [
+                                { label: "Mercury", value: "mercury" },
+                                { label: "Venus", value: "venus" },
+                                { label: "Earth", value: "earth" },
+                                { label: "Mars", value: "mars" },
+                                { label: "Jupiter", value: "jupiter" },
+                                { label: "Saturn", value: "saturn" },
+                                { label: "Uranus", value: "uranus" },
+                                { label: "Neptune", value: "neptune" }
+                            ]}
+                    />
 
-                <InputField
-                    name="orbitalElementsTarget.sma"
-                    label="Semi-Major Axis"
-                    unit="KM"
-                    type="text"
-                    value={String(formIn.orbitalElementsTarget.sma)}
-                    onChange={handleChange}
-                    pattern="^(?!0$).*"
-                />
+                </div>
 
-                <InputField
-                    name="orbitalElementsTarget.ecc"
-                    label="Eccentricity"
-                    unit="KM"
-                    value={formIn.orbitalElementsTarget.ecc}
-                    onChange={handleChange}
-                    min={0}
-                />
+                <div className="flex flex-col gap-4">
 
-                <InputField
-                    name="orbitalElementsTarget.inc"
-                    label="Inclination"
-                    unit="DEG"
-                    value={formIn.orbitalElementsTarget.inc}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <span className="text-center uppercase font-semibold">Target Orbital Elements</span>
 
-                <InputField
-                    name="orbitalElementsTarget.raan"
-                    label="RAAN"
-                    unit="DEG"
-                    value={formIn.orbitalElementsTarget.raan}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <InputField
+                        name="orbitalElementsTarget.sma"
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        type="text"
+                        value={String(formIn.orbitalElementsTarget.sma)}
+                        onChange={handleChange}
+                        pattern="^(?!0$).*"
+                        tooltip
+                    />
 
-                <InputField
-                    name="orbitalElementsTarget.aop"
-                    label="Argument Periapsis"
-                    unit="DEG"
-                    value={formIn.orbitalElementsTarget.aop}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <InputField
+                        name="orbitalElementsTarget.ecc"
+                        label="Eccentricity"
+                        symbol="e"
+                        unit=""
+                        value={formIn.orbitalElementsTarget.ecc}
+                        onChange={handleChange}
+                        min={0}
+                        tooltip
+                    />
 
-                <InputField
-                    name="orbitalElementsTarget.ta"
-                    label="True Anomaly"
-                    unit="DEG"
-                    value={formIn.orbitalElementsTarget.ta}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <InputField
+                        type="number"
+                        name="orbitalElementsTarget.inc"
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={formIn.orbitalElementsTarget.inc}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Chaser Orbital Elements</span>
+                    <InputField
+                        type="number"
+                        name="orbitalElementsTarget.raan"
+                        label="Right Ascension of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={formIn.orbitalElementsTarget.raan}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
 
-                <InputField
-                    name="orbitalElementsChaser.sma"
-                    label="Semi-Major Axis"
-                    unit="KM"
-                    type="text"
-                    value={String(formIn.orbitalElementsChaser.sma)}
-                    onChange={handleChange}
-                    pattern="^(?!0$).*"
-                />
+                    <InputField
+                        type="number"
+                        name="orbitalElementsTarget.aop"
+                        label="Argument Of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={formIn.orbitalElementsTarget.aop}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
 
-                <InputField
-                    name="orbitalElementsChaser.ecc"
-                    label="Eccentricity"
-                    unit="KM"
-                    value={formIn.orbitalElementsChaser.ecc}
-                    onChange={handleChange}
-                    min={0}
-                />
+                    <InputField
+                        type="number"
+                        name="orbitalElementsTarget.ta"
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={formIn.orbitalElementsTarget.ta}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
 
-                <InputField
-                    name="orbitalElementsChaser.inc"
-                    label="Inclination"
-                    unit="DEG"
-                    value={formIn.orbitalElementsChaser.inc}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                </div>
 
-                <InputField
-                    name="orbitalElementsChaser.raan"
-                    label="RAAN"
-                    unit="DEG"
-                    value={formIn.orbitalElementsChaser.raan}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                <div className="flex flex-col gap-4">
 
-                <InputField
-                    name="orbitalElementsChaser.aop"
-                    label="Argument Periapsis"
-                    unit="DEG"
-                    value={formIn.orbitalElementsChaser.aop}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <span className="col-span-3 text-center uppercase font-semibold">Chaser Orbital Elements</span>
 
-                <InputField
-                    name="orbitalElementsChaser.ta"
-                    label="True Anomaly"
-                    unit="DEG"
-                    value={formIn.orbitalElementsChaser.ta}
-                    onChange={handleChange}
-                    min={-360}
-                    max={360}
-                />
+                    <InputField
+                        name="orbitalElementsChaser.sma"
+                        label="Semimajor Axis"
+                        symbol="a"
+                        unit="km"
+                        type="text"
+                        value={String(formIn.orbitalElementsChaser.sma)}
+                        onChange={handleChange}
+                        pattern="^(?!0$).*"
+                        tooltip
+                    />
+
+                    <InputField
+                        name="orbitalElementsChaser.ecc"
+                        label="Eccentricity"
+                        symbol="e"
+                        unit=""
+                        value={formIn.orbitalElementsChaser.ecc}
+                        onChange={handleChange}
+                        min={0}
+                        tooltip
+                    />
+
+                    <InputField
+                        type="number"
+                        name="orbitalElementsChaser.inc"
+                        label="Inclination"
+                        symbol="i"
+                        unit="deg"
+                        value={formIn.orbitalElementsChaser.inc}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        type="number"
+                        name="orbitalElementsChaser.raan"
+                        label="Right Ascension of Ascending Node"
+                        symbol="\Omega"
+                        unit="deg"
+                        value={formIn.orbitalElementsChaser.raan}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        type="number"
+                        name="orbitalElementsChaser.aop"
+                        label="Argument Of Periapsis"
+                        symbol="\omega"
+                        unit="deg"
+                        value={formIn.orbitalElementsChaser.aop}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                    <InputField
+                        type="number"
+                        name="orbitalElementsChaser.ta"
+                        label="True Anomaly"
+                        symbol="\theta"
+                        unit="deg"
+                        value={formIn.orbitalElementsChaser.ta}
+                        onChange={handleChange}
+                        min={-360}
+                        max={360}
+                        tooltip
+                    />
+
+                </div>
 
             </form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <form.Root className="grid grid-cols-[120px_1fr_1fr_1fr] gap-4 mb-4 items-center">
 
-                <span className="col-span-3 text-center uppercase font-semibold">Position Vector</span>
+                <span className="text-center uppercase font-semibold text-xs">Position</span>
 
-                <OutputField label="X" unit="KM" value={formOut.position.x} />
+                <OutputField symbol="r_x" unit="km" value={formOut.position.x} />
 
-                <OutputField label="Y" unit="KM" value={formOut.position.y} />
+                <OutputField symbol="r_y" unit="km" value={formOut.position.y} />
 
-                <OutputField label="Z" unit="KM" value={formOut.position.z} />
+                <OutputField symbol="r_z" unit="km" value={formOut.position.z} />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Velocity Vector</span>
+                <span className="text-center uppercase font-semibold text-xs">Velocity</span>
 
-                <OutputField label="X" unit="KM / S" value={formOut.velocity.x} />
+                <OutputField symbol="v_x" unit="km / s" value={formOut.velocity.x} />
 
-                <OutputField label="Y" unit="KM / S" value={formOut.velocity.y} />
+                <OutputField symbol="v_y" unit="km / s" value={formOut.velocity.y} />
 
-                <OutputField label="Z" unit="KM / S" value={formOut.velocity.z} />
+                <OutputField symbol="v_z" unit="km / s" value={formOut.velocity.z} />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Acceleration Vector</span>
+                <span className="text-center uppercase font-semibold text-xs">Acceleration</span>
 
-                <OutputField label="X" unit="KM / S^2" value={formOut.acceleration.x} />
+                <OutputField symbol="a_x" unit="km / s^2" value={formOut.acceleration.x} />
 
-                <OutputField label="Y" unit="KM / S^2" value={formOut.acceleration.y} />
+                <OutputField symbol="a_y" unit="km / s^2" value={formOut.acceleration.y} />
 
-                <OutputField label="Z" unit="KM / S^2" value={formOut.acceleration.z} />
+                <OutputField symbol="a_z" unit="km / s^2" value={formOut.acceleration.z} />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Angular Velocity Vector</span>
+                <span className="text-center uppercase font-semibold text-xs">Angular Velocity</span>
 
-                <OutputField label="X" unit="DEG / S" value={formOut.angularVelocity.x} />
+                <OutputField symbol="\Omega_x" unit="deg / s" value={formOut.angularVelocity.x} />
 
-                <OutputField label="Y" unit="DEG / S" value={formOut.angularVelocity.y} />
+                <OutputField symbol="\Omega_y" unit="deg / s" value={formOut.angularVelocity.y} />
 
-                <OutputField label="Z" unit="DEG / S" value={formOut.angularVelocity.z} />
+                <OutputField symbol="\Omega_z" unit="deg / s" value={formOut.angularVelocity.z} />
 
             </form.Root>
 
-            {/* <div className="col-span-full flex flex-col space-y-4 p-4"> */}
-
-                    <Plot
-                        data={kinematics ?? []}
-                        layout={layout}
-                        style={{ width: "100%", height: "100%" }}
-                    />
-
-                {/* </div> */}
+            <Plot
+                className="border-2 border-neutral-300 rounded-xl"
+                data={kinematics ?? []}
+                layout={layout}
+                config={config}
+                style={{ width: "100%", height: "500px" }}
+            />
 
         </DialogRUI>
     )

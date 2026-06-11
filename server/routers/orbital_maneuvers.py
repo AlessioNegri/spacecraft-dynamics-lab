@@ -34,11 +34,13 @@ def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> om.RocketMotor:
     
     return rocket_motor
 
-def fill_orbital_elements(orbital_elements_schema: schema.OrbitalElements) -> o3d.OrbitalElements:
+def fill_orbital_elements(attractor: bodies.Attractor,
+                          orbital_elements_schema: schema.OrbitalElements) -> o3d.OrbitalElements:
     """
     Fill the orbital elements from schema values
 
     Args:
+        attractor (bodies.Attractor): Main attractor
         orbital_elements_schema (schema.OrbitalElements): Pydantic schema orbital elements
 
     Returns:
@@ -54,6 +56,8 @@ def fill_orbital_elements(orbital_elements_schema: schema.OrbitalElements) -> o3
     oe.right_ascension_of_ascending_node = orbital_elements_schema.raan * u.deg
     oe.argument_of_periapsis = orbital_elements_schema.aop * u.deg
     oe.true_anomaly = orbital_elements_schema.ta * u.deg
+    
+    oe.calc_specific_angular_momentum(attractor=attractor)
     
     return oe
 
@@ -166,14 +170,14 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.sma = data.maneuver.data.sma
     oe_2_schema.ecc = data.maneuver.data.ecc
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(oe_2_schema)
+    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     if data.maneuver.data.direction == 0:
         
@@ -264,14 +268,14 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema : schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.sma = data.maneuver.data.sma
     oe_2_schema.ecc = data.maneuver.data.ecc
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(oe_2_schema)
+    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     r_3: u.Quantity = data.maneuver.data.supportApocenterRadius * u.km
     
@@ -358,7 +362,7 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     nu_target: u.Quantity = data.maneuver.data.targetTrueAnomaly * u.deg
     
@@ -439,7 +443,7 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2:o3d.OrbitalElements = copy.deepcopy(oe_1)
 
@@ -521,13 +525,13 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.aop = data.maneuver.data.aop
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(oe_2_schema)
+    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     sip: bool = data.maneuver.data.intersectionPoint == 1
     
@@ -607,7 +611,7 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     nu_T: u.Quantity = data.maneuver.data.trueAnomalyTarget * u.deg
     
@@ -688,13 +692,13 @@ async def put_inclination_change(data: schema.InclinationChangeInModelInfo) -> f
 
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
 
     oe_2_schema.inc = data.maneuver.data.inc
 
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(oe_2_schema)
+    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.inclination_change_maneuver(attractor=attractor,
                                                                                    rocket_motor=rocket_motor,
@@ -770,14 +774,14 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(data.orbitalElements)
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.inc = data.maneuver.data.inc
     oe_2_schema.raan = data.maneuver.data.raan
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(oe_2_schema)
+    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_raan_and_inclination(attractor=attractor,
                                                                                                       rocket_motor=rocket_motor,

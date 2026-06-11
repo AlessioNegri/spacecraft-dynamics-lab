@@ -164,7 +164,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
     // --- RENDERING ---
 
     return (
-        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+        <div className="w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative">
         
             <Tooltip title={hide ? "Show" : "Hide"} side="top">
 
@@ -182,12 +182,9 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
 
                 <Form.Root className="space-y-6">
 
-                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    <div className="flex space-x-4 justify-center items-center">
 
-                        <iconify.Icon
-                            icon="emojione-monotone:satellite"
-                            width={32}
-                        />
+                        <iconify.Icon icon="emojione-monotone:satellite" width={32} />
 
                         <span className="font-bold">SPACECRAFT</span>
 
@@ -228,7 +225,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                         tooltip
                     />
 
-                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    <div className="flex space-x-4 justify-center items-center">
 
                         <iconify.Icon
                             icon="game-icons:orbit"
@@ -240,7 +237,6 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     </div>
 
                     <InputField
-                        className=""
                         name="attractor"
                         label="Attractor"
                         type="select"
@@ -259,10 +255,6 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                             ]}
                     />
 
-                    <span></span>
-
-                    <span></span>
-
                     <InputField
                         name="orbitalElements.sma"
                         label="Semimajor Axis"
@@ -275,6 +267,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     />
 
                     <InputField
+                        type="number"
                         name="orbitalElements.ecc"
                         label="Eccentricity"
                         symbol="e"
@@ -286,6 +279,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     />
 
                     <InputField
+                        type="number"
                         name="orbitalElements.inc"
                         label="Inclination"
                         symbol="i"
@@ -298,6 +292,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     />
 
                     <InputField
+                        type="number"
                         name="orbitalElements.raan"
                         label="Right Ascension of Ascending Node"
                         symbol="\Omega"
@@ -310,6 +305,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     />
 
                     <InputField
+                        type="number"
                         name="orbitalElements.aop"
                         label="Argument of Periapsis"
                         symbol="\omega"
@@ -322,6 +318,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                     />
 
                     <InputField
+                        type="number"
                         name="orbitalElements.ta"
                         label="True Anomaly"
                         symbol="\theta"
@@ -333,7 +330,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                         tooltip
                     />
 
-                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    <div className="flex space-x-4 justify-center items-center">
 
                         <iconify.Icon
                             icon="game-icons:rocket-thruster"

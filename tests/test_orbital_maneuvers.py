@@ -401,7 +401,7 @@ def test_apse_line_rotation_from_eta():
                                                                                   eta=eta)
     
     assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 1.503, atol=1e-3)
-    assert np.isclose(maneuver.orbital_elements_list[0].true_anomaly.to_value(u.deg), 153.04, atol=1e-2)
+    assert np.isclose(maneuver.true_anomaly_list[0].to_value(u.deg), 153.04, atol=1e-2)
     assert np.isclose(maneuver.rocket_elevation_angle_list[0].to_value(u.deg), 91.28, atol=1e-2)
     
 def test_apse_line_rotation_from_true_anomaly():

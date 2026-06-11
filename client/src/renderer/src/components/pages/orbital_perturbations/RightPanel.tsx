@@ -191,6 +191,15 @@ export default function RightPanel(): react.JSX.Element
 
     // --- RENDERING ---
 
+    if (specificAngularMomentum === undefined)
+    {
+        return (
+            <div className="w-full h-full flex items-center justify-center text-neutral-500">
+                Run the analysis to generate the plot
+            </div>
+        )
+    }
+
     return (
         <div className="w-full h-full rounded-lg shadow-inner p-2 grid grid-cols-2 grid-rows-3 gap-0">
 

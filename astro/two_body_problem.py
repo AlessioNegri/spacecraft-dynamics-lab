@@ -264,7 +264,7 @@ class Orbit:
         
         if end_epoch < self.epoch: raise TypeError(f"'end_epoch' {end_epoch} must come after 'epoch' {self.epoch}")
         
-        return self._propagate((end_epoch - self.epoch).to(u.s).to_value(), rocket_motor)
+        return self._propagate((end_epoch - self.epoch).to_value(u.s), rocket_motor)
 
     def propagate_for(self, delta: time.TimeDelta, rocket_motor: om.RocketMotor = None) -> Result:
         """Propagate the orbit for delta time
@@ -279,7 +279,7 @@ class Orbit:
         
         common.check_time_delta(delta)
         
-        return self._propagate(delta.to(u.s).to_value(), rocket_motor)
+        return self._propagate(delta.to_value(u.s), rocket_motor)
         
     # --- PRIVATE ---
     

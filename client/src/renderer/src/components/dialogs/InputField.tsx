@@ -131,7 +131,7 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                 <Themes.Flex direction={"column"} gap={"2"}>
 
                 {
-                    !props.tooltip &&
+                    (!props.tooltip && props.label) &&
 
                     <Themes.Text className="flex justify-between text-sm text-neutral-300">
 

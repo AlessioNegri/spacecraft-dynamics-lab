@@ -16,6 +16,7 @@ export default function OrbitalManeuversPage(): react.JSX.Element
     const [maneuverResult, setManeuverResult] = react.useState<IOrbitalManeuverFormOutput | null>(null)
 
     const [hideLeftBar, setHideLeftBar] = react.useState<boolean>(false)
+
     const [hideRightBar, setHideRightBar] = react.useState<boolean>(false)
 
     // --- RENDERING ---
@@ -28,7 +29,11 @@ export default function OrbitalManeuversPage(): react.JSX.Element
                 <div className={utility.cn(hideLeftBar ? "w-18" : "w-90",
                     "border-r border-neutral-700 p-4 overflow-y-auto bg-orange-300/5")}>
 
-                    <LeftPanel onHide={(hide: boolean) => setHideLeftBar(hide)} onOrbitsChange={setOrbits} onResultChange={setManeuverResult} />
+                    <LeftPanel
+                        onHide={(hide: boolean) => setHideLeftBar(hide)}
+                        onOrbitsChange={setOrbits}
+                        onResultChange={setManeuverResult}
+                    />
 
                 </div>
 

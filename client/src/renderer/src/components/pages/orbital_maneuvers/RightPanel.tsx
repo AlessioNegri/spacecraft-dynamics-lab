@@ -14,12 +14,18 @@ interface Props
 /** @function RightPanel */
 export default function RightPanel(props: Readonly<Props>): react.JSX.Element
 {
+    // --- USE STATE ---
+
     const [hide, setHide] = react.useState<boolean>(false)
+
+    // --- USE EFFECT ---
 
     react.useEffect(() => { props.onHide(hide) }, [hide])
 
+    // --- RENDERING ---
+
     return (
-        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+        <div className="w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative">
 
             <Tooltip title={hide ? "Show" : "Hide"} side="top">
 
@@ -37,12 +43,9 @@ export default function RightPanel(props: Readonly<Props>): react.JSX.Element
 
                 <Form.Root className="space-y-6">
 
-                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    <div className="flex space-x-4 justify-center items-center">
                     
-                        <iconify.Icon
-                            icon="game-icons:orbit"
-                            width={32}
-                        />
+                        <iconify.Icon icon="game-icons:orbit" width={32} />
 
                         <span className="font-bold">NEW ORBIT</span>
 
@@ -96,12 +99,9 @@ export default function RightPanel(props: Readonly<Props>): react.JSX.Element
                         tooltip
                     />
 
-                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    <div className="flex space-x-4 justify-center items-center">
                     
-                        <iconify.Icon
-                            icon="iconoir:coins"
-                            width={32}
-                        />
+                        <iconify.Icon icon="iconoir:coins" width={32} />
 
                         <span className="font-bold">COST</span>
 
