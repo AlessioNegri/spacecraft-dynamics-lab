@@ -6,7 +6,7 @@ import astro.bodies as bd
 import astro.interplanetary_trajectories as it
 import astro.orbital_maneuvers as om
 
-def test_synodic_period():
+def test_synodic_period_1():
     """EXAMPLE 8.1"""
     
     departure_planet: bd.Attractor = bd.Attractor.EARTH
@@ -18,85 +18,183 @@ def test_synodic_period():
     
     assert np.isclose(T_S.to_value(u.day), 779.9, atol=1e-1)
 
-def test_wait_time():
+def test_synodic_period_2():
+    """EXAMPLE 10.2 - BOOK 2"""
+    
+    departure_planet: bd.Attractor = bd.Attractor.EARTH
+    
+    arrival_planet: bd.Attractor = bd.Attractor.VENUS
+    
+    T_S: u.Quantity = it.InterplanetaryTrajectories.synodic_period(departure_planet=departure_planet,
+                                                                   arrival_planet=arrival_planet)
+    
+    assert np.isclose(T_S.to_value(u.day), 583.9, atol=1e-1)
+
+def test_wait_time_1():
     """EXAMPLE 8.2"""
     
     departure_planet: bd.Attractor = bd.Attractor.EARTH
     
     arrival_planet: bd.Attractor = bd.Attractor.MARS
     
-    _, phi_f, t_wait = it.InterplanetaryTrajectories.wait_time(departure_planet=departure_planet,
+    phi_0, phi_f, t_wait = it.InterplanetaryTrajectories.wait_time(departure_planet=departure_planet,
                                                                    arrival_planet=arrival_planet)
     
-    assert np.isclose(phi_f.to_value(u.rad), -1.3107, atol=1e-0)
+    assert np.isclose(phi_0.to_value(u.deg), 44.3, atol=1e-1)
+    assert np.isclose(phi_f.to_value(u.rad), -1.3114, atol=1e-4)
     assert np.isclose(t_wait.to_value(u.day), 454.4, atol=1e-1)
+
+def test_wait_time_2():
+    """EXAMPLE 10.2 - BOOK 2"""
+    
+    departure_planet: bd.Attractor = bd.Attractor.EARTH
+    
+    arrival_planet: bd.Attractor = bd.Attractor.VENUS
+    
+    phi_0, phi_f, t_wait = it.InterplanetaryTrajectories.wait_time(departure_planet=departure_planet,
+                                                                   arrival_planet=arrival_planet)
+    
+    assert np.isclose(phi_0.to_value(u.deg), -54.1, atol=1e-1)
+    #assert np.isclose(t_wait.to_value(u.day), 454.4, atol=1e-1)
 
 def test_sphere_of_influence():
     """EXAMPLE 8.3"""
     
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MERCURY,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 112_409, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.VENUS,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 616_279, atol=1e0)
+    
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.EARTH,
                                                                         main_attractor=bd.Attractor.SUN)
     
-    assert np.isclose(soi.to_value(u.km), 925000, atol=1e3)
+    assert np.isclose(soi.to_value(u.km), 924_635, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MOON,
                                                                         main_attractor=bd.Attractor.EARTH)
     
-    assert np.isclose(soi.to_value(u.km), 66200, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 66_200, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MARS,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 577_227, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.JUPITER,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 48_214_223, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.SATURN,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 54_808_061, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.URANUS,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 51_839_753, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.NEPTUNE,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 86_770_197, atol=1e0)
+    
+    soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.PLUTO,
+                                                                        main_attractor=bd.Attractor.SUN)
+    
+    assert np.isclose(soi.to_value(u.km), 3_146_985, atol=1e0)
 
-def test_departure():
+def test_departure_1():
     """EXAMPLE 8.4"""
     
     dv, hyperbola = it.InterplanetaryTrajectories.departure(departure_planet=bd.Attractor.EARTH,
-                                                                          arrival_planet=bd.Attractor.MARS,
-                                                                          periapse_radius=(6378 + 300) * u.km)
+                                                            arrival_planet=bd.Attractor.MARS,
+                                                            periapse_radius=(6378 + 300) * u.km)
     
     assert np.isclose(dv.to_value(u.km / u.s), 3.590, atol=1e-3)
     assert np.isclose(hyperbola.asymptote_angle.to_value(u.deg), 29.17, atol=1e-2)
 
-def test_rendezvous():
+def test_departure_2():
+    """EXAMPLE 10.1"""
+    
+    dv, hyperbola = it.InterplanetaryTrajectories.departure(departure_planet=bd.Attractor.EARTH,
+                                                            arrival_planet=bd.Attractor.MARS,
+                                                            periapse_radius=(6378 + 185) * u.km)
+    
+    assert np.isclose(dv.to_value(u.km / u.s), 3.6147, atol=1e-4)    
+    assert np.isclose(hyperbola.hyperbolic_excess_speed.to_value(u.km / u.s), 2.9448, atol=1e-4)
+    assert np.isclose(hyperbola.characteristic_energy.to_value(u.km**2 / u.s**2), 8.6712, atol=1e-4)
+    assert np.isclose(hyperbola.specific_energy.to_value(u.km**2 / u.s**2), 4.3356, atol=1e-4)
+    assert np.isclose(hyperbola.time_of_flight.to_value(u.day), 3.16, atol=1e-2)
+    
+    dv, hyperbola = it.InterplanetaryTrajectories.departure(departure_planet=bd.Attractor.EARTH,
+                                                            arrival_planet=bd.Attractor.VENUS,
+                                                            periapse_radius=(6378 + 185) * u.km)
+    
+    assert np.isclose(dv.to_value(u.km / u.s), 3.5070, atol=1e-4)    
+    assert np.isclose(hyperbola.hyperbolic_excess_speed.to_value(u.km / u.s), -2.4954, atol=1e-4)
+    assert np.isclose(hyperbola.characteristic_energy.to_value(u.km**2 / u.s**2), 6.2271, atol=1e-4)
+    assert np.isclose(hyperbola.specific_energy.to_value(u.km**2 / u.s**2), 3.1135, atol=1e-4)
+
+def test_rendezvous_with_optimal_periapsis_radius():
     """EXAMPLE 8.5"""
     
-    dv, hyperbola, oe = it.InterplanetaryTrajectories.rendezvous(departure_planet=bd.Attractor.EARTH,
-                                                                 arrival_planet=bd.Attractor.MARS,
-                                                                 orbit_period=7 * u.hour)
+    dv, hyperbola, oe = it.InterplanetaryTrajectories.rendezvous_with_optimal_periapsis_radius(departure_planet=bd.Attractor.EARTH,
+                                                                                               arrival_planet=bd.Attractor.MARS,
+                                                                                               orbit_period=7 * u.hour)
     
     assert np.isclose(dv.to_value(u.km / u.s), 1.472, atol=1e-3)
-    assert np.isclose(hyperbola.periapse_radius.to_value(u.km), 5456, atol=1e0)
+    assert np.isclose(hyperbola.periapsis_radius.to_value(u.km), 5456, atol=1e0)
     assert np.isclose(hyperbola.aiming_radius.to_value(u.km), 9817, atol=1e0)
     assert np.isclose(hyperbola.asymptote_angle.to_value(u.deg), 58.13, atol=1e-2)
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 8832, atol=1e0)
     assert np.isclose(oe.eccentricity.to_value(), 0.3822, atol=1e-4)
+
+def test_rendezvous_with_optimal_periapsis_radius():
+    """EXAMPLE 8.5"""
+    
+    dv, hyperbola, _ = it.InterplanetaryTrajectories.rendezvous_with_circular_orbit(departure_planet=bd.Attractor.EARTH,
+                                                                                    arrival_planet=bd.Attractor.VENUS,
+                                                                                    radius=6402 * u.km)
+    
+    assert np.isclose(dv.to_value(u.km / u.s), 3.3079, atol=1e-4)
+    assert np.isclose(hyperbola.aiming_radius.to_value(u.km), -24_673.5, atol=1e-1)
 
 def test_flyby():
     """EXAMPLE 8.6"""
     
     oe_1, hyperbola_params, oe_2 = it.InterplanetaryTrajectories.flyby(departure_planet=bd.Attractor.EARTH,
                                                                        arrival_planet=bd.Attractor.VENUS,
-                                                                       periapse_radius=(6052 + 300) * u.km,
-                                                                       nu_1=-30 * u.deg,
+                                                                       periapsis_radius=(6052 + 300) * u.km,
+                                                                       true_anomaly_incoming=-30 * u.deg,
                                                                        side=it.FlybySide.DARK_SIDE)
     
     assert np.isclose(oe_1.specific_angular_momentum.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
     assert np.isclose(oe_1.eccentricity.to_value(), 0.1702, atol=1e-4)
     assert np.isclose(hyperbola_params.specific_angular_momentum.to_value(u.km**2 / u.s), 68480, atol=1e0)
     assert np.isclose(hyperbola_params.eccentricity.to_value(), 1.272, atol=1e-3)
-    assert np.isclose(hyperbola_params.turn_angle.to_value(u.deg), 103.6, atol=1e-1)
+    assert np.isclose(hyperbola_params.turning_angle.to_value(u.deg), 103.6, atol=1e-1)
     assert np.isclose(hyperbola_params.aiming_radius.to_value(u.km), 18342, atol=1e0)
     assert np.isclose(oe_2.specific_angular_momentum.to_value(u.km**2 / u.s), 3.434e9, atol=1e6)
     assert np.isclose(oe_2.eccentricity.to_value(), 0.1847, atol=1e-4)
     
     oe_1, hyperbola_params, oe_2 = it.InterplanetaryTrajectories.flyby(departure_planet=bd.Attractor.EARTH,
                                                                        arrival_planet=bd.Attractor.VENUS,
-                                                                       periapse_radius=(6052 + 300) * u.km,
-                                                                       nu_1=-30 * u.deg,
+                                                                       periapsis_radius=(6052 + 300) * u.km,
+                                                                       true_anomaly_incoming=-30 * u.deg,
                                                                        side=it.FlybySide.SUNLIT_SIDE)
     
     assert np.isclose(oe_1.specific_angular_momentum.to_value(u.km**2 / u.s), 4.059e9, atol=1e6)
     assert np.isclose(oe_1.eccentricity.to_value(), 0.1702, atol=1e-4)
     assert np.isclose(hyperbola_params.specific_angular_momentum.to_value(u.km**2 / u.s), 68480, atol=1e0)
     assert np.isclose(hyperbola_params.eccentricity.to_value(), 1.272, atol=1e-3)
-    assert np.isclose(hyperbola_params.turn_angle.to_value(u.deg), 103.6, atol=1e-1)
+    assert np.isclose(hyperbola_params.turning_angle.to_value(u.deg), 103.6, atol=1e-1)
     assert np.isclose(hyperbola_params.aiming_radius.to_value(u.km), 18342, atol=1e0)
     assert np.isclose(oe_2.specific_angular_momentum.to_value(u.km**2 / u.s), 4.019e9, atol=1e6)
     assert np.isclose(oe_2.eccentricity.to_value(), 0.1556, atol=1e-4)

@@ -1,12 +1,14 @@
 import * as react from "react"
+import * as Form from "@radix-ui/react-form"
 import * as plotly from "plotly.js"
 import Plot from "react-plotly.js"
 
 import utility from "@renderer/common/utility"
 
-import FormInput from "../dialogs/FormInput"
+//import FormInput from "../../dialogs/FormInput"
+import InputField from "@renderer/components/dialogs/InputField"
 
-interface InterplanetaryMainPlotProps
+interface Props
 {
     porkChopData2D: IPorkChopData2D | null
     porkChopData3D: IPorkChopData3D | null
@@ -14,7 +16,7 @@ interface InterplanetaryMainPlotProps
 }
 
 /** @function InterplanetaryMainPlot */
-export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMainPlotProps>)
+export default function InterplanetaryMainPlot(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -22,11 +24,15 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
 
     const [data3D, setData3D] = react.useState<plotly.Data[]>()
 
+    const [selection, setSelection] = react.useState<plotly.Data[]>()
+
     const [flybyDateIndex, setFlybyDateIndex] = react.useState<number>(0)
 
     const [flybyDateLength, setFlybyDateLength] = react.useState<number>(0)
 
-    // --- CONST ---
+    const [selectedPoint, setSelectedPoint] = react.useState<{ x: string, y: string } | null>(null)
+
+    // --- PLOTLY ---
 
     const layout: any = //plotly.Layout
     {
@@ -95,7 +101,14 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
 
     react.useEffect(() =>
     {
-        if (props.porkChopData2D === null) return
+        if (props.porkChopData2D === null)
+        {
+            setData2D([])
+
+            setSelection([])
+
+            return
+        }
 
         const dvHeatmap: plotly.Data =
         {
@@ -106,6 +119,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             type: "contour",
             colorscale: "Cividis",
             reversescale: false,
+            ncontours: 50,
             line:
             {
                 color: "black",
@@ -113,9 +127,9 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             },
             contours:
             {
-                coloring: "heatmap",
+                coloring: "fill",
                 showlabels: true,
-                size: 15,
+                size: 1,
                 showlines: true,
                 type: "levels",
                 labelfont:
@@ -126,11 +140,13 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             },
             colorbar:
             {
+                tick0: 0,
+                dtick: 5,
+                x: -0.15,
                 title:
                 {
                     text: "ΔV (km/s)",//"$\\Delta v_{total}$",
-                },
-                x: -0.15
+                }
             }
         }
 
@@ -143,6 +159,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "red",
@@ -170,6 +187,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "yellow",
@@ -197,6 +215,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "white",
@@ -214,13 +233,41 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
                 }
             }
         }
-        
+
         setData2D([dvHeatmap, dv1Isolines, dv2Isolines, tofIsolines])
-    }, [props.porkChopData2D])
+    }, [props.porkChopData2D, selectedPoint])
 
     react.useEffect(() =>
     {
-        if (props.porkChopData3D === null) return
+        if (!selectedPoint) return;
+        
+        const markerTrace: plotly.Data =
+        {
+            x: [selectedPoint.x],
+            y: [selectedPoint.y],
+            mode: "text+markers",
+            type: "scatter",
+            marker: { color: "magenta", size: 12, symbol: "x" },
+            text: ["Selected"],
+            textposition: "top center",
+            hoverinfo: "skip",
+            name: "Selected",
+            textfont: { weight: "bold", size: 16, color: "magenta", family: "Lucida Console Bold" }
+        }
+
+        setSelection([markerTrace])
+    }, [selectedPoint])
+
+    react.useEffect(() =>
+    {
+        if (props.porkChopData3D === null)
+        {
+            setData3D([])
+
+            setSelection([])
+
+            return
+        }
 
         setFlybyDateLength(props.porkChopData3D.flybyDates.length - 1)
 
@@ -233,6 +280,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             type: "contour",
             colorscale: "Cividis",
             reversescale: false,
+            ncontours: 50,
             line:
             {
                 color: "black",
@@ -242,7 +290,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             {
                 coloring: "heatmap",
                 showlabels: true,
-                size: 15,
+                size: 1,
                 showlines: true,
                 type: "levels",
                 labelfont:
@@ -270,6 +318,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "red",
@@ -297,6 +346,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "green",
@@ -324,6 +374,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "yellow",
@@ -351,6 +402,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             hoverinfo: "skip",
             type: "contour",
             showscale: false,
+            ncontours: 50,
             line:
             {
                 color: "white",
@@ -368,9 +420,29 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
                 }
             }
         }
-        
+
         setData3D([dvHeatmap, dv1Isolines, dvGAIsolines, dv2Isolines, tofIsolines])
-    }, [props.porkChopData3D, flybyDateIndex])
+    }, [props.porkChopData3D, flybyDateIndex, selectedPoint])
+
+    react.useEffect(() =>
+    {
+        if (!selectedPoint) return;
+        
+        const markerTrace: plotly.Data =
+        {
+            x: [selectedPoint.x],
+            y: [selectedPoint.y],
+            mode: "text+markers",
+            type: "scatter",
+            marker: { color: "magenta", size: 12, symbol: "x" },
+            text: ["Selected"],
+            textposition: "top center",
+            hoverinfo: "skip",
+            name: "Selected"
+        }
+
+        setSelection([markerTrace])
+    }, [selectedPoint])
 
     // --- HANDLE ---
 
@@ -389,6 +461,8 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             dv2: props.porkChopData2D!.dv2Grid[p.pointIndex[0]][p.pointIndex[1]],
             tofDays: props.porkChopData2D!.tofGrid[p.pointIndex[0]][p.pointIndex[1]]
         })
+
+        setSelectedPoint({ x: p.x as string, y: p.y as string })
     }
 
     const handleClick3D = (e: plotly.PlotMouseEvent) =>
@@ -410,11 +484,13 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             tof2Days: props.porkChopData3D!.tof2Grid[p.pointIndex[0]][p.pointIndex[1]],
             tofDays: props.porkChopData3D!.tofGrid[p.pointIndex[0]][p.pointIndex[1]]
         })
+
+        setSelectedPoint({ x: p.x as string, y: p.y as string })
     }
 
-    const handleLayer = (e: react.ChangeEvent<HTMLInputElement>) =>
+    const handleLayer = (e: react.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     {
-        const index: number = Number(e.target.value)
+        const index: number = Math.round(Number(e.target.value))
 
         const A = props.porkChopData3D!.arrivalDates.length
         const L = props.porkChopData3D!.launchDates.length
@@ -470,7 +546,7 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
             props.porkChopData2D && 
 
             <Plot
-                data={data2D ?? []}
+                data={[...(data2D ?? []), ...(selection ?? [])]}
                 layout={layout}
                 style={{ width: "100%", height: "100%" }}
                 config={config}
@@ -483,9 +559,9 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
 
             <>
 
-                <div className="absolute left-100 z-2 flex">
+                <div className="absolute left-0 -top-4 z-2 flex">
 
-                    <FormInput
+                    {/* <FormInput
                         label={`Flyby Date: ${props.porkChopData3D.flybyDates[flybyDateIndex]}`}
                         type="range"
                         name="flybyDate"
@@ -493,12 +569,27 @@ export default function InterplanetaryMainPlot(props: Readonly<InterplanetaryMai
                         max={flybyDateLength}
                         value={flybyDateIndex}
                         setValue={handleLayer}
-                    />
+                    /> */}
+
+                    <Form.Root>
+
+                        <InputField
+                            type="range"
+                            label={`Flyby Date: ${props.porkChopData3D.flybyDates[flybyDateIndex]}`}
+                            name="flybyDate"
+                            symbol="t^{FB}"
+                            value={flybyDateIndex}
+                            onChange={handleLayer}
+                            min={0}
+                            max={flybyDateLength}
+                        />
+
+                    </Form.Root>
 
                 </div>
 
                 <Plot
-                    data={data3D ?? []}
+                    data={[...(data3D ?? []), ...(selection ?? [])]}
                     key={flybyDateIndex}
                     layout={layout}
                     style={{ width: "100%", height: "100%" }}

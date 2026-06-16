@@ -55,8 +55,8 @@ BODIES: dict[Attractor, Body] = {}
 
 BODIES[Attractor.SUN] = Body(
     name=Attractor.SUN,
-    mu=132712440041.93938 * u.km**3 / u.s**2,
-    R_E=695700.0 * u.km,
+    mu=132_712_440_041.93938 * u.km**3 / u.s**2,
+    R_E=695_700.0 * u.km,
     J2=None,
     f=None,
     omega=(2 * np.pi / (25.38 * 86400)) * u.rad / u.s,
@@ -68,8 +68,8 @@ BODIES[Attractor.SUN] = Body(
 
 BODIES[Attractor.MERCURY] = Body(
     name=Attractor.MERCURY,
-    mu=22031.86855 * u.km**3 / u.s**2,
-    R_E=2439.7 * u.km,
+    mu=22_031.86855 * u.km**3 / u.s**2,
+    R_E=2_439.7 * u.km,
     J2=None,
     f=None,
     omega=(2 * np.pi / (58.646 * 86400)) * u.rad / u.s,
@@ -81,8 +81,8 @@ BODIES[Attractor.MERCURY] = Body(
 
 BODIES[Attractor.VENUS] = Body(
     name=Attractor.VENUS,
-    mu=324858.592 * u.km**3 / u.s**2,
-    R_E=6051.8 * u.km,
+    mu=324_858.592 * u.km**3 / u.s**2,
+    R_E=6_051.8 * u.km,
     J2=None,
     f=None,
     omega=(-2 * np.pi / (243.025 * 86400)) * u.rad / u.s,  # ? Retrograde
@@ -94,21 +94,21 @@ BODIES[Attractor.VENUS] = Body(
 
 BODIES[Attractor.EARTH] = Body(
     name=Attractor.EARTH,
-    mu=398600.4418 * u.km**3 / u.s**2,
-    R_E=6378.1363 * u.km,
+    mu=398_600.4418 * u.km**3 / u.s**2,
+    R_E=6_378.1363 * u.km,
     J2=1.08262668e-3 * u.one,
     f=1 / 298.257223563 * u.one,
     omega=7.2921150e-5 * u.rad / u.s,
     M=5.972168e24 * u.kg,
     g_0=9.80665 * u.m / u.s**2,
     T_S=365.256_363_004 * u.day,
-    semi_major_axis=149_598_023 * u.km
+    semi_major_axis=1 * u.AU # * 149_597_870.7
 )
 
 BODIES[Attractor.MOON] = Body(
     name=Attractor.MOON,
-    mu=4902.800066 * u.km**3 / u.s**2,
-    R_E=1737.4 * u.km,
+    mu=4_902.800066 * u.km**3 / u.s**2,
+    R_E=1_737.4 * u.km,
     J2=2.03263e-4 * u.one,
     f=None,
     omega=(2 * np.pi / (27.321661 * 86400)) * u.rad / u.s,
@@ -120,8 +120,8 @@ BODIES[Attractor.MOON] = Body(
 
 BODIES[Attractor.MARS] = Body(
     name=Attractor.MARS,
-    mu=42828.375214 * u.km**3 / u.s**2,
-    R_E=3396.19 * u.km,
+    mu=42_828.375214 * u.km**3 / u.s**2,
+    R_E=3_396.19 * u.km,
     J2=1.96045e-3 * u.one,
     f=1 / 169.8 * u.one,
     omega=7.0882181e-5 * u.rad / u.s,
@@ -133,8 +133,8 @@ BODIES[Attractor.MARS] = Body(
 
 BODIES[Attractor.JUPITER] = Body(
     name=Attractor.JUPITER,
-    mu=126686511.0 * u.km**3 / u.s**2,
-    R_E=71492.0 * u.km,
+    mu=126_686_511.0 * u.km**3 / u.s**2,
+    R_E=71_492.0 * u.km,
     J2=1.4697e-2 * u.one,
     f=0.06487 * u.one,
     omega=1.75853e-4 * u.rad / u.s,
@@ -146,8 +146,8 @@ BODIES[Attractor.JUPITER] = Body(
 
 BODIES[Attractor.SATURN] = Body(
     name=Attractor.SATURN,
-    mu=37931207.8 * u.km**3 / u.s**2,
-    R_E=60268.0 * u.km,
+    mu=37_931_190.0 * u.km**3 / u.s**2,
+    R_E=60_268.0 * u.km,
     J2=1.6298e-2 * u.one,
     f=0.09796 * u.one,
     omega=1.63788e-4 * u.rad / u.s,
@@ -159,34 +159,34 @@ BODIES[Attractor.SATURN] = Body(
 
 BODIES[Attractor.URANUS] = Body(
     name=Attractor.URANUS,
-    mu=5793951.0 * u.km**3 / u.s**2,
-    R_E=25559.0 * u.km,
+    mu=5_793_940.0 * u.km**3 / u.s**2,
+    R_E=25_559.0 * u.km,
     J2=3.34343e-3 * u.one,
     f=0.02293 * u.one,
     omega=(-1.01237e-4) * u.rad / u.s,  # ? Retrograde
     M=8.6810e25 * u.kg,
     g_0=8.69 * u.m / u.s**2,
     T_S=30_688.500_000_000 * u.day,
-    semi_major_axis=19.191_260 * u.AU
+    semi_major_axis=19.218_400 * u.AU
 )
 
 BODIES[Attractor.NEPTUNE] = Body(
     name=Attractor.NEPTUNE,
-    mu=6836529.0 * u.km**3 / u.s**2,
-    R_E=24764.0 * u.km,
+    mu=6_836_529.0 * u.km**3 / u.s**2,
+    R_E=24_764.0 * u.km,
     J2=3.411e-3 * u.one,
     f=0.01708 * u.one,
     omega=1.08339e-4 * u.rad / u.s,
     M=1.02413e26 * u.kg,
     g_0=11.15 * u.m / u.s**2,
     T_S=60_195.000_000_000 * u.day,
-    semi_major_axis=30.070 * u.AU
+    semi_major_axis=30.110 * u.AU
 )
 
 BODIES[Attractor.PLUTO] = Body(
     name=Attractor.PLUTO,
-    mu=872.4 * u.km**3 / u.s**2,
-    R_E=1188.3 * u.km,
+    mu=871.9 * u.km**3 / u.s**2,
+    R_E=1_151.0 * u.km,
     J2=None,
     f=None,
     omega=(-1.138e-5) * u.rad / u.s,
@@ -202,12 +202,14 @@ def get_body(attractor: Attractor) -> Body: return BODIES[attractor]
 
 julian_century: u.Unit = 36525 * u.day
 
+# ? Planetary ephemeris for the epoch January 1, 2000
+
 EPHEMERIDES: typing.Dict[Attractor, typing.Tuple[PlanetaryOrbitalElements, PlanetaryOrbitalElementsCentennialRates]] = {}
 
 EPHEMERIDES[Attractor.MERCURY] = (
     PlanetaryOrbitalElements(
         semi_major_axis=0.38709927 * u.AU,
-        eccentricity=0.20563593 * u.dimensionless_unscaled,
+        eccentricity=0.20563593 * u.one,
         inclination=7.00497902 * u.deg,
         right_ascension_of_ascending_node=48.33076593 * u.deg,
         longitude_of_perihelion=77.45779628 * u.deg,
@@ -215,7 +217,7 @@ EPHEMERIDES[Attractor.MERCURY] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=0.00000037 * u.AU / julian_century,
-        eccentricity=0.00001906 * u.dimensionless_unscaled / julian_century,
+        eccentricity=0.00001906 * u.one / julian_century,
         inclination=-0.00594749 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.12534081 * u.deg / julian_century,
         longitude_of_perihelion=0.16047689 * u.deg / julian_century,
@@ -226,7 +228,7 @@ EPHEMERIDES[Attractor.MERCURY] = (
 EPHEMERIDES[Attractor.VENUS] = (
     PlanetaryOrbitalElements(
         semi_major_axis=0.72333566 * u.AU,
-        eccentricity=0.00677672 * u.dimensionless_unscaled,
+        eccentricity=0.00677672 * u.one,
         inclination=3.39467605 * u.deg,
         right_ascension_of_ascending_node=76.67984255 * u.deg,
         longitude_of_perihelion=131.60246717 * u.deg,
@@ -234,7 +236,7 @@ EPHEMERIDES[Attractor.VENUS] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=0.00000390 * u.AU / julian_century,
-        eccentricity=-0.00004107 * u.dimensionless_unscaled / julian_century,
+        eccentricity=-0.00004107 * u.one / julian_century,
         inclination=-0.00078890 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.27769418 * u.deg / julian_century,
         longitude_of_perihelion=0.00268329 * u.deg / julian_century,
@@ -245,7 +247,7 @@ EPHEMERIDES[Attractor.VENUS] = (
 EPHEMERIDES[Attractor.EARTH] = (
     PlanetaryOrbitalElements(
         semi_major_axis=1.00000261 * u.AU,
-        eccentricity=0.01671123 * u.dimensionless_unscaled,
+        eccentricity=0.01671123 * u.one,
         inclination=-0.00001531 * u.deg,
         right_ascension_of_ascending_node=0.0 * u.deg,
         longitude_of_perihelion=102.93768193 * u.deg,
@@ -253,7 +255,7 @@ EPHEMERIDES[Attractor.EARTH] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=0.00000562 * u.AU / julian_century,
-        eccentricity=-0.00004932 * u.dimensionless_unscaled / julian_century,
+        eccentricity=-0.00004932 * u.one / julian_century,
         inclination=-0.01294668 * u.deg / julian_century,
         right_ascension_of_ascending_node=0.0 * u.deg / julian_century,
         longitude_of_perihelion=0.32327364 * u.deg / julian_century,
@@ -264,7 +266,7 @@ EPHEMERIDES[Attractor.EARTH] = (
 EPHEMERIDES[Attractor.MARS] = (
     PlanetaryOrbitalElements(
         semi_major_axis=1.52371034 * u.AU,
-        eccentricity=0.09339410 * u.dimensionless_unscaled,
+        eccentricity=0.09339410 * u.one,
         inclination=1.84969142 * u.deg,
         right_ascension_of_ascending_node=49.55953891 * u.deg,
         longitude_of_perihelion=(360 - 23.94362959) * u.deg,
@@ -272,7 +274,7 @@ EPHEMERIDES[Attractor.MARS] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=0.0001847 * u.AU / julian_century,
-        eccentricity=0.00007882 * u.dimensionless_unscaled / julian_century,
+        eccentricity=0.00007882 * u.one / julian_century,
         inclination=-0.00813131 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.29257343 * u.deg / julian_century,
         longitude_of_perihelion=0.44441088 * u.deg / julian_century,
@@ -283,7 +285,7 @@ EPHEMERIDES[Attractor.MARS] = (
 EPHEMERIDES[Attractor.JUPITER] = (
     PlanetaryOrbitalElements(
         semi_major_axis=5.20288700 * u.AU,
-        eccentricity=0.04838624 * u.dimensionless_unscaled,
+        eccentricity=0.04838624 * u.one,
         inclination=1.30439695 * u.deg,
         right_ascension_of_ascending_node=100.47390909 * u.deg,
         longitude_of_perihelion=14.72847983 * u.deg,
@@ -291,7 +293,7 @@ EPHEMERIDES[Attractor.JUPITER] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=-0.00011607 * u.AU / julian_century,
-        eccentricity=0.00013253 * u.dimensionless_unscaled / julian_century,
+        eccentricity=0.00013253 * u.one / julian_century,
         inclination=-0.00183714 * u.deg / julian_century,
         right_ascension_of_ascending_node=0.20469106 * u.deg / julian_century,
         longitude_of_perihelion=0.21252668 * u.deg / julian_century,
@@ -302,7 +304,7 @@ EPHEMERIDES[Attractor.JUPITER] = (
 EPHEMERIDES[Attractor.SATURN] = (
     PlanetaryOrbitalElements(
         semi_major_axis=9.53667594 * u.AU,
-        eccentricity=0.05386179 * u.dimensionless_unscaled,
+        eccentricity=0.05386179 * u.one,
         inclination=2.48599187 * u.deg,
         right_ascension_of_ascending_node=113.66242448 * u.deg,
         longitude_of_perihelion=92.59887831 * u.deg,
@@ -310,7 +312,7 @@ EPHEMERIDES[Attractor.SATURN] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=-0.00125060 * u.AU / julian_century,
-        eccentricity=-0.00050991 * u.dimensionless_unscaled / julian_century,
+        eccentricity=-0.00050991 * u.one / julian_century,
         inclination=0.00193609 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.28867794 * u.deg / julian_century,
         longitude_of_perihelion=-0.41897216 * u.deg / julian_century,
@@ -321,7 +323,7 @@ EPHEMERIDES[Attractor.SATURN] = (
 EPHEMERIDES[Attractor.URANUS] = (
     PlanetaryOrbitalElements(
         semi_major_axis=19.18916464 * u.AU,
-        eccentricity=0.04725744 * u.dimensionless_unscaled,
+        eccentricity=0.04725744 * u.one,
         inclination=0.77263783 * u.deg,
         right_ascension_of_ascending_node=74.01692503 * u.deg,
         longitude_of_perihelion=170.95427630 * u.deg,
@@ -329,7 +331,7 @@ EPHEMERIDES[Attractor.URANUS] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=-0.00196176 * u.AU / julian_century,
-        eccentricity=-0.00004397 * u.dimensionless_unscaled / julian_century,
+        eccentricity=-0.00004397 * u.one / julian_century,
         inclination=-0.00242939 * u.deg / julian_century,
         right_ascension_of_ascending_node=0.04240589 * u.deg / julian_century,
         longitude_of_perihelion=0.40805281 * u.deg / julian_century,
@@ -340,7 +342,7 @@ EPHEMERIDES[Attractor.URANUS] = (
 EPHEMERIDES[Attractor.NEPTUNE] = (
     PlanetaryOrbitalElements(
         semi_major_axis=30.06992276 * u.AU,
-        eccentricity=0.00859048 * u.dimensionless_unscaled,
+        eccentricity=0.00859048 * u.one,
         inclination=1.77004347 * u.deg,
         right_ascension_of_ascending_node=131.78422574 * u.deg,
         longitude_of_perihelion=44.96476227 * u.deg,
@@ -348,7 +350,7 @@ EPHEMERIDES[Attractor.NEPTUNE] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=0.00026291 * u.AU / julian_century,
-        eccentricity=0.00005105 * u.dimensionless_unscaled / julian_century,
+        eccentricity=0.00005105 * u.one / julian_century,
         inclination=0.00035372 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.00508664 * u.deg / julian_century,
         longitude_of_perihelion=-0.32241464 * u.deg / julian_century,
@@ -359,7 +361,7 @@ EPHEMERIDES[Attractor.NEPTUNE] = (
 EPHEMERIDES[Attractor.PLUTO] = (
     PlanetaryOrbitalElements(
         semi_major_axis=39.48211675 * u.AU,
-        eccentricity=0.24882730 * u.dimensionless_unscaled,
+        eccentricity=0.24882730 * u.one,
         inclination=17.14001206 * u.deg,
         right_ascension_of_ascending_node=110.30393684 * u.deg,
         longitude_of_perihelion=224.06891629 * u.deg,
@@ -367,7 +369,7 @@ EPHEMERIDES[Attractor.PLUTO] = (
     ),
     PlanetaryOrbitalElementsCentennialRates(
         semi_major_axis=-0.00031596 * u.AU / julian_century,
-        eccentricity=0.00005170 * u.dimensionless_unscaled / julian_century,
+        eccentricity=0.00005170 * u.one / julian_century,
         inclination=0.00004818 * u.deg / julian_century,
         right_ascension_of_ascending_node=-0.01183482 * u.deg / julian_century,
         longitude_of_perihelion=-0.04062942 * u.deg / julian_century,

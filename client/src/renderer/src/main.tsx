@@ -1,3 +1,6 @@
+// Ensure `global` exists for libraries that expect a Node-like global variable (e.g. plotly)
+//(globalThis as any).global = (globalThis as any).global || globalThis
+
 (globalThis as any).CESIUM_BASE_URL = new URL('./cesium/', globalThis.location.href).toString()
 
 import './assets/main.css'

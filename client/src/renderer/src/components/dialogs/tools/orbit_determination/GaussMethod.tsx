@@ -68,8 +68,6 @@ export default function GaussMethodDialog(props: Readonly<Props>): react.JSX.Ele
 
         const [ group, index ] = name.split(".")
 
-        console.log(name, value, group, index)
-
         if (["localSiderealTime", "rightAscension", "declination", "time"].includes(group))
         {
             setFormIn({ ...formIn, [group]: formIn[group].map((v: number, i: number) =>

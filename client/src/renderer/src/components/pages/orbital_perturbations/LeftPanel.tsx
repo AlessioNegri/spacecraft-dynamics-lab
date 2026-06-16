@@ -132,7 +132,7 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
     // --- RENDERING ---
     
     return (
-        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+        <div className="w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative">
 
             <Tooltip title={hide ? "Show" : "Hide"} side="top">
 

@@ -1,36 +1,36 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
 
-import Tooltip from "../Tooltip"
-import FormSection from "../dialogs/FormSection"
-import FormButton from "../dialogs/FormButton"
-import InputField from "../dialogs/InputField"
+import Tooltip from "@renderer/components/Tooltip"
+import InputField from "@renderer/components/dialogs/InputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 const defaultMission: IInterplanetaryMissionForm =
 {
     departureBody: "earth",
-    flybyBody: "",
-    arrivalBody: "neptune",
-    launchWindowStart: "2020-01-01",
-    launchWindowEnd: "2021-12-31",
-    flybyWindowStart: "2025-01-01",
-    flybyWindowEnd: "2025-12-31",
-    arrivalWindowStart: "2030-01-01",
-    arrivalWindowEnd: "2040-12-31",
+    flybyBody: " ",
+    arrivalBody: "mars",//"neptune",
+    launchWindowStart: "2005-05-03",//"2020-01-01",
+    launchWindowEnd: "2005-11-06",//"2021-12-31",
+    flybyWindowStart: "2005-10-01",//"2025-01-01",
+    flybyWindowEnd: "2005-12-31",//"2025-12-31",
+    arrivalWindowStart: "2005-11-26",//"2030-01-01",
+    arrivalWindowEnd: "2007-02-19",//"2040-12-31",
     gridSize: 1
 }
 
-interface InterplanetaryLeftBarProps
+interface Props
 {
     onBodies: (departure: string, flyby: string, arrival: string) => void
     onHide: (hide: boolean) => void
 }
 
 /** @function InterplanetaryLeftBar */
-export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeftBarProps>): react.JSX.Element
+export default function InterplanetaryLeftBar(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -83,18 +83,26 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
         if (!formIn.arrivalWindowStart)   newErrors.windows = "Choose valid arrival start window"
         if (!formIn.arrivalWindowEnd)     newErrors.windows = "Choose valid arrival end window"
 
-        if (formIn.launchWindowStart >= formIn.launchWindowEnd)     newErrors.windows = "Launch window start < launch window end"
-        if (formIn.arrivalWindowStart >= formIn.arrivalWindowEnd)   newErrors.windows = "Arrival window start < arrival window end"
-        if (formIn.launchWindowStart >= formIn.arrivalWindowStart)  newErrors.windows = "Launch window start < arrival window start"
-        
-        if (formIn.flybyBody !== "")
-        {
-            if (formIn.flybyWindowStart >= formIn.flybyWindowEnd)       newErrors.windows = "Flyby window start < flyby window end"
-            if (formIn.flybyWindowStart >= formIn.arrivalWindowStart)   newErrors.windows = "Flyby window start < arrival window start"
-            if (formIn.launchWindowStart >= formIn.flybyWindowStart)    newErrors.windows = "Launch window start < flyby window start"
-        }
+        if (formIn.launchWindowStart >= formIn.launchWindowEnd)
+            newErrors.windows = "Launch window start < launch window end"
 
-        if (formIn.gridSize < 1 || formIn.gridSize > 200) newErrors.resolution = "Grid size must be between 1 and 200"
+        if (formIn.arrivalWindowStart >= formIn.arrivalWindowEnd)
+            newErrors.windows = "Arrival window start < arrival window end"
+
+        if (formIn.launchWindowStart >= formIn.arrivalWindowStart)
+            newErrors.windows = "Launch window start < arrival window start"
+        
+        if (formIn.flybyBody.trim() !== "")
+        {
+            if (formIn.flybyWindowStart >= formIn.flybyWindowEnd)
+                newErrors.windows = "Flyby window start < flyby window end"
+
+            if (formIn.flybyWindowStart >= formIn.arrivalWindowStart)
+                newErrors.windows = "Flyby window start < arrival window start"
+
+            if (formIn.launchWindowStart >= formIn.flybyWindowStart)
+                newErrors.windows = "Launch window start < flyby window start"
+        }
 
         setErrors(newErrors)
 
@@ -107,7 +115,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
 
         if (!validate()) return
 
-        props.onBodies(formIn.departureBody, formIn.flybyBody, formIn.arrivalBody)
+        props.onBodies(formIn.departureBody, formIn.flybyBody.trim(), formIn.arrivalBody)
 
         try
         {
@@ -117,9 +125,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
+            http.checkError(import.meta.url, err)
         }
     }
 
@@ -135,16 +141,14 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
         }
         catch (err)
         {
-            const message: string | null = http.checkError(import.meta.url, err)
-
-            if (message) globalThis.window.api.error(`[${import.meta.url}] ${message}`)
+            http.checkError(import.meta.url, err)
         }
     }
 
     // --- RENDERING ---
 
     return (
-        <div className={`w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative`}>
+        <div className="w-full h-full p-4 overflow-y-auto custom-scrollbar space-y-6 relative">
 
             <Tooltip title={hide ? "Show" : "Hide"} side="top">
 
@@ -158,11 +162,22 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
             </Tooltip>
 
         {
-            !hide && (<form.Root className="space-y-6">
+            !hide &&
+            
+            <Form.Root className="space-y-6">
 
-            {/* Mission Section */}
+                {/* Bodies */}
 
-            <FormSection title="Mission">
+                <div className="flex space-x-4 col-span-full justify-center items-center">
+                
+                    <iconify.Icon
+                        icon="game-icons:solar-system"
+                        width={32}
+                    />
+
+                    <span className="font-bold">BODIES</span>
+
+                </div>
 
                 <InputField
                     label="Departure Body"
@@ -222,20 +237,26 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                         ]}
                 />
 
-            {
-                errors.bodies && <p className="text-red-400 text-sm">{errors.bodies}</p>
-            }
+                { errors.bodies && <ErrorText text={errors.bodies} /> }
 
-            </FormSection>
+                {/* Date Ranges */}
 
-            {/* Date Ranges */}
+                <div className="flex space-x-4 col-span-full justify-center items-center">
+                
+                    <iconify.Icon
+                        icon="clarity:date-solid"
+                        width={32}
+                    />
 
-            <FormSection title="Date Ranges">
+                    <span className="font-bold">DATES</span>
+
+                </div>
 
                 <InputField
                     label="Launch Window Start"
                     type="date"
                     name="launchWindowStart"
+                    symbol="t_0^{LW}"
                     value={formIn.launchWindowStart}
                     onChange={handleChange}
                 />
@@ -244,6 +265,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                     label="Launch Window End"
                     type="date"
                     name="launchWindowEnd"
+                    symbol="t_f^{LW}"
                     value={formIn.launchWindowEnd}
                     onChange={handleChange}
                 />
@@ -257,6 +279,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                             label="Flyby Window Start"
                             type="date"
                             name="flybyWindowStart"
+                            symbol="t_0^{FB}"
                             value={formIn.flybyWindowStart}
                             onChange={handleChange}
                         />
@@ -265,6 +288,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                             label="Flyby Window End"
                             type="date"
                             name="flybyWindowEnd"
+                            symbol="t_f^{FB}"
                             value={formIn.flybyWindowEnd}
                             onChange={handleChange}
                         />
@@ -276,6 +300,7 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                     label="Arrival Window Start"
                     type="date"
                     name="arrivalWindowStart"
+                    symbol="t_0^{AW}"
                     value={formIn.arrivalWindowStart}
                     onChange={handleChange}
                 />
@@ -284,47 +309,53 @@ export default function InterplanetaryLeftBar(props: Readonly<InterplanetaryLeft
                     label="Arrival Window End"
                     type="date"
                     name="arrivalWindowEnd"
+                    symbol="t_f^{AW}"
                     value={formIn.arrivalWindowEnd}
                     onChange={handleChange}
                 />
 
-            {
-                errors.windows && <p className="text-red-400 text-sm">{errors.windows}</p>
-            }
+                { errors.windows && <ErrorText text={errors.windows} /> }
 
-            </FormSection>
+                {/* Settings */}
 
-            {/* Resolution */}
+                <div className="flex space-x-4 col-span-full justify-center items-center">
+                
+                    <iconify.Icon
+                        icon="mdi:settings"
+                        width={32}
+                    />
 
-            <FormSection title="Resolution">
+                    <span className="font-bold">SETTINGS</span>
+
+                </div>
 
                 <InputField
-                    label="Grid Size (days)"
                     type="number"
+                    label="Grid Size"
                     name="gridSize"
+                    symbol="s"
+                    unit="days"
                     min={1}
                     max={200}
                     value={formIn.gridSize}
                     onChange={handleChange}
                 />
 
-            {
-                errors.resolution && <p className="text-red-400 text-sm">{errors.resolution}</p>
-            }
+                {/* Buttons */}
 
-            </FormSection>
+                <div className="flex justify-between">
 
-            {/* Buttons */}
+                    <Themes.Button color="green" variant="outline" disabled={running} onClick={handleSubmit}>
+                        Run Analysis
+                    </Themes.Button>
 
-            <div className="flex justify-between">
+                    <Themes.Button color="red" variant="outline" disabled={!running} onClick={handleStop}>
+                        Stop Analysis
+                    </Themes.Button>
 
-                <FormButton text="Run Analysis" color="green" disabled={running} onClick={handleSubmit} />
+                </div>
 
-                <FormButton text="Stop Analysis" color="red" disabled={!running} onClick={handleStop} />
-
-            </div>
-
-            </form.Root>)
+            </Form.Root>
         }
             
         </div>

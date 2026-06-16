@@ -280,7 +280,7 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
   <div>
     <h3>Transfer</h3>
     <p>
-      With the assumption of circular coplanar planetary orbits, the users can compute the departure, rendezvous (with optimal periapse radius), and flyby parameters for interplanetary trajectories.
+      With the assumption of circular coplanar planetary orbits, the users can compute the departure and rendezvous for interplanetary trajectories.
     </p>
   </div>
 

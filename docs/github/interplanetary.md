@@ -11,5 +11,9 @@ The **Interplanetary Page** allows to study the Pork-Chop of an interplanetary m
 </p>
 
 <p align="center">
+    <img src="../images/interplanetary-page/page-no-flyby.png" width="100%" alt="image">
+</p>
+
+<p align="center">
     <img src="../images/interplanetary-page/page-flyby.png" width="100%" alt="image">
 </p>

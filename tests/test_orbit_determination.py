@@ -90,14 +90,14 @@ def test_timestamp_2_julian_day_2():
     assert np.isclose(jd_1 - jd_2, 17_021.805, 1e-3)
     assert np.isclose(timestamp_1.to_value("jd") - timestamp_2.to_value("jd"), 17_021.805, 1e-3)
 
-def test_julian_day_2_timestamp():
+def test_julian_day_2_timestamp_1():
     """EXAMPLE 5.4"""
     
     jd: float = 2_453_138.115
     
     timestamp_1: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=jd)
     
-    timestamp_2 : time.Time = time.Time(jd, format="jd")
+    timestamp_2: time.Time = time.Time(jd, format="jd")
     
     assert np.isclose(timestamp_1.ymdhms.year, 2004, 1e-0)
     assert np.isclose(timestamp_1.ymdhms.month, 5, 1e-0)
@@ -112,6 +112,29 @@ def test_julian_day_2_timestamp():
     assert np.isclose(timestamp_2.ymdhms.hour, 14, 1e-0)
     assert np.isclose(timestamp_2.ymdhms.minute, 45, 1e-0)
     assert np.isclose(timestamp_2.ymdhms.second, 30, 1e-0)
+
+def test_julian_day_2_timestamp_2():
+    """EXAMPLE - BOOK 2"""
+    
+    jd: float = 2_457_665.0
+    
+    timestamp_1: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=jd)
+    
+    timestamp_2: time.Time = time.Time(jd, format="jd")
+    
+    assert np.isclose(timestamp_1.ymdhms.year, 2016, 1e-0)
+    assert np.isclose(timestamp_1.ymdhms.month, 10, 1e-0)
+    assert np.isclose(timestamp_1.ymdhms.day, 3, 1e-0)
+    assert np.isclose(timestamp_1.ymdhms.hour, 12, 1e-0)
+    assert np.isclose(timestamp_1.ymdhms.minute, 0, 1e-0)
+    assert np.isclose(timestamp_1.ymdhms.second, 0, 1e-0)
+    
+    assert np.isclose(timestamp_2.ymdhms.year, 2016, 1e-0)
+    assert np.isclose(timestamp_2.ymdhms.month, 10, 1e-0)
+    assert np.isclose(timestamp_2.ymdhms.day, 3, 1e-0)
+    assert np.isclose(timestamp_2.ymdhms.hour, 12, 1e-0)
+    assert np.isclose(timestamp_2.ymdhms.minute, 0, 1e-0)
+    assert np.isclose(timestamp_2.ymdhms.second, 0, 1e-0)
 
 def test_local_sidereal_time():
     """EXAMPLE 5.6"""

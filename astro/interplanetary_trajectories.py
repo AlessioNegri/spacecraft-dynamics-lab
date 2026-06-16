@@ -6,6 +6,9 @@ Implementation of interplanetary trajectories algorithms.
 References:
 - Howard D. Curtis, "Orbital Mechanics for Engineering Students"
     - Chapter 8: Interplanetary Trajectories
+
+- Craig A. Kluever, "Space Flight Dynamics"
+    - Chapter 10: Interplanetary Trajectories
 """
 
 __author__      = "Alessio Negri"
@@ -30,12 +33,16 @@ class HyperbolaParameters():
     """Hyperbola Parameters
     """
     
-    specific_angular_momentum: u.Quantity = 0.0 * u.km**2 / u.s
-    eccentricity: u.Quantity = 0.0 * u.dimensionless_unscaled
-    periapse_radius: u.Quantity = 0.0 * u.km
-    asymptote_angle: u.Quantity = 0.0 * u.rad
-    turn_angle: u.Quantity = 0.0 * u.rad
-    aiming_radius: u.Quantity = 0.0 * u.km
+    specific_angular_momentum   : u.Quantity = 0.0 * u.km**2 / u.s
+    eccentricity                : u.Quantity = 0.0 * u.one
+    periapsis_radius            : u.Quantity = 0.0 * u.km
+    asymptote_angle             : u.Quantity = 0.0 * u.rad # ? beta
+    turning_angle               : u.Quantity = 0.0 * u.rad # ? delta
+    aiming_radius               : u.Quantity = 0.0 * u.km # ? Delta
+    specific_energy             : u.Quantity = 0.0 * u.km**2 / u.s**2
+    hyperbolic_excess_speed     : u.Quantity = 0.0 * u.km / u.s
+    characteristic_energy       : u.Quantity = 0.0 * u.km**2 / u.s**2
+    time_of_flight              : u.Quantity = 0.0 * u.s
 
 class FlybySide(enum.IntEnum):
     """Type of fly-by"""
@@ -51,7 +58,8 @@ class InterplanetaryTrajectories():
     
     @staticmethod
     def synodic_period(departure_planet: bd.Attractor, arrival_planet: bd.Attractor) -> u.Quantity:
-        """Calculate the **Synodic Period** for an interplanetary transfer
+        """
+        Calculate the **Synodic Period** for an interplanetary transfer
 
         Args:
             departure_planet (bd.Attractor): Departure planet
@@ -150,10 +158,11 @@ class InterplanetaryTrajectories():
     
     @staticmethod
     def sphere_of_influence(body: bd.Attractor, main_attractor: bd.Attractor) -> u.Quantity:
-        """Calculate the Sphere Of Influence (SOI) of the given body w.r.t. the main attractor
+        """
+        Calculate the Sphere Of Influence (SOI) of the given body w.r.t. the main attractor
 
         Args:
-            body (bd.Attractor): Planet
+            body (bd.Attractor): Planet / Moon
             main_attractor (bd.Attractor): Main attractor
 
         Returns:
@@ -168,9 +177,9 @@ class InterplanetaryTrajectories():
         
         m_body: float = bd.BODIES[body].M.to_value(u.kg)
         
-        m_sun: float = bd.BODIES[main_attractor].M.to_value(u.kg)
+        m_main_attractor: float = bd.BODIES[main_attractor].M.to_value(u.kg)
         
-        return R * (m_body / m_sun)**(2/5) * u.km
+        return R * (m_body / m_main_attractor)**(2/5) * u.km
     
     @staticmethod
     def departure(departure_planet: bd.Attractor,
@@ -182,8 +191,8 @@ class InterplanetaryTrajectories():
         Planet orbits are assumed to be circular and coplanar to simplify the calculations
 
         Args:
-            departurePlanet (CelestialBody): Departure planet
-            arrivalPlanet (CelestialBody): Arrival planet
+            departure_planet (bd.Attractor): Departure planet
+            arrival_planet (bd.Attractor): Arrival planet
             periapse_radius (u.Quantity): Circular Parking Orbit radius
 
         Returns:
@@ -222,6 +231,18 @@ class InterplanetaryTrajectories():
         
         aiming_radius: float = h**2 / mu_1 * 1 / np.sqrt(e**2 - 1)
         
+        p: float = h**2 / mu_1
+        
+        r_SOI: u.Quantity = InterplanetaryTrajectories.sphere_of_influence(body=departure_planet,
+                                                                           main_attractor=bd.Attractor.SUN)
+        
+        theta: float = np.arccos((p / r_SOI.to_value(u.km) - 1) / e)
+        
+        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
+                                                                   specific_angular_momentum=h * u.km**2 / u.s,
+                                                                   eccentricity=e * u.one,
+                                                                   attractor=departure_planet)
+        
         # >>> 3. Circular parking orbit
         
         v_c: float = np.sqrt(mu_1 / r_p)
@@ -231,20 +252,25 @@ class InterplanetaryTrajectories():
         dv: float = np.abs(v_p - v_c)
         
         hyperbola_params: HyperbolaParameters = HyperbolaParameters(specific_angular_momentum=h * u.km**2 / u.s,
-                                                                    eccentricity=e * u.dimensionless_unscaled,
-                                                                    periapse_radius=r_p * u.km,
+                                                                    eccentricity=e * u.one,
+                                                                    periapsis_radius=r_p * u.km,
                                                                     asymptote_angle=asymptote_angle * u.rad,
-                                                                    turn_angle=turn_angle * u.rad,
-                                                                    aiming_radius=aiming_radius * u.km)
+                                                                    turning_angle=turn_angle * u.rad,
+                                                                    aiming_radius=aiming_radius * u.km,
+                                                                    specific_energy=(v_inf * u.km / u.s)**2 / 2,
+                                                                    hyperbolic_excess_speed=v_inf * u.km / u.s,
+                                                                    characteristic_energy=(v_inf * u.km / u.s)**2,
+                                                                    time_of_flight=tof)
         
         return dv * u.km / u.s, hyperbola_params
     
     @staticmethod
-    def rendezvous(departure_planet: bd.Attractor,
-                   arrival_planet: bd.Attractor,
-                   orbit_period : u.Quantity) -> typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]:
+    def rendezvous_with_optimal_periapsis_radius(departure_planet: bd.Attractor,
+                                                 arrival_planet: bd.Attractor,
+                                                 orbit_period: u.Quantity)\
+                                                -> typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]:
         """
-        Planetary arrival hyperbola design with optimal periapse radius
+        Planetary arrival hyperbola design with optimal periapsis radius
         
         r_p_opt = (2 * mu_2 / v_inf**2) * (1 - e) / (1 + e)
 
@@ -269,21 +295,35 @@ class InterplanetaryTrajectories():
         
         R_2: float = bd.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
         
+        R_E_2: float = bd.BODIES[arrival_planet].R_E.to_value(u.km)
+        
         T: float = orbit_period.to_value(u.s)
         
         # >>> 1. Hyperbolic excess speed of the arrival hyperbola (ΔV_ARR = V_PLANET_ARR - V_SC_ARR)
         
         v_inf: float = np.sqrt(mu_sun / R_2) * (1 - np.sqrt(2 * R_1 / (R_1 + R_2)))
         
-        # >>> 2. Capture orbit with optimal periapse radius
+        # >>> 2. Capture orbit with optimal periapsis radius
         
         a: float = (T * np.sqrt(mu_2) / (2 * np.pi))**(2/3) # ? Semi-major axis
         
-        e: float = (2 * mu_2) / (a * v_inf**2) - 1 # ? Eccentricity with optimal periapse radius
+        e: float = (2 * mu_2) / (a * v_inf**2) - 1 # ? Eccentricity with optimal periapsis radius
         
-        r_p: float = (2 * mu_2 / v_inf**2) * (1 - e) / (1 + e) # ? Optimal periapse radius
+        if e < 0 or e > 1:
+            
+            print(f"e = {e} is not valid!")
+            
+            return 0 * u.km / u.s, HyperbolaParameters(), o3d.OrbitalElements()
         
-        oe_capture: o3d.OrbitalElements = o3d.OrbitalElements(0, a * u.km, e * u.dimensionless_unscaled, 0, 0, 0, 0)
+        r_p: float = (2 * mu_2 / v_inf**2) * (1 - e) / (1 + e) # ? Optimal periapsis radius
+        
+        if r_p <= R_E_2:
+            
+            print(f"r_p = {r_p} <= R_planet = {R_E_2} is not valid!")
+            
+            return 0 * u.km / u.s, HyperbolaParameters(), o3d.OrbitalElements()
+        
+        oe_capture: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=a * u.km, eccentricity=e * u.one)
         
         # >>> 3. Hyperbolic trajectory
         
@@ -297,12 +337,28 @@ class InterplanetaryTrajectories():
         
         aiming_radius: float = h_hyp**2 / mu_2 * 1 / np.sqrt(e_hyp**2 - 1)
         
+        p: float = h_hyp**2 / mu_2
+        
+        r_SOI: u.Quantity = InterplanetaryTrajectories.sphere_of_influence(body=arrival_planet,
+                                                                           main_attractor=bd.Attractor.SUN)
+        
+        theta_hyp: float = np.arccos((p / r_SOI.to_value(u.km) - 1) / e_hyp)
+        
+        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
+                                                                   specific_angular_momentum=h_hyp * u.km**2 / u.s,
+                                                                   eccentricity=e_hyp * u.one,
+                                                                   attractor=arrival_planet)
+        
         hyperbola_params: HyperbolaParameters = HyperbolaParameters(specific_angular_momentum=h_hyp * u.km**2 / u.s,
-                                                                    eccentricity=e_hyp * u.dimensionless_unscaled,
-                                                                    periapse_radius=r_p * u.km,
+                                                                    eccentricity=e_hyp * u.one,
+                                                                    periapsis_radius=r_p * u.km,
                                                                     asymptote_angle=asymptote_angle * u.rad,
-                                                                    turn_angle=turn_angle * u.rad,
-                                                                    aiming_radius=aiming_radius * u.km)
+                                                                    turning_angle=turn_angle * u.rad,
+                                                                    aiming_radius=aiming_radius * u.km,
+                                                                    specific_energy=(v_inf * u.km / u.s)**2 / 2,
+                                                                    hyperbolic_excess_speed=v_inf * u.km / u.s,
+                                                                    characteristic_energy=(v_inf * u.km / u.s)**2,
+                                                                    time_of_flight=tof)
         
         # >>> 4. Maneuver
         
@@ -311,10 +367,158 @@ class InterplanetaryTrajectories():
         return dv * u.km / u.s, hyperbola_params, oe_capture
     
     @staticmethod
+    def rendezvous_with_circular_orbit(departure_planet: bd.Attractor,
+                                       arrival_planet: bd.Attractor,
+                                       radius: u.Quantity)\
+                                        -> typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]:
+        """
+        Planetary arrival hyperbola design with circular orbit
+
+        Args:
+            departure_planet (bd.Attractor): Departure planet
+            arrival_planet (bd.Attractor): Arrival planet
+            radius (u.Quantity): Circular Orbit radius
+
+        Returns:
+            typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]: [dv, params, Orbital Elements]
+        """
+        
+        cm.check_attractor(attractor=departure_planet)
+        
+        cm.check_attractor(attractor=arrival_planet)
+        
+        mu_sun: float = bd.BODIES[bd.Attractor.SUN].mu.to_value(u.km**3 / u.s**2)
+        
+        mu_2: float = bd.BODIES[arrival_planet].mu.to_value(u.km**3 / u.s**2)
+        
+        R_1: float = bd.BODIES[departure_planet].semi_major_axis.to_value(u.km)
+        
+        R_2: float = bd.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
+        
+        r_p: float = radius.to_value(u.km)
+        
+        # >>> 1. Hyperbolic excess speed of the arrival hyperbola (ΔV_ARR = V_PLANET_ARR - V_SC_ARR)
+        
+        v_inf: float = np.sqrt(mu_sun / R_2) * (1 - np.sqrt(2 * R_1 / (R_1 + R_2)))
+        
+        # >>> 2. Capture circular orbit
+        
+        oe_capture: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=radius)
+        
+        # >>> 3. Hyperbolic trajectory
+        
+        e_hyp: float = 1 + r_p * v_inf**2 / mu_2 # ? Eccentricity
+        
+        h_hyp: float = r_p * np.sqrt(v_inf**2 + 2 * mu_2 / r_p) # ? Specific angular momentum
+        
+        turn_angle: float = 2 * np.arcsin(1 / e_hyp)
+        
+        asymptote_angle: float = np.arccos(1 / e_hyp) # ? Angle to periapsis
+        
+        aiming_radius: float = r_p / v_inf * np.sqrt(v_inf**2 + 2 * mu_2 / r_p)
+        
+        p: float = h_hyp**2 / mu_2
+        
+        r_SOI: u.Quantity = InterplanetaryTrajectories.sphere_of_influence(body=arrival_planet,
+                                                                           main_attractor=bd.Attractor.SUN)
+        
+        theta_hyp: float = np.arccos((p / r_SOI.to_value(u.km) - 1) / e_hyp)
+        
+        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
+                                                                   specific_angular_momentum=h_hyp * u.km**2 / u.s,
+                                                                   eccentricity=e_hyp * u.one,
+                                                                   attractor=arrival_planet)
+        
+        hyperbola_params: HyperbolaParameters = HyperbolaParameters(specific_angular_momentum=h_hyp * u.km**2 / u.s,
+                                                                    eccentricity=e_hyp * u.one,
+                                                                    periapsis_radius=r_p * u.km,
+                                                                    asymptote_angle=asymptote_angle * u.rad,
+                                                                    turning_angle=turn_angle * u.rad,
+                                                                    aiming_radius=aiming_radius * u.km,
+                                                                    specific_energy=(v_inf * u.km / u.s)**2 / 2,
+                                                                    hyperbolic_excess_speed=v_inf * u.km / u.s,
+                                                                    characteristic_energy=(v_inf * u.km / u.s)**2,
+                                                                    time_of_flight=tof)
+        
+        # >>> 4. Maneuver
+        
+        v_p: float = np.sqrt(v_inf**2 + 2 * mu_2 / r_p)
+        
+        dv: float = v_p - np.sqrt(mu_2 / r_p)
+        
+        return dv * u.km / u.s, hyperbola_params, oe_capture
+    
+    @staticmethod
+    def rendezvous_with_entry_interface(departure_planet: bd.Attractor,
+                                        arrival_planet: bd.Attractor,
+                                        radius: u.Quantity,
+                                        flight_path_angle: u.Quantity)\
+                                        -> typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]:
+        """
+        Planetary arrival hyperbola design with given entry interface (EI) conditions
+
+        Args:
+            departure_planet (bd.Attractor): Departure planet
+            arrival_planet (bd.Attractor): Arrival planet
+            radius (u.Quantity): Entry interface radius
+            flight_path_angle (u.Quantity): Entry interface flight path angle
+
+        Returns:
+            typing.Tuple[u.Quantity, HyperbolaParameters, o3d.OrbitalElements]: [dv, params, Orbital Elements]
+        """
+        
+        cm.check_attractor(attractor=departure_planet)
+        
+        cm.check_attractor(attractor=arrival_planet)
+        
+        cm.check_angle(angle=flight_path_angle.to_value(u.deg))
+        
+        mu_sun: float = bd.BODIES[bd.Attractor.SUN].mu.to_value(u.km**3 / u.s**2)
+        
+        mu_2: float = bd.BODIES[arrival_planet].mu.to_value(u.km**3 / u.s**2)
+        
+        R_1: float = bd.BODIES[departure_planet].semi_major_axis.to_value(u.km)
+        
+        R_2: float = bd.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
+        
+        r_EI: float = radius.to_value(u.km)
+        
+        fpa_EI: float = flight_path_angle.to_value(u.rad)
+        
+        # >>> 1. Hyperbolic excess speed of the arrival hyperbola (ΔV_ARR = V_PLANET_ARR - V_SC_ARR)
+        
+        v_inf: float = np.sqrt(mu_sun / R_2) * (1 - np.sqrt(2 * R_1 / (R_1 + R_2)))
+        
+        # >>> 2. Entry interface
+        
+        v_EI: float = np.sqrt(v_inf**2 + 2 * mu_2 / r_EI)
+        
+        # >>> 3. Hyperbolic trajectory
+        
+        h_hyp: float = r_EI * v_EI * np.cose(fpa_EI) # ? Specific angular momentum
+        
+        aiming_radius: float = (r_EI * np.cos(fpa_EI)) / v_inf * np.sqrt(v_inf**2 + 2 * mu_2 / r_EI)
+        
+        hyperbola_params: HyperbolaParameters = HyperbolaParameters(specific_angular_momentum=h_hyp * u.km**2 / u.s,
+                                                                    eccentricity=0 * u.one,
+                                                                    periapsis_radius=0 * u.km,
+                                                                    asymptote_angle=0 * u.rad,
+                                                                    turning_angle=0 * u.rad,
+                                                                    aiming_radius=aiming_radius * u.km,
+                                                                    specific_energy=(v_inf * u.km / u.s)**2 / 2,
+                                                                    hyperbolic_excess_speed=v_inf * u.km / u.s,
+                                                                    characteristic_energy=(v_inf * u.km / u.s)**2,
+                                                                    time_of_flight=0 * u.s)
+        
+        # >>> 4. Maneuver
+        
+        return 0 * u.km / u.s, hyperbola_params, o3d.OrbitalElements()
+    
+    @staticmethod
     def flyby(departure_planet: bd.Attractor,
               arrival_planet: bd.Attractor,
-              periapse_radius: u.Quantity,
-              nu_1: u.Quantity,
+              periapsis_radius: u.Quantity,
+              true_anomaly_incoming: u.Quantity,
               side: FlybySide = FlybySide.DARK_SIDE)\
     -> typing.Tuple[o3d.OrbitalElements, HyperbolaParameters, o3d.OrbitalElements]:
         """
@@ -325,8 +529,8 @@ class InterplanetaryTrajectories():
         Args:
             departure_planet (bd.Attractor): Departure planet
             arrival_planet (bd.Attractor): Arrival planet
-            periapse_radius (u.Quantity): Hyperbola periapse radius
-            nu_1 (u.Quantity): True anomaly of the incoming trajectory
+            periapse_radius (u.Quantity): Hyperbola periapsis radius
+            true_anomaly_incoming (u.Quantity): True anomaly of the incoming trajectory
             side (FlybySide, optional): Side w.r.t. Sun. Defaults to FlybySide.DARK_SIDE.
 
         Returns:
@@ -338,7 +542,7 @@ class InterplanetaryTrajectories():
         
         cm.check_attractor(attractor=arrival_planet)
         
-        cm.check_angle(angle=nu_1.to_value(u.deg))
+        cm.check_angle(angle=true_anomaly_incoming.to_value(u.deg))
         
         mu_sun: float = bd.BODIES[bd.Attractor.SUN].mu.to_value(u.km**3 / u.s**2)
         
@@ -348,24 +552,23 @@ class InterplanetaryTrajectories():
         
         R_2: float = bd.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
         
-        r_p: float = periapse_radius.to_value(u.km)
+        r_p: float = periapsis_radius.to_value(u.km)
         
-        nu_1: float = nu_1.to_value(u.rad)
+        ta_1: float = true_anomaly_incoming.to_value(u.rad)
         
         # >>> 1. Preflyby ellipse (orbit 1) - Heliocentric frame
         
-        e_1: float = (R_1 - R_2) / (R_1 + R_2 * np.cos(nu_1)) # ? Eccentricity
+        e_1: float = (R_1 - R_2) / (R_1 + R_2 * np.cos(ta_1)) # ? Eccentricity
         
         h_1: float = np.sqrt(mu_sun * R_1 * (1 - e_1)) # ? Specific angular momentum
         
-        V_t_1: float = mu_sun / h_1 * (1 + e_1 * np.cos(nu_1)) # ? Transverse velocity
+        V_t_1: float = mu_sun / h_1 * (1 + e_1 * np.cos(ta_1)) # ? Transverse velocity
         
-        V_r_1: float = mu_sun / h_1 * e_1 * np.sin(nu_1) # ? Radial velocity
+        V_r_1: float = mu_sun / h_1 * e_1 * np.sin(ta_1) # ? Radial velocity
         
-        oe_1: o3d.OrbitalElements = o3d.OrbitalElements(h_1 * u.km**2 / u.s,
-                                                        0 * u.km,
-                                                        e_1 * u.dimensionless_unscaled,
-                                                        0, 0, 0, 0)
+        oe_1: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h_1 * u.km**2 / u.s,
+                                                        eccentricity=e_1 * u.one,
+                                                        true_anomaly=ta_1 * u.rad)
         
         # >>> 2. Flyby hyperbola - Planetocentric frame (u_v, u_s)
         
@@ -389,12 +592,28 @@ class InterplanetaryTrajectories():
         
         phi_1: float = np.arctan(v_inf_1[1] / v_inf_1[0]) # ? Angle between v_inf_1 and V_planet (inbound)
         
+        p: float = h_hyp**2 / mu_2
+        
+        r_SOI: u.Quantity = InterplanetaryTrajectories.sphere_of_influence(body=arrival_planet,
+                                                                           main_attractor=bd.Attractor.SUN)
+        
+        theta: float = np.arccos((p / r_SOI.to_value(u.km) - 1) / e_hyp)
+        
+        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
+                                                                   specific_angular_momentum=h_hyp * u.km**2 / u.s,
+                                                                   eccentricity=e_hyp * u.one,
+                                                                   attractor=arrival_planet)
+        
         hyperbola_params: HyperbolaParameters = HyperbolaParameters(specific_angular_momentum=h_hyp * u.km**2 / u.s,
-                                                                    eccentricity=e_hyp * u.dimensionless_unscaled,
-                                                                    periapse_radius=r_p * u.km,
+                                                                    eccentricity=e_hyp * u.one,
+                                                                    periapsis_radius=r_p * u.km,
                                                                     asymptote_angle=asymptote_angle * u.rad,
-                                                                    turn_angle=turn_angle * u.rad,
-                                                                    aiming_radius=aiming_radius * u.km)
+                                                                    turning_angle=turn_angle * u.rad,
+                                                                    aiming_radius=aiming_radius * u.km,
+                                                                    specific_energy=(v_inf_1_norm * u.km / u.s)**2 / 2,
+                                                                    hyperbolic_excess_speed=v_inf_1_norm * u.km / u.s,
+                                                                    characteristic_energy=(v_inf_1_norm * u.km / u.s)**2,
+                                                                    time_of_flight=tof)
         
         # >>> 3. Approach
         
@@ -424,14 +643,13 @@ class InterplanetaryTrajectories():
         
         e_sin: float = V_r_2 * h_2 / mu_sun # ? e_2 * sin(nu_2)
         
-        nu_2: float = np.arctan2(e_sin, e_cos)
+        ta_2: float = np.arctan2(e_sin, e_cos)
         
-        e_2: float = e_sin / np.sin(nu_2)
+        e_2: float = e_sin / np.sin(ta_2)
         
-        oe_2: o3d.OrbitalElements = o3d.OrbitalElements(h_2 * u.km**2 / u.s,
-                                                        0 * u.km,
-                                                        e_2 * u.dimensionless_unscaled,
-                                                        0, 0, 0, 0)
+        oe_2: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h_2 * u.km**2 / u.s,
+                                                        eccentricity=e_2 * u.one,
+                                                        true_anomaly=ta_2 * u.rad)
         
         # >>> 5. Maneuver
         
@@ -440,7 +658,7 @@ class InterplanetaryTrajectories():
     @staticmethod
     def ephemeris(planet: bd.Attractor, timestamp: time.Time) -> typing.List[u.Quantity]:
         """
-        Evaluates the ephemeris for a given planet and timestamp
+        Evaluate the ephemeris for a given planet and timestamp
         
         Determine the state vector of a planet at a given date and time. All angular calculations must be adjusted so
         that they lie in the range 0° - 360° (except for inclination, which must be in the range -90° - 90°).
@@ -461,7 +679,7 @@ class InterplanetaryTrajectories():
         
         # >>> 2. Number of Julian centuries between J2000 and the given timestamp
         
-        T_0: u.Quantity = (JD - 2_451_545) / 36_525 * bd.julian_century
+        T_0: u.Quantity = (JD - od.OrbitDetermination.J2000) / 36_525 * bd.julian_century
         
         # >>> 3. Orbital elements
         
@@ -479,9 +697,9 @@ class InterplanetaryTrajectories():
         
         mean_longitude: u.Quantity = cm.wrap_angle(poe.mean_longitude + dpoe_dt.mean_longitude * T_0)
         
-        # >>> 4. Angular momentum
+        # >>> 4. Specific angular momentum
         
-        h: u.Quantity = np.sqrt(mu_sun * semi_major_axis.to_value(u.km) * (1 - eccentricity.to_value(u.dimensionless_unscaled)**2)) * u.km**2 / u.s
+        h: u.Quantity = np.sqrt(mu_sun * semi_major_axis.to_value(u.km) * (1 - eccentricity.to_value(u.one)**2)) * u.km**2 / u.s
         
         # >>> 5. Argument of Perihelion and Mean Anomaly
         
@@ -499,17 +717,19 @@ class InterplanetaryTrajectories():
         
         t: u.Quantity = mean_anomaly.to(u.rad) * period / (2 * np.pi * u.rad)
         
-        nu: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t, period=period, eccentricity=eccentricity)
+        ta: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t,
+                                                                          period=period,
+                                                                          eccentricity=eccentricity)
         
         # >>> 7. State vector
         
-        oe: o3d.OrbitalElements = o3d.OrbitalElements(h,
-                                                      semi_major_axis,
-                                                      eccentricity,
-                                                      inclination,
-                                                      right_ascension_of_ascending_node,
-                                                      argument_of_perihelion,
-                                                      nu)
+        oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h,
+                                                      semimajor_axis=semi_major_axis,
+                                                      eccentricity=eccentricity,
+                                                      inclination=inclination,
+                                                      right_ascension_of_ascending_node=right_ascension_of_ascending_node,
+                                                      argument_of_periapsis=argument_of_perihelion,
+                                                      true_anomaly=ta)
         
         r_HEF, v_HEF = o3d.Orbit3D.keplerian_to_cartesian(attractor=bd.Attractor.SUN, orbital_elements=oe)
         
@@ -552,7 +772,7 @@ class InterplanetaryTrajectories():
         
         period_arrival: float = arrival_orbit_period.to_value(u.s)
         
-        r_p_A: float = arrival_periapse_radius.to_value(u.km)
+        r_p_arrival: float = arrival_periapse_radius.to_value(u.km)
         
         mu_departure: float = bd.BODIES[departure_planet].mu.to_value(u.km**3 / u.s**2)
         
@@ -589,13 +809,13 @@ class InterplanetaryTrajectories():
     
         a_A: float = (period_arrival * np.sqrt(mu_arrival) / (2 * np.pi))**(2/3)
         
-        e_A: float = 1 - r_p_A / a_A
+        e_A: float = 1 - r_p_arrival / a_A
         
-        v_p_A: float = np.sqrt(mu_arrival * (1 + e_A) / r_p_A)
+        v_p_A: float = np.sqrt(mu_arrival * (1 + e_A) / r_p_arrival)
         
         # >>> b. Hyperbola trajectory
         
-        v_p_hyp: float = np.sqrt(np.linalg.norm(v_inf_A)**2 + 2 * mu_arrival / r_p_A)
+        v_p_hyp: float = np.sqrt(np.linalg.norm(v_inf_A)**2 + 2 * mu_arrival / r_p_arrival)
         
         # >>> c. Maneuver
         

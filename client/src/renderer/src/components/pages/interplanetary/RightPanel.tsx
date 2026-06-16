@@ -1,14 +1,14 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
+import * as Themes from "@radix-ui/themes"
 import { InlineMath } from "react-katex"
 
 import http from "@renderer/common/http"
 
-import Tooltip from "../Tooltip"
-import FormSection from "../dialogs/FormSection"
-import InputField from "../dialogs/InputField"
-import OutputField from "../dialogs/OutputField"
+import Tooltip from "@renderer/components/Tooltip"
+import InputField from "../../dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
 
 interface IFormIn
 {
@@ -48,7 +48,7 @@ const defaultOut: IFormOut =
     arrivalDeltaV: 0
 }
 
-interface InterplanetaryRightBarProps
+interface Props
 {
     departureBody: string
     flybyBody: string
@@ -58,7 +58,7 @@ interface InterplanetaryRightBarProps
 }
 
 /** @function InterplanetaryRightBar */
-export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRightBarProps>): react.JSX.Element
+export default function InterplanetaryRightBar(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -91,27 +91,27 @@ export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRig
         }
 
         setFormIn(updated)
-
-        const request = async () =>
-        {
-            try
-            {
-                let response: any = await http.api.post(`/interplanetary/optimal-transfer`, updated)
-
-                const result: IFormOut = response.data
-                
-                setFormOut(result)
-            }
-            catch (err)
-            {
-                http.checkError(import.meta.url, err)
-            }
-        }
-
-        request()
+        
+        request(updated)
     }, [props.info])
 
     // --- HANDLE ---
+
+    const request = async (data: IFormIn) =>
+    {
+        try
+        {
+            let response: any = await http.api.post(`/interplanetary/optimal-transfer`, data)
+
+            const result: IFormOut = response.data
+            
+            setFormOut(result)
+        }
+        catch (err)
+        {
+            http.checkError(import.meta.url, err)
+        }
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     {
@@ -154,18 +154,42 @@ export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRig
                 props.info &&
                 <>
                     {/* Bodies */}
+                    
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                    
+                        <iconify.Icon
+                            icon="game-icons:solar-system"
+                            width={32}
+                        />
+    
+                        <span className="font-bold">BODIES</span>
+    
+                    </div>
 
-                    <FormSection title="Bodies">
+                    <div className="flex flex-col gap-2">
 
                         <Field title="Departure" value={props.departureBody} />
-                        
+
+                        { props.flybyBody && <Field title="Flyby" value={props.flybyBody} /> }
+
                         <Field title="Arrival" value={props.arrivalBody} />
 
-                    </FormSection>
+                    </div>
 
                     {/* Dates */}
 
-                    <FormSection title="Dates">
+                    <div className="flex space-x-4 col-span-full justify-center items-center">
+                                    
+                        <iconify.Icon
+                            icon="clarity:date-solid"
+                            width={32}
+                        />
+    
+                        <span className="font-bold">DATES</span>
+    
+                    </div>
+
+                    <div className="flex flex-col gap-2">
 
                         <Field title="Launch" value={props.info.launchDate} />
 
@@ -177,11 +201,11 @@ export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRig
                         props.info.tof1Days &&
                         <>
                         
-                            <Field title="TOF 1" value={String(props.info.tof1Days) + " days"} />
+                            <Field title="TOF 1" value={props.info.tof1Days.toFixed(0) + " days"} />
 
-                            <Field title="" value={Number(props.info.tof1Days / 365).toFixed(0) + " years"} />
+                            {/* <Field title="" value={Number(props.info.tof1Days / 365).toFixed(0) + " years"} /> */}
 
-                            <Field title="" value={Number(props.info.tof1Days * 24).toFixed(0) + " hours"} />
+                            {/* <Field title="" value={Number(props.info.tof1Days * 24).toFixed(0) + " hours"} /> */}
 
                         </>
                     }
@@ -190,82 +214,149 @@ export default function InterplanetaryRightBar(props: Readonly<InterplanetaryRig
                         props.info.tof2Days &&
                         <>
                         
-                            <Field title="TOF 2" value={String(props.info.tof2Days) + " days"} />
+                            <Field title="TOF 2" value={props.info.tof2Days.toFixed(0) + " days"} />
 
-                            <Field title="" value={Number(props.info.tof2Days / 365).toFixed(0) + " years"} />
+                            {/* <Field title="" value={Number(props.info.tof2Days / 365).toFixed(0) + " years"} /> */}
 
-                            <Field title="" value={Number(props.info.tof2Days * 24).toFixed(0) + " hours"} />
+                            {/* <Field title="" value={Number(props.info.tof2Days * 24).toFixed(0) + " hours"} /> */}
 
                         </>
                     }
 
-                        <Field title="TOF" value={String(props.info.tofDays) + " days"} />
+                        <Field title="TOF" value={props.info.tofDays.toFixed(0) + " days"} />
 
-                        <Field title="" value={Number(props.info.tofDays / 365).toFixed(0) + " years"} />
+                        {/* <Field title="" value={Number(props.info.tofDays / 365).toFixed(0) + " years"} /> */}
 
-                        <Field title="" value={Number(props.info.tofDays * 24).toFixed(0) + " hours"} />
+                        {/* <Field title="" value={Number(props.info.tofDays * 24).toFixed(0) + " hours"} /> */}
                     
-                    </FormSection>
+                    </div>
 
                     {/* Delta-V */}
 
-                    <FormSection title="Δv Breakdown">
+                    <div className="flex space-x-4 justify-center items-center">
+                    
+                        <iconify.Icon
+                            icon="game-icons:rocket-thruster"
+                            width={32}
+                        />
+
+                        <span className="font-bold">ΔV BREAKDOWN</span>
+
+                    </div>
+
+                    <div className="flex flex-col gap-2">
 
                         <Field
-                            title={<>Departure <InlineMath math="\Delta v = v_{\infty}^-" /></>}
-                            value={props.info.dv1.toFixed(3) + " km/s"} />
+                            title={<InlineMath math="\Delta v_1 = v_{\infty}^-" />}
+                            value={props.info.dv1.toFixed(3) + " km/s"}
+                        />
 
-                        { props.info.dvGA && <Field title="Gravity Assist Δv" value={props.info.dvGA.toFixed(3) + " km/s"} /> }
+                        {
+                            props.info.dvGA &&
+                            <Field
+                                title={<InlineMath math="\Delta v_{GA}" />}
+                                value={props.info.dvGA.toFixed(3) + " km/s"}
+                            />
+                        }
 
                         <Field
-                            title={<>Arrival <InlineMath math="\Delta v = v_{\infty}^+" /></>}
-                            value={props.info.dv2.toFixed(3) + " km/s"} />
+                            title={<InlineMath math="\Delta v_2 = v_{\infty}^+" />}
+                            value={props.info.dv2.toFixed(3) + " km/s"}
+                        />
 
-                        <Field title="Total Δv" value={props.info.dv.toFixed(3) + " km/s"} />
+                        <Field
+                            title={<InlineMath math="\Delta v_{TOT}" />}
+                            value={props.info.dv.toFixed(3) + " km/s"}
+                        />
 
-                    </FormSection>
+                    </div>
 
-                    {/* Delta-V */}
+                    {/* Orbits */}
 
-                    <FormSection title="Orbits">
+                    <div className="flex space-x-4 justify-center items-center">
+                    
+                        <iconify.Icon
+                            icon="game-icons:orbit"
+                            width={32}
+                        />
 
-                        <form.Root className="w-full flex-col space-y-4" onSubmit={(e) => e.preventDefault()}>
+                        <span className="font-bold">ORBITS</span>
+
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+
+                        <Form.Root className="w-full flex-col space-y-4" onSubmit={(e) => e.preventDefault()}>
 
                             <InputField
+                                type="number"
                                 name="departureHeight"
                                 label="Departure Parking Orbit Altitude"
-                                unit="KM"
+                                symbol="H_D"
+                                unit="km"
                                 value={formIn.departureHeight}
                                 onChange={handleChange}
+                                min={1}
                             />
 
                             <InputField
+                                type="number"
                                 name="arrivalPeriapsisHeight"
                                 label="Arrival Periapsis Orbit Altitude"
-                                unit="KM"
+                                symbol="H_p"
+                                unit="km"
                                 value={formIn.arrivalPeriapsisHeight}
                                 onChange={handleChange}
+                                min={1}
                             />
 
                             <InputField
+                                type="number"
                                 name="arrivalOrbitalPeriod"
                                 label="Arrival Orbital Period"
-                                unit="HOURS"
+                                symbol="T_A"
+                                unit="hours"
                                 value={formIn.arrivalOrbitalPeriod}
                                 onChange={handleChange}
+                                min={1}
                             />
 
-                        </form.Root>
+                        </Form.Root>
 
-                        <form.Root className="w-full flex-col space-y-4 border-t-2 mt-4 pt-4">
+                        <Form.Root className="w-full flex-col space-y-4 border-t-2 mt-4 pt-4">
 
-                            <OutputField label="Departure Δv" unit="KM / S" value={formOut.departureDeltaV} />
+                            <OutputField
+                                label="Departure Delta Velocity"
+                                symbol="\Delta v"
+                                unit="km / s"
+                                value={formOut.departureDeltaV}
+                            />
 
-                            <OutputField label="Arrival Δv" unit="KM / S" value={formOut.arrivalDeltaV} />
+                            <OutputField
+                                label="Arrival Delta Velocity"
+                                symbol="\Delta v"
+                                unit="km / s"
+                                value={formOut.arrivalDeltaV}
+                            />
 
-                        </form.Root>
+                            <OutputField
+                                label="Total Delta Velocity"
+                                symbol="\Delta v"
+                                unit="km / s"
+                                value={formOut.departureDeltaV + formOut.arrivalDeltaV}
+                            />
+
+                        </Form.Root>
                         
-                    </FormSection>
+                    </div>
+
+                    <div className="flex justify-center">
+                    
+                        <Themes.Button color="green" variant="outline" onClick={() => request(formIn)}>
+                            Calculate
+                        </Themes.Button>
+
+                    </div>
 
                     {/* Lambert Vectors */}
                     {/* <section>

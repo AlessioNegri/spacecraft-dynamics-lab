@@ -150,7 +150,10 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
 
             # * Lambert solution
             
-            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=r1, arrival_position=r2, delta_time=time.TimeDelta(tof))
+            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN,
+                                                            departure_position=r1,
+                                                            arrival_position=r2,
+                                                            delta_time=time.TimeDelta(tof))
             
             # * Solution
             
@@ -175,8 +178,8 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
     info_data.running = False
     info_data.data =\
     {
-        "launchDates": [t.to_datetime().date().isoformat() for t in t_launch],
-        "arrivalDates": [t.to_datetime().date().isoformat() for t in t_arrive],
+        "launchDates": [t.to_datetime(leap_second_strict="silent").date().isoformat() for t in t_launch],
+        "arrivalDates": [t.to_datetime(leap_second_strict="silent").date().isoformat() for t in t_arrive],
         "tof": TOF.T.tolist(),
         "dv1": DV_1.T.tolist(),
         "dv2": DV_2.T.tolist()
@@ -215,9 +218,17 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
     
     info_data: common.InfoModel = common.InfoModel(source="interplanetary", counter=0, total=len(t_launch))
     
-    if t_launch[-1] >= t_flyby[0]: return info_data.model_dump()
+    if t_launch[-1] >= t_flyby[0]:
+        
+        print(f"Launch date {t_launch[-1]} override flyby date {t_flyby[0]}")
+        
+        return info_data.model_dump()
     
-    if t_flyby[-1] >= t_arrive[0]: return info_data.model_dump()
+    if t_flyby[-1] >= t_arrive[0]:
+        
+        print(f"Flyby date {t_flyby[-1]} override arrival date {t_arrive[0]}")
+        
+        return info_data.model_dump()
     
     info_data.running = True
     
@@ -328,9 +339,9 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
     info_data.running = False
     info_data.data =\
     {
-        "launchDates": [t.to_datetime().date().isoformat() for t in t_launch],
-        "flybyDates": [t.to_datetime().date().isoformat() for t in t_flyby],
-        "arrivalDates": [t.to_datetime().date().isoformat() for t in t_arrive],
+        "launchDates": [t.to_datetime(leap_second_strict="silent").date().isoformat() for t in t_launch],
+        "flybyDates": [t.to_datetime(leap_second_strict="silent").date().isoformat() for t in t_flyby],
+        "arrivalDates": [t.to_datetime(leap_second_strict="silent").date().isoformat() for t in t_arrive],
         "tof1": TOF_1.T.tolist(),
         "tof2": TOF_2.T.tolist(),
         "dv1": DV_1.T.tolist(),

@@ -1,11 +1,12 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
 
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 interface IFormIn
 {
@@ -87,7 +88,7 @@ export default function SynodicPeriodDialog(props: Readonly<Props>): react.JSX.E
 
         try
         {
-            let response: any = await http.api.put(`/tools/synodic-period`, formIn)
+            let response: any = await http.api.put(`/interplanetary/synodic-period`, formIn)
 
             const result: IFormOut = response.data
 
@@ -120,7 +121,7 @@ export default function SynodicPeriodDialog(props: Readonly<Props>): react.JSX.E
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
@@ -163,26 +164,43 @@ export default function SynodicPeriodDialog(props: Readonly<Props>): react.JSX.E
                         ]}
                 />
 
-                {
-                    errors.planets &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.planets}</span>
-                }
+                { errors.planets && <ErrorText text={errors.planets} /> }
 
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-3 gap-4 mb-4">
 
-                <OutputField label="Synodic Period" unit="DAYS" value={formOut.synodicPeriod} />
+                <OutputField
+                    label="Synodic Period"
+                    symbol="T_{syn}"
+                    unit="days"
+                    value={formOut.synodicPeriod}
+                />
 
-                <OutputField label="Initial Phase Angle" unit="DEG" value={formOut.initialPhaseAngle} />
+                <OutputField
+                    label="Initial Phase Angle"
+                    symbol="\phi_0"
+                    unit="deg"
+                    value={formOut.initialPhaseAngle}
+                />
 
-                <OutputField label="Final Phase Angle" unit="DEG" value={formOut.finalPhaseAngle} />
+                <OutputField
+                    label="Final Phase Angle"
+                    symbol="\phi_f"
+                    unit="deg"
+                    value={formOut.finalPhaseAngle}
+                />
 
-                <OutputField label="Wait Time" unit="DAYS" value={formOut.waitTime} />
+                <OutputField
+                    label="Wait Time"
+                    symbol="t_{wait}"
+                    unit="days"
+                    value={formOut.waitTime}
+                />
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

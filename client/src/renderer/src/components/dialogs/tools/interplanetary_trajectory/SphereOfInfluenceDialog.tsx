@@ -1,11 +1,12 @@
 import * as react from "react"
-import * as form from "@radix-ui/react-form"
+import * as Form from "@radix-ui/react-form"
 
 import http from "@renderer/common/http"
 
-import DialogRUI from "../../DialogRUI"
-import InputField from "../../InputField"
-import OutputField from "../../OutputField"
+import DialogRUI from "@renderer/components/dialogs/DialogRUI"
+import InputField from "@renderer/components/dialogs/InputField"
+import OutputField from "@renderer/components/dialogs/OutputField"
+import ErrorText from "@renderer/components/dialogs/ErrorText"
 
 interface IFormIn
 {
@@ -95,7 +96,7 @@ export default function SphereOfInfluenceDialog(props: Readonly<Props>): react.J
 
         try
         {
-            let response: any = await http.api.put(`/tools/sphere-of-influence`, formIn)
+            let response: any = await http.api.put(`/interplanetary/sphere-of-influence`, formIn)
 
             const result: IFormOut = response.data
 
@@ -127,7 +128,7 @@ export default function SphereOfInfluenceDialog(props: Readonly<Props>): react.J
 
             {/* INPUT */}
 
-            <form.Root
+            <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
                 className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
@@ -170,20 +171,22 @@ export default function SphereOfInfluenceDialog(props: Readonly<Props>): react.J
                     }
                 />
 
-                {
-                    errors.body &&
-                    <span className="col-span-3 text-center text-sm text-red-400">{errors.body}</span>
-                }
+                { errors.body && <ErrorText text={errors.body} /> }
 
-            </form.Root>
+            </Form.Root>
 
             {/* OUTPUT */}
 
-            <form.Root className="grid grid-cols-3 gap-4 mb-4">
+            <Form.Root className="grid grid-cols-3 gap-4 mb-4">
 
-                <OutputField label="Sphere of Influence" unit="KM" value={formOut.sphereOfInfluence} />
+                <OutputField
+                    label="Sphere of Influence"
+                    symbol="r_{SOI}"
+                    unit="km"
+                    value={formOut.sphereOfInfluence}
+                />
 
-            </form.Root>
+            </Form.Root>
 
         </DialogRUI>
     )

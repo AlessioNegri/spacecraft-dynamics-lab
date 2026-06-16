@@ -2,9 +2,9 @@ import * as react from "react"
 
 import utility from "@renderer/common/utility"
 
-import InterplanetaryLeftBar from "../common/InterplanetaryLeftBar"
-import InterplanetaryMainPlot from "../common/InterplanetaryMainPlot"
-import InterplanetaryRightBar from "../common/InterplanetaryRightBar"
+import LeftPanel from "@renderer/components/pages/interplanetary/LeftPanel"
+import CentralPanel from "@renderer/components/pages/interplanetary/CentralPanel"
+import RightPanel from "@renderer/components/pages/interplanetary/RightPanel"
 
 /** @function InterplanetaryPage */
 export default function InterplanetaryPage()
@@ -26,6 +26,14 @@ export default function InterplanetaryPage()
     const [hideLeftBar, setHideLeftBar] = react.useState<boolean>(false)
 
     const [hideRightBar, setHideRightBar] = react.useState<boolean>(false)
+
+    // --- USE REF ---
+    
+    const porkChopData2DRef = react.useRef<IPorkChopData2D | null>(porkChopData2D)
+    
+    const porkChopData3DRef = react.useRef<IPorkChopData3D | null>(porkChopData3D)
+
+    const selectedRef = react.useRef<ISelectionInfo | null>(selected)
 
     // --- USE EFFECT ---
 
@@ -112,7 +120,8 @@ export default function InterplanetaryPage()
     {
         const rmRI = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            if (sim.source === "interplanetary" && sim.data != undefined)
+            if (sim.source === "interplanetary" &&
+                sim.data && typeof sim.data === "object" && Object.keys(sim.data).length > 0)
             {
                 if (sim.data["dvGA"] === undefined)
                 {
@@ -123,15 +132,23 @@ export default function InterplanetaryPage()
                     processData3D(sim)
                 }
             }
-            else if (sim.source === "interplanetary" && sim.data == undefined)
+            else if (sim.source === "interplanetary" &&
+                (!sim.data || typeof sim.data !== "object" || Object.keys(sim.data).length === 0))
             {
-                if (porkChopData2D !== null) setPorkChopData2D(null)
-                if (porkChopData3D !== null) setPorkChopData3D(null)
+                if (porkChopData2DRef.current !== null) setPorkChopData2D(null)
+                if (porkChopData3DRef.current !== null) setPorkChopData3D(null)
+                if (selectedRef !== null) setSelected(null)
             }
         })
 
         return () => { rmRI() }
     }, [])
+
+    react.useEffect(() => { porkChopData2DRef.current = porkChopData2D }, [porkChopData2D])
+
+    react.useEffect(() => { porkChopData3DRef.current = porkChopData3D }, [porkChopData3D])
+
+    react.useEffect(() => { selectedRef.current = selected}, [selected])
 
     // --- RENDERING ---
 
@@ -140,9 +157,10 @@ export default function InterplanetaryPage()
 
             <div className="flex flex-1 overflow-hidden">
 
-                <div className={`${hideLeftBar ? "w-18" : "w-80"} border-r border-neutral-700 p-4 overflow-y-auto`}>
+                <div className={utility.cn(hideLeftBar ? "w-18" : "w-90",
+                                    "border-r border-neutral-700 p-4 overflow-y-auto bg-orange-300/5")}>
 
-                    <InterplanetaryLeftBar
+                    <LeftPanel
                         onBodies={(departure: string, flyby: string, arrival: string) =>
                         {
                             setDepartureBody(departure)
@@ -155,7 +173,7 @@ export default function InterplanetaryPage()
 
                 <div className="flex-1 p-4 overflow-auto flex items-center justify-center">
                     
-                    <InterplanetaryMainPlot
+                    <CentralPanel
                         porkChopData2D={porkChopData2D}
                         porkChopData3D={porkChopData3D}
                         onSelect={setSelected}
@@ -163,9 +181,10 @@ export default function InterplanetaryPage()
 
                 </div>
 
-                <div className={`${hideRightBar ? "w-18" : "w-80"} border-l border-neutral-700 p-4 overflow-y-auto`}>
+                <div className={utility.cn(hideRightBar ? "w-18" : "w-80",
+                                    "border-l border-neutral-700 p-4 overflow-y-auto bg-cyan-300/5")}>
 
-                    <InterplanetaryRightBar
+                    <RightPanel
                         departureBody={departureBody.toLocaleUpperCase()}
                         flybyBody={flybyBody.toLocaleUpperCase()}
                         arrivalBody={arrivalBody.toLocaleUpperCase()}

@@ -297,7 +297,7 @@ class OrbitDetermination():
         return J0 + UT / 24
     
     @staticmethod
-    def frac_day_2_hms(frac_day : float) -> typing.List[int]:
+    def frac_day_2_hms(frac_day: float) -> typing.List[int]:
         """
         Split the fractional day in hour - minute - second
 
@@ -319,7 +319,7 @@ class OrbitDetermination():
         return [hour, minute, second]
     
     @staticmethod
-    def julian_day_2_timestamp(julian_day : float) -> time.Time:
+    def julian_day_2_timestamp(julian_day: float) -> time.Time:
         """
         Convert the Julian day in timestamp (Fliegel–Van Flandern algorithm)
 
@@ -392,6 +392,20 @@ class OrbitDetermination():
             })
         
         return timestamp
+    
+    @staticmethod
+    def modified_julian_day(julian_day: float) -> float:
+        """
+        Convert the Julian day (JD) in Modified Julian day (MJD)
+
+        Args:
+            julian_day (float): _description_
+
+        Returns:
+            float: _description_
+        """
+        
+        return julian_day - 2_400_000.5
     
     @staticmethod
     def local_sidereal_time(timestamp: time.Time, longitude : u.Quantity) -> u.Quantity:
