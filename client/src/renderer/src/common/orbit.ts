@@ -15,12 +15,12 @@ function generateOrbitPositions(orbit: IDbOrbit, samples = 360)
 
     // * Precompute rotation matrices (perifocal → ECI)
 
-    const cosO: number = Math.cos(raan)
-    const sinO: number = Math.sin(raan)
-    const cosi: number = Math.cos(inc)
-    const sini: number = Math.sin(inc)
-    const cosw: number = Math.cos(aop)
-    const sinw: number = Math.sin(aop)
+    const cosO: number = Math.cos(raan * Math.PI / 180)
+    const sinO: number = Math.sin(raan * Math.PI / 180)
+    const cosi: number = Math.cos(inc * Math.PI / 180)
+    const sini: number = Math.sin(inc * Math.PI / 180)
+    const cosw: number = Math.cos(aop * Math.PI / 180)
+    const sinw: number = Math.sin(aop * Math.PI / 180)
 
     const PQW_to_ECI: cesium.Matrix3 = new cesium.Matrix3(
                                                             cosO * cosw - sinO * sinw * cosi,

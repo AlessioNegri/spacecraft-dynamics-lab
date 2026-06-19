@@ -7,7 +7,7 @@
 The **Spacecraft Page** displays all the created spacecraft: selecting a spacecraft in the list, the details are shown on the right. The user can *add*, *edit*, and *delete* a spacecraft.
 
 <p align="center">
-  <img src="../images/spacecraft-page/page.png" width="50%" alt="image">
+  <img src="../images/spacecraft-page/page.png" width="100%" alt="image">
 </p>
 
 The dialog contains all info of a spacecraft:

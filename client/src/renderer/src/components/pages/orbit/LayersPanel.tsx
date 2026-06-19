@@ -1,9 +1,11 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
 
-import Tooltip from "../Tooltip"
+import utility from "@renderer/common/utility"
 
-interface LayersPanelProps
+import Tooltip from "@renderer/components/Tooltip"
+
+interface Props
 {
     spacecrafts: IDbSpacecraftItem[]
     selectedId: string | null
@@ -13,7 +15,7 @@ interface LayersPanelProps
 }
 
 /** @function LayersPanel */
-export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JSX.Element
+export default function LayersPanel(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---
 
@@ -43,7 +45,7 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
 
             <button
                 className="w-full pb-2 mb-2 border-b-2 flex items-center justify-between gap-2 cursor-pointer"
-                onClick={() => setOpen(o => !o)}>
+                onClick={() => setOpen(prev => !prev)}>
 
                 <div className="font-semibold text-base">Spacecraft List</div>
 
@@ -87,7 +89,6 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
 
                 </Tooltip>
 
-
             </button>
 
         {
@@ -98,10 +99,13 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                     props.spacecrafts.map((spacecraft: IDbSpacecraftItem) => (
                     <button
                         key={spacecraft._id}
-                        className={`flex items-center justify-start gap-2 p-1 cursor-pointer
-                                    hover:bg-neutral-600 hover:rounded mr-2
-                                    ${(spacecraft._id === props.selectedId) ? 'bg-neutral-500 rounded' : ''}`}
-                        onClick={() => props.onToggle(spacecraft._id!)}>
+                        onClick={() => props.onToggle(spacecraft._id!)}
+                        className={utility.cn(
+                            "flex items-center justify-start gap-2 p-1 cursor-pointer",
+                            "hover:bg-neutral-600 hover:rounded mr-2",
+                            (spacecraft._id === props.selectedId) ? 'bg-neutral-500 rounded' : '')
+                        }
+                    >
 
                         <iconify.Icon
                             icon={`${spacecraft.visible ? "mdi:show" : "mdi:hide"}`}
@@ -118,8 +122,10 @@ export default function LayersPanel(props: Readonly<LayersPanelProps>): react.JS
                             <iconify.Icon
                                 icon="mdi:camera"
                                 width={24}
-                                className={`cursor-pointer hover:text-orange-300
-                                            ${(spacecraft._id === props.selectedId) ? 'text-green-300' : ''}`}
+                                className={utility.cn(
+                                    "cursor-pointer hover:text-orange-300",
+                                    (spacecraft._id === props.selectedId) ? 'text-green-300' : '')
+                                }
                                 onClick={(e: react.MouseEvent<SVGSVGElement, MouseEvent>) =>
                                 {
                                     e.stopPropagation()

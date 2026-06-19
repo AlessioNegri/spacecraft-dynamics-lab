@@ -6,9 +6,9 @@ import * as iconify from "@iconify/react"
 import http from "@renderer/common/http"
 import orbit from "@renderer/common/orbit"
 
-import LayersPanel from "../common/LayersPanel"
-import TelemetryPanel from "../common/TelemetryPanel"
-import Tooltip from "../Tooltip"
+import Tooltip from "@renderer/components/Tooltip"
+import LayersPanel from "@renderer/components/pages/orbit/LayersPanel"
+import TelemetryPanel from "@renderer/components/pages/orbit/TelemetryPanel"
 
 /** @function OrbitPage */
 export default function OrbitPage()
@@ -29,7 +29,8 @@ export default function OrbitPage()
                     <iconify.Icon
                         icon="mdi:reload"
                         width={29}
-                        className="bg-gray-700 border border-gray-600 hover:bg-cyan-700 hover:border hover:border-cyan-300 cursor-pointer"
+                        className="bg-gray-700 border border-gray-600 
+                            hover:bg-cyan-700 hover:border hover:border-cyan-300 cursor-pointer"
                         onClick={() => setViewerKey(k => k + 1)} />
                     
                 </Tooltip>
@@ -52,6 +53,8 @@ function OrbitViewer()
         try
         {
             const res = await http.api.get<IDbSpacecraftItem[]>("/spacecraft/items")
+
+            // * Add visible property to all items (default to true)
 
             const data = res.data.map(item => ({ ...item, visible: true }))
 
@@ -137,7 +140,7 @@ function OrbitViewer()
 
         if (selectedId)
         {
-            const entity = entityRefs.current.get(selectedId)
+            const entity: cesium.Entity | undefined = entityRefs.current.get(selectedId)
 
             viewer.selectedEntity = entity
 
@@ -208,7 +211,8 @@ function OrbitViewer()
                     selectedId={selectedId}
                     onToggle={toggleVisibility}
                     onTrack={(id: string) => setSelectedId(id)}
-                    onStop={() => setSelectedId(null)} />
+                    onStop={() => setSelectedId(null)}
+                />
             
             </div>
 
@@ -220,12 +224,12 @@ function OrbitViewer()
                     selectedId={selectedId}
                     entityRefs={entityRefs}
                     viewerRef={viewerRef}
-                    />
+                />
 
             </div>
 
         {
-            creditContainer && layoutContainer && telemetryContainer && (
+            creditContainer && layoutContainer && telemetryContainer &&
 
             <resium.Viewer
                 ref={viewerRef}
@@ -248,6 +252,8 @@ function OrbitViewer()
 
                 {/* <resium.CameraFlyTo duration={0} destination={cesium.Cartesian3.fromDegrees(-100, 40, 100_000_000)} /> */}
 
+                {/* Draw orbits */}
+
                 {
                     viewerReady && orbits.map((positions: cesium.Cartesian3[], index: number) => (
 
@@ -258,11 +264,14 @@ function OrbitViewer()
                             width={items[index].style.width}
                             material={cesium.Color.fromCssColorString(items[index].style.color)}
                             show={items[index].visible}
-                            clampToGround={false}/>
+                            clampToGround={false}
+                        />
 
                     </resium.Entity>
 
                 ))}
+
+                {/* Animate orbits */}
 
                 {
                     viewerReady && satellitePaths.map((path, index) =>
@@ -272,7 +281,8 @@ function OrbitViewer()
                             return (
                                 <resium.Entity
                                     key={items[index]._id + "_sat"}
-                                    ref={el => { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
+                                    ref={(el: resium.CesiumComponentRef<cesium.Entity> | null) =>
+                                        { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
                                     position={path}
                                     show={items[index].visible}
                                     point={new cesium.PointGraphics(
@@ -281,7 +291,7 @@ function OrbitViewer()
                                             color: cesium.Color.fromCssColorString(items[index].style.color)
                                         })}
                                     onClick={() => setSelectedId(items[index]._id!)}
-                                    />
+                                />
                             )
                         }
                         else
@@ -289,7 +299,8 @@ function OrbitViewer()
                             return (
                                 <resium.Entity
                                     key={items[index]._id + "_sat"}
-                                    ref={el => { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
+                                    ref={(el: resium.CesiumComponentRef<cesium.Entity> | null) =>
+                                        { if (el) entityRefs.current.set(items[index]._id!, el.cesiumElement!) }}
                                     position={path}
                                     //path={new cesium.PathGraphics({ width: 2, material: cesium.Color.YELLOW.withAlpha(0.5) })}
                                     show={items[index].visible}
@@ -301,13 +312,13 @@ function OrbitViewer()
                                             maximumScale: models.find(m => m.name === items[index].model)?.maximumScale ?? 1 // ? Avoids insane scaling when close
                                         })}
                                     onClick={() => setSelectedId(items[index]._id!)}
-                                    />
+                                />
                             )
                         }                    
                     }
                 )}
 
-            </resium.Viewer>)
+            </resium.Viewer>
         }
             
         </div>

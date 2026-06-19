@@ -14,7 +14,8 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 # --- UTILITY ---
 
 def serialize_spacecraft(doc: schema.SpacecraftModel) -> dict:
-    """Serialize the DB document in a JSON dictionary
+    """
+    Serialize the DB document in a JSON dictionary
 
     Args:
         doc (SpacecraftModel): MongoDB collection document
@@ -34,7 +35,8 @@ def serialize_spacecraft(doc: schema.SpacecraftModel) -> dict:
     }
     
 def convert_orbit(orbit_data: dict) -> dict:
-    """Convert orbit data in float
+    """
+    Convert orbit data
 
     Args:
         orbit_data (dict): Orbit data
@@ -52,14 +54,44 @@ def convert_orbit(orbit_data: dict) -> dict:
         "tan": float(orbit_data["tan"])
     }
 
+def convert_style(style_data: dict) -> dict:
+    """
+    Convert style data
+
+    Args:
+        style_data (dict): Style data
+
+    Returns:
+        dict: Converted style data
+    """
+    
+    return {
+        "width": float(style_data["width"]),
+        "color": style_data["color"]
+    }
+
 # --- HTTP ---
 
-def require_mongo(request: fastapi.Request):
+def require_mongo(request: fastapi.Request) -> AsyncIOMotorClient:
+    """
+
+    Args:
+        request (fastapi.Request): Generic HTTP request
+
+    Raises:
+        fastapi.HTTPException: Exception raised in case of missing MongoDB
+
+    Returns:
+        AsyncIOMotorClient: Database client
+    """
+    
     if not request.app.state.data.mongo_enabled:
+        
         raise fastapi.HTTPException(
-            status_code=503,
+            status_code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"MongoDB unavailable: {request.app.state.data.mongo_error}"
         )
+    
     return database.get_client()
 
 router: fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft',
@@ -69,14 +101,15 @@ router: fastapi.APIRouter = fastapi.APIRouter(prefix='/spacecraft',
 # >>> GET
 
 @router.get(path='/items', response_model=typing.List[schema.SpacecraftModelInfo])
-async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
+async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_client))\
+    -> fastapi.responses.JSONResponse:
     """HTTP GET spacecrafts collection
 
     Args:
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
-        [SpacecraftModel]: List of spacecrafts
+        fastapi.responses.JSONResponse: JSON response
     """
     
     spacecrafts: AsyncIOMotorCollection = client["spacecraft_dynamics_lab"]["spacecrafts"]
@@ -85,7 +118,7 @@ async def get_items(client: AsyncIOMotorClient = fastapi.Depends(database.get_cl
     
     # * Serialize for frontend
     
-    serialized = [serialize_spacecraft(doc) for doc in result]
+    serialized: list[dict] = [serialize_spacecraft(doc) for doc in result]
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=serialized)
 
@@ -97,8 +130,9 @@ async def post_insert(name: str = fastapi.Form(...),
                       orbit: str = fastapi.Form(...),
                       style: str = fastapi.Form(...),
                       image: fastapi.UploadFile | None = fastapi.File(None),
-                      model: str = fastapi.Form(...),
-                      client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
+                      model: str = fastapi.Form(""),
+                      client: AsyncIOMotorClient = fastapi.Depends(database.get_client))\
+                          -> fastapi.responses.JSONResponse:
     """HTTP POST INSERT spacecrafts collection
 
     Args:
@@ -107,11 +141,11 @@ async def post_insert(name: str = fastapi.Form(...),
         orbit (str, optional): Orbit parameters. Defaults to fastapi.Form(...).
         style (str, optional): Style parameters. Defaults to fastapi.Form(...).
         image (fastapi.UploadFile | None, optional): Image. Defaults to fastapi.File(None).
-        model (str, optional): 3D model name. Defaults to fastapi.Form(...).
+        model (str, optional): 3D model name. Defaults to fastapi.Form("").
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
-        ActionModel: Result
+        fastapi.responses.JSONResponse: JSON response
     """
     
     spacecrafts: AsyncIOMotorCollection = client["spacecraft_dynamics_lab"]["spacecrafts"]
@@ -138,7 +172,7 @@ async def post_insert(name: str = fastapi.Form(...),
     
     try:
         
-        style_data = json.loads(style)
+        style_data = convert_style(json.loads(style))
         
     except Exception:
         
@@ -182,8 +216,9 @@ async def post_update(id: str,
                       orbit: str = fastapi.Form(...),
                       style: str = fastapi.Form(...),
                       image: fastapi.UploadFile | None = fastapi.File(None),
-                      model: str = fastapi.Form(...),
-                      client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
+                      model: str = fastapi.Form(""),
+                      client: AsyncIOMotorClient = fastapi.Depends(database.get_client))\
+                          -> fastapi.responses.JSONResponse:
     """HTTP POST UPDATE spacecrafts collection
 
     Args:
@@ -193,11 +228,11 @@ async def post_update(id: str,
         orbit (str, optional): Orbit parameters. Defaults to fastapi.Form(...).
         style (str, optional): Style parameters. Defaults to fastapi.Form(...).
         image (fastapi.UploadFile | None, optional): Image. Defaults to fastapi.File(None).
-        model (str, optional): 3D model name. Defaults to fastapi.Form(...).
+        model (str, optional): 3D model name. Defaults to fastapi.Form("").
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
-        ActionModel: Result
+        fastapi.responses.JSONResponse: JSON response
     """
     
     spacecrafts: AsyncIOMotorCollection = client["spacecraft_dynamics_lab"]["spacecrafts"]
@@ -234,7 +269,7 @@ async def post_update(id: str,
     
     try:
         
-        style_data = json.loads(style)
+        style_data = convert_style(json.loads(style))
         
     except Exception:
         
@@ -275,7 +310,8 @@ async def post_update(id: str,
 
 @router.delete("/{id}", response_model=common.ActionModel)
 async def delete_spacecraft(id: str,
-                            client: AsyncIOMotorClient = fastapi.Depends(database.get_client)):
+                            client: AsyncIOMotorClient = fastapi.Depends(database.get_client))\
+                                -> fastapi.responses.JSONResponse:
     """HTTP DELETE spacecrafts collection
 
     Args:
@@ -283,7 +319,7 @@ async def delete_spacecraft(id: str,
         client (AsyncIOMotorClient, optional): MongoDB client. Defaults to fastapi.Depends(database.get_client).
 
     Returns:
-        ActionModel: Result
+        fastapi.responses.JSONResponse: JSON response
     """
     
     spacecrafts: AsyncIOMotorCollection = client["spacecraft_dynamics_lab"]["spacecrafts"]

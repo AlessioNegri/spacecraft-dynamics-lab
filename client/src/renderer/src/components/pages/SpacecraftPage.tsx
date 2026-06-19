@@ -1,12 +1,14 @@
 import * as react from "react"
 import * as iconify from "@iconify/react"
+import * as katex from "react-katex"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
+import utility from "@renderer/common/utility"
 
-import Tooltip from "../Tooltip"
-import SpacecraftDialog from "../dialogs/SpacecraftDialog"
-import DeleteSpacecraftDialog from "../dialogs/DeleteSpacecraftDialog"
-import GlbViewer from "../common/GlbViewer"
+import GlbViewer from "@renderer/components/common/GlbViewer"
+import SpacecraftDialog from "@renderer/components/dialogs/spacecraft/SpacecraftDialog"
+import DeleteSpacecraftDialog from "@renderer/components/dialogs/spacecraft/DeleteSpacecraftDialog"
 
 /** @function SpacecraftPage */
 export default function SpacecraftPage(): react.JSX.Element
@@ -65,18 +67,24 @@ export default function SpacecraftPage(): react.JSX.Element
             
             {/* List */}
             
-            <div className="w-64 bg-neutral-800 text-white overflow-y-auto border-r border-neutral-700 p-2
+            <div className="w-90 bg-orange-300/5 text-white overflow-y-auto border-r border-neutral-700 p-2
                             overflow-auto custom-scrollbar">
 
-                <h1 className="text-center border-b-2 mb-2 uppercase">Spacecraft List</h1>
+                <h1 className="text-center border-neutral-400 border-b-2 mb-2 pb-2 uppercase font-bold">
+                    Spacecraft List
+                </h1>
                 
             {
                 items.map((item: IDbSpacecraftItem) => (
                     <button
                         key={item._id}
                         onClick={() => setSelected(item)}
-                        className={`w-full text-left px-4 py-2 hover:bg-neutral-600 transition rounded cursor-pointer
-                            ${selected?._id === item._id ? "bg-orange-300/25 text-orange-300 font-bold" : ""}`}>
+                        className={utility.cn(
+                            "w-full text-left px-4 py-2 hover:bg-neutral-600 transition rounded cursor-pointer",
+                            "transition-colors duration-500",
+                            selected?._id === item._id ? "bg-orange-300/25 text-orange-300 font-bold" : "")
+                            }
+                    >
 
                         {item.name}
 
@@ -102,47 +110,41 @@ export default function SpacecraftPage(): react.JSX.Element
 
             {/* Actions */}
 
-            <div className="absolute top-2 right-4 flex">
+            <div className="absolute top-2 right-4 flex gap-2">
 
-                <Tooltip title="Add Spacecraft" side="bottom">
-
-                    <iconify.Icon
-                        icon={"mdi:add-box"}
-                        width={40}
-                        onClick={() => { setOpenAddEdit(true); setEdit(false) }}
-                        className="text-green-300 hover:text-white cursor-pointer"
-                    />
-
-                </Tooltip>
+                <Themes.Button
+                    color="green"
+                    variant="outline"
+                    onClick={() => { setOpenAddEdit(true); setEdit(false) }}
+                >
+                    <iconify.Icon icon="mdi:add" height={20} />
+                    Add SC
+                </Themes.Button>
 
             {
                 selected &&
                 (
-                    <>
+                    <react.Fragment>
 
-                        <Tooltip title="Edit Spacecraft" side="bottom">
-                            
-                            <iconify.Icon
-                                icon={"mdi:edit-box"}
-                                width={40}
-                                onClick={() => { setOpenAddEdit(true); setEdit(true) }}
-                                className="text-blue-300 hover:text-white cursor-pointer"
-                            />
+                        <Themes.Button
+                            color="blue"
+                            variant="outline"
+                            onClick={() => { setOpenAddEdit(true); setEdit(true) }}
+                        >
+                            <iconify.Icon icon="mdi:edit" height={20} />
+                            Edit SC
+                        </Themes.Button>
 
-                        </Tooltip>
+                        <Themes.Button
+                            color="red"
+                            variant="outline"
+                            onClick={() => { setOpenDelete(true) }}
+                        >
+                            <iconify.Icon icon="mdi:remove" height={20} />
+                            Delete SC
+                        </Themes.Button>
 
-                        <Tooltip title="Delete Spacecraft" side="bottom">
-
-                            <iconify.Icon
-                                icon={"mdi:cancel-box"}
-                                width={40}
-                                onClick={() => setOpenDelete(true)}
-                                className="text-red-300 hover:text-white cursor-pointer"
-                            />
-
-                        </Tooltip>
-
-                    </>
+                    </react.Fragment>
                 )
             }
 
@@ -155,7 +157,8 @@ export default function SpacecraftPage(): react.JSX.Element
                 <SpacecraftDialog
                     item={selected}
                     edit={edit}
-                    onClose={() => { setOpenAddEdit(false) }}
+                    opened={openAddEdit}
+                    setOpened={(opened: boolean) => setOpenAddEdit(opened)}
                     onOk={() => { getItems() }}
                 />
             }
@@ -165,13 +168,21 @@ export default function SpacecraftPage(): react.JSX.Element
                 <DeleteSpacecraftDialog
                     id={selected!._id!}
                     name={selected!.name}
-                    onClose={() => { setOpenDelete(false) }}
+                    opened={openDelete}
+                    setOpened={(opened: boolean) => setOpenDelete(opened)}
                     onOk={() => { getItems() }}
                 />
             }
 
         </div>
     )
+}
+
+interface SectionItem
+{
+    name: string
+    value: number | string
+    unit: string
 }
 
 /**
@@ -193,8 +204,8 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
         { name: "Semi-Major Axis", value: item.orbit.sma, unit: "km" },
         { name: "Eccentricity", value: item.orbit.ecc, unit: "" },
         { name: "Inclination", value: item.orbit.inc, unit: "deg" },
-        { name: "Right Ascension Ascending Node", value: item.orbit.raan, unit: "deg" },
-        { name: "Argument Periapsis", value: item.orbit.aop, unit: "deg" },
+        { name: "Right Ascension of Ascending Node", value: item.orbit.raan, unit: "deg" },
+        { name: "Argument of Periapsis", value: item.orbit.aop, unit: "deg" },
         { name: "True Anomaly", value: item.orbit.tan, unit: "deg" }
     ]
 
@@ -242,11 +253,12 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
 
                         <GlbViewer
                             model={item.model}
-                            scale={models.find(m => m.name === item.model)?.scale ?? 1} />
+                            scale={models.find(m => m.name === item.model)?.scale ?? 1}
+                        />
 
                     </div>
                     :
-                    <div className="border-neutral-600 border-4 rounded w-1/2 flex items-center justify-center">
+                    <div className="border-neutral-600 border-2 rounded w-1/2 flex items-center justify-center">
                         Model preview not available
                     </div>
                 }
@@ -255,13 +267,6 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
 
         </div>
     )
-}
-
-interface SectionItem
-{
-    name: string
-    value: number | string
-    unit: string
 }
 
 interface SectionProps
@@ -275,7 +280,7 @@ function Section(props: Readonly<SectionProps>): react.JSX.Element
 {
     const isColor = (value: string): boolean =>
     {
-        const s = new Option().style
+        const s: CSSStyleDeclaration = new Option().style
 
         s.color = value
 
@@ -302,10 +307,17 @@ function Section(props: Readonly<SectionProps>): react.JSX.Element
                             ?
                             <div className="h-6 rounded" style={{ backgroundColor: String(item.value) }}/>
                             :
-                            <span className="text-left border-b border-neutral-600 p-1">{item.value}</span>
+                            <span
+                                className="text-left border-b border-neutral-600 p-1 text-neutral-300"
+                                style={{ fontFamily: "Oxanium" }}
+                            >
+                                {item.value}
+                            </span>
                         }
 
-                            <span className="text-right text-orange-300 font-semibold">{item.unit}</span>
+                            <span className="text-right text-orange-300 font-semibold">
+                                <katex.InlineMath math={String.raw`{${item.unit}}`} />
+                            </span>
 
                         </react.Fragment>
                     )
