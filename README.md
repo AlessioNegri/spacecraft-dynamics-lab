@@ -2,6 +2,11 @@
 
 # 🛰️ Spacecraft Dynamics Lab (S.D.L.)
 
+> ⚠️ **Important Notice**
+> This software is intended for educational, research, and simulation purposes only.
+> It must not be used for real spacecraft operations, mission planning, navigation,
+> or any safety‑critical decision-making.
+
 Spacecraft Dynamics Lab is an Electron desktop application to simulate spacecraft dynamics.
 
 <p align="center">

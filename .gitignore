@@ -1,6 +1,7 @@
 .backup/
 .pytest_cache/
 astro.egg-info/
+docs/videos/*mp4
 htmlcov/
 tests/__pycache__/
 .coverage

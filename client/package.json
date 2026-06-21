@@ -1,11 +1,12 @@
 {
   "name": "spacecraft-dynamics-lab",
-  "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "version": "0.1.0",
+  "description": "Spacecraft Dynamics Lab Frontend",
   "main": "./out/main/index.js",
-  "author": "alessio-negri.com",
-  "homepage": "https://electron-vite.org",
-  "icon": "./resources/icon.ico",
+  "author": "Alessio Negri",
+  "homepage": "https://github.com/AlessioNegri/spacecraft-dynamics-lab",
+  "productName": "Spacecraft Dynamics Lab",
+  "icon": "./resources/SpacecraftDynamicsLab.ico",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

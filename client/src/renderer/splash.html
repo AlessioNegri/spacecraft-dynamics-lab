@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; img-src 'self' file: data:; style-src 'unsafe-inline'">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Spacecraft Dynamics Lab</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            font-family: sans-serif;
+        }
+
+        img {
+            max-width: 90%;
+            max-height: 70%;
+            object-fit: contain;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #ddd;
+            border-top-color: #ffa500;
+            border-radius: 50%;
+            animation: spin 2.0s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="SpacecraftDynamicsLab.png" alt="Spacecraft Dynamics Lab" />
+    <div class="loader"></div>
+</body>
+
+</html>

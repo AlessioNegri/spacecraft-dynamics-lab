@@ -2,7 +2,7 @@ import * as react from "react"
 
 import DialogRUI from "./DialogRUI"
 
-import logo from "../../assets/SDL.png"
+import logo from "../../assets/SpacecraftDynamicsLab.png"
 
 interface Props
 {
@@ -13,12 +13,6 @@ interface Props
 /** @function AboutDialog */
 export default function AboutDialog(props: Readonly<Props>): react.JSX.Element
 {
-    // --- USE STATE ---
-
-    const [versions] = react.useState<any>(globalThis.electron.process.versions)
-
-    // --- RENDERING ---
-
     return (
         <DialogRUI
             title="About SDL - Spacecraft Dynamics Lab"
@@ -27,44 +21,86 @@ export default function AboutDialog(props: Readonly<Props>): react.JSX.Element
             onClose={() => props.setOpened(false)}
             onSubmit={() => props.setOpened(false)}>
 
-            <div className="flex flex-col custom-font p-4 space-y-6">
+            <div className="flex flex-col custom-font p-6 space-y-8 text-neutral-200">
 
-                <div className="flex justify-between pb-4 border-b border-neutral-700">
+                {/* Logo */}
+
+                <div className="flex justify-center items-center space-x-6">
+                    <img
+                        src={logo}
+                        alt="Spacecraft Dynamics Lab Logo"
+                        className="w-[70%] h-auto rounded shadow-lg"
+                    />
+                </div>
+
+                {/* Metadata */}
+
+                <div className="border border-neutral-700 rounded p-4 space-y-2 bg-neutral-900/40">
+
+                    <div className="flex justify-between">
+                        <span className="text-neutral-400">Author</span>
+                        <span className="font-semibold">Alessio Negri</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-neutral-400">Version</span>
+                        <span className="font-semibold">v0.1.0</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-neutral-400">Release</span>
+                        <span className="font-semibold">2026.06.21</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-neutral-400">License</span>
+                        <span className="font-semibold">MIT License</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span className="text-neutral-400">Source Code</span>
+                        <a
+                            href="https://github.com/AlessioNegri/spacecraft-dynamics-lab"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-orange-400 hover:underline"
+                        >
+                            GitHub Repository
+                        </a>
+                    </div>
+                </div>
+
+                {/* Copyright */}
+
+                <div className="border-neutral-700 text-center text-neutral-500 text-sm">
+                    © 2026 Spacecraft Dynamics Lab — All rights reserved.
+                </div>
+
+            </div>
+
+            {/* <div className="flex flex-col custom-font p-4 space-y-6">
+
+                <div className="flex justify-between border-neutral-700">
 
                     <img
                         src={logo}
                         alt="Spacecraft Dynamics Lab Logo"
-                        className="w-32 h-auto rounded-3xl"
+                        className="w-96 h-auto rounded"
                     />
 
-                    <div className="flex flex-col items-center justify-center text-right">
+                    <div className="flex flex-col gap-4 items-center justify-center text-right">
 
                         <span className="text-orange-300 font-bold text-lg">Spacecraft Dynamics Lab</span>
 
-                        <span className="text-neutral-300 font-bold">v1.0.0 - Jan 01 2026</span>
+                        <span className="text-neutral-300 font-bold">v0.1.0 - Jun 21 2026</span>
+
+                        <span className="text-neutral-400 text-sm">Developed by Alessio Negri</span>
 
                     </div>
 
-
                 </div>
 
-                <div className="grid grid-cols-2 gap-y-2 font-mono text-base">
-
-                    <span className="text-neutral-300">Electron</span>
-
-                    <span className="text-neutral-400">v{versions.electron}</span>
-
-                    <span className="text-neutral-300">Chromium</span>
-
-                    <span className="text-neutral-400">v{versions.chrome}</span>
-
-                    <span className="text-neutral-300">Node</span>
-
-                    <span className="text-neutral-400">v{versions.node}</span>
-
-                </div>
-
-            </div>
+            </div> */}
 
         </DialogRUI>
     )

@@ -1,5 +1,6 @@
-appId: com.electron.app
-productName: SpacecraftDynamicsLab
+appId: com.alessio.spacecraftdynamicslab
+productName: Spacecraft Dynamics Lab
+copyright: "© 2026 Alessio Negri"
 directories:
   buildResources: build
 files:
@@ -13,7 +14,10 @@ asarUnpack:
   - resources/**
 win:
   executableName: SpacecraftDynamicsLab
-  artifactName: SpacecraftDynamicsLab-${version}.${ext}
+  artifactName: SpacecraftDynamicsLab.${ext}
+  legalTrademarks: "Spacecraft Dynamics Lab"
+  signAndEditExecutable: false
+  signExts: []
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

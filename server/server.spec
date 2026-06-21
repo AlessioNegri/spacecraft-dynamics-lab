@@ -5,6 +5,11 @@
 import sys
 from PyInstaller.utils.hooks import collect_submodules
 
+from PyInstaller.utils.win32.versioninfo import (
+    VSVersionInfo, FixedFileInfo, StringFileInfo, StringTable,
+    StringStruct, VarFileInfo, VarStruct
+)
+
 # Collect FastAPI / Pydantic dynamic imports
 hiddenimports = collect_submodules('astropy') + \
                 collect_submodules('motor') + \
@@ -40,6 +45,37 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+version_info = VSVersionInfo(
+    ffi=FixedFileInfo(
+        filevers=(0, 1, 0, 0),
+        prodvers=(0, 1, 0, 0),
+        mask=0x3f,
+        flags=0x0,
+        OS=0x40004,
+        fileType=0x1,
+        subtype=0x0,
+        date=(0, 0)
+    ),
+    kids=[
+        StringFileInfo([
+            StringTable(
+                '040904B0',
+                [
+                    StringStruct('CompanyName', 'Alessio Negri'),
+                    StringStruct('FileDescription', 'Spacecraft Dynamics Lab Backend Service'),
+                    StringStruct('FileVersion', '0.1.0'),
+                    StringStruct('InternalName', 'SpacecraftDynamicsLabService'),
+                    StringStruct('LegalCopyright', '© 2026 Alessio Negri'),
+                    StringStruct('OriginalFilename', 'SpacecraftDynamicsLabService.exe'),
+                    StringStruct('ProductName', 'Spacecraft Dynamics Lab'),
+                    StringStruct('ProductVersion', '0.1.0')
+                ]
+            )
+        ]),
+        VarFileInfo([VarStruct('Translation', [1033, 1200])])
+    ]
+)
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -51,4 +87,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
+    icon='SpacecraftDynamicsLab.ico',
+    version=version_info
 )

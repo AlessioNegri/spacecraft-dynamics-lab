@@ -4,11 +4,12 @@ import * as Menubar from "@radix-ui/react-menubar"
 
 import utility from "@renderer/common/utility"
 
-import logo from "../../assets/SDL.png"
+import logo from "../../assets/SpacecraftDynamicsLabLogo.png"
 
 import Shortcut from "../Shortcut"
 
 import AboutDialog from "../dialogs/AboutDialog"
+import DisclaimerDialog from "../dialogs/DisclaimerDialog"
 
 import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representation/CartesianOrbitParametersDialog"
 import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/CartesianKeplerianDialog"
@@ -36,6 +37,7 @@ import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSync
 const DIALOGS =
 {
     aboutDialog: AboutDialog,
+    disclaimerDialog: DisclaimerDialog,
 
     cartesianOrbitParametersDialog: CartesianOrbitParametersDialog,
     cartesianKeplerianDialog: CartesianKeplerianDialog,
@@ -183,7 +185,8 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
 
     const help: IMenuItem[] =
     [
-        { label: "About", shortcut: "Ctrl+A", action: () => setOpenDialog("aboutDialog") }
+        { label: "About", shortcut: "Ctrl+A", action: () => setOpenDialog("aboutDialog") },
+        { label: "Disclaimer", action: () => setOpenDialog("disclaimerDialog") }
     ]
 
     // --- RENDERING ---
@@ -195,11 +198,7 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
 
             <div className="w-full flex gap-4 items-center justify-start border-b border-neutral-700 ps-2 mb-2">
 
-                <div className="w-8 flex justify-center">
-
-                    <img src={logo} alt="Spacecraft Dynamics Lab Logo" className="h-auto rounded-3xl"/>
-
-                </div>
+                <img src={logo} alt="Spacecraft Dynamics Lab Logo" style={{ height: "32px", width: "auto" }} />
 
                 <p
                     className="flex-1 text-orange-300 capitalize"
