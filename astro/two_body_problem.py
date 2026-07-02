@@ -1,5 +1,5 @@
 """
-Two Body Problem
+Two-Body Problem
 
 Implements core algorithms for solving the classical two-body problem,
 including orbital geometry, conic classification, and the fundamental
@@ -68,7 +68,7 @@ class OrbitParameters:
     characteristic_energy       : u.Quantity = 0.0 * u.km**2 / u.s**2   # ? Characteristic Energy
 
 class Orbit:
-    """Generic orbit in 2 Body Problem
+    """Generic orbit in two-body problem
     """
     
     def __init__(self):

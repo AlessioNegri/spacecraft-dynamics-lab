@@ -36,6 +36,11 @@ const items: ISideBarItem[] =
         id: "orbital-perturbations",
         label: "Orbital Perturbations",
         icon: "game-icons:perpendicular-rings"
+    },
+    {
+        id: "circular-restricted-three-body-problem",
+        label: "Circular Restricted Three-Body Problem",
+        icon: "mingcute:three-circles-fill"
     }
 ]
 

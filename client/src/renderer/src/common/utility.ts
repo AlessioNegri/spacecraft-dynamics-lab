@@ -24,11 +24,28 @@ export function cn(...inputs: any[])
     return twMerge(clsx(inputs))
 }
 
+/**
+ * @description Create an array of numbers with given limits
+ * 
+ * @param start Start
+ * @param stop Stop
+ * @param points Number of points
+ * @returns Array of numbers
+ */
+function linspace(start: number, stop: number, points: number): number[]
+{
+    if (points <= 1) return [start]
+
+    const step: number = (stop - start) / (points - 1)
+
+    return Array.from({ length: points }, (_, index) => start + step * index)
+}
 
 const utility =
 {
     initArray,
-    cn
+    cn,
+    linspace
 }
 
 export default utility

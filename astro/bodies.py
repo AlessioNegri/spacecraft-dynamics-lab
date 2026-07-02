@@ -5,17 +5,17 @@ import numpy as np
 import typing
 
 class Attractor(enum.Enum):
-    SUN     = "sun"
-    MERCURY = "mercury"
-    VENUS   = "venus"
-    EARTH   = "earth"
-    MOON    = "moon"
-    MARS    = "mars"
-    JUPITER  = "jupiter"
-    SATURN   = "saturn"
-    URANUS   = "uranus"
-    NEPTUNE  = "neptune"
-    PLUTO    = "pluto"
+    SUN         = "sun"
+    MERCURY     = "mercury"
+    VENUS       = "venus"
+    EARTH       = "earth"
+    MOON        = "moon"
+    MARS        = "mars"
+    JUPITER     = "jupiter"
+    SATURN      = "saturn"
+    URANUS      = "uranus"
+    NEPTUNE     = "neptune"
+    PLUTO       = "pluto"
 
 @dc.dataclass(frozen=True)
 class Body:

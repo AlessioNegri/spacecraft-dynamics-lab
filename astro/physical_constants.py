@@ -25,3 +25,7 @@ radiated_power_intensity_photosphere: u.Quantity = stefan_boltzmann_constant * p
 # * Photosphere radius R_0
 
 photosphere_radius: u.Quantity = 696_000 * u.km
+
+# * Universal gravitational constant
+
+universal_gravitational_constant : u.Quantity = 6.674_301_5e-20 * u.km**3 / u.s**2 / u.kg

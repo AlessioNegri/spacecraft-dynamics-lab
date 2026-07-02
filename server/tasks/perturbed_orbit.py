@@ -104,7 +104,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
     
     step: u.Quantity = 1 * u.hour
 
-    n_steps: int = int(((end_date - start_date) / step).to_value(u.dimensionless_unscaled))
+    n_steps: int = int(((end_date - start_date) / step).to_value(u.one))
 
     deltas: t.TimeDelta = np.arange(0, n_steps + 1) * step
 

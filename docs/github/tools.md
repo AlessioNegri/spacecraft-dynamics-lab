@@ -287,3 +287,35 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
   <img src="../images/tools-page/transfer.png" alt="image">
 
 </div>
+
+## Circular Restricted Three-Body Problem
+
+The `Circular Restricted Three-Body Problem` dialog furnishes different utilities used in the analysis of the motion of a small body under the gravitational influence of two larger bodies (primaries) that are in circular orbits around their common center of mass.
+
+<div class="side-view">
+
+  <div>
+    <h3>Orbit Parameters</h3>
+    <p>
+      Compute the circular restricted three-body problem parameters for a selected pair of
+      primaries, including the mass ratios, angular velocity, body positions, and Lagrange points.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/orbit-parameters.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Zero Velocity Curves</h3>
+    <p>
+      Use the CR3BP orbit parameters from the selected primaries to compute the zero-velocity
+      manifold and visualize the forbidden regions as the Jacobi constant varies.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/zero-velocity-curves.png" alt="image">
+
+</div>

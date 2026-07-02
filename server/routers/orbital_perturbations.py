@@ -60,7 +60,6 @@ async def post_run(payload: schema.SimulationModel, background: fastapi.Backgrou
     
     return utility.ok("Ok")
 
-
 # >>> PUT
 
 @router.put("/nodal-regression-rate", response_model=schema.NodalRegressionOutModelInfo)

@@ -9,6 +9,7 @@ import OrbitalManeuversPage from "./pages/OrbitalManeuversPage"
 import RelativeMotionPage from "./pages/RelativeMotionPage"
 import InterplanetaryPage from "./pages/InterplanetaryPage"
 import OrbitalPerturbationsPage from "./pages/OrbitalPerturbationsPage"
+import CircularRestrictedThreeBodyProblemPage from "./pages/CircularRestrictedThreeBodyProblem"
 import SettingsPage from "./pages/SettingsPage"
 
 interface RightPanelProps
@@ -77,6 +78,7 @@ export default function RightPanel(props: Readonly<RightPanelProps>): react.JSX.
                 {props.activePage === "relative-motion" && <RelativeMotionPage/>}
                 {props.activePage === "interplanetary" && <InterplanetaryPage/>}
                 {props.activePage === "orbital-perturbations" && <OrbitalPerturbationsPage/>}
+                {props.activePage === "circular-restricted-three-body-problem" && <CircularRestrictedThreeBodyProblemPage/>}
 
                 <div className={utility.cn(props.activePage === 'settings' ? 'block' : 'hidden', 'h-full')}>
                     <SettingsPage />

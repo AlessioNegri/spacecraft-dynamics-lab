@@ -54,7 +54,8 @@ export default class MainWindow extends Singleton
             titleBarStyle: 'hidden', // ? For macOs
             title: "Spacecraft Dynamics Lab",
             icon: icon,
-            transparent: true,
+            transparent: false,
+            backgroundColor: "#00000000",
             webPreferences:
             {
                 preload: path.join(__dirname, '../preload/index.js'),

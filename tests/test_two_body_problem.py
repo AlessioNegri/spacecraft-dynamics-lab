@@ -16,7 +16,7 @@ def test_cartesian_to_orbit_parameters_circle():
     v_0: np.ndarray = np.array([0, v_geo, 0]) * u.km / u.s
 
     op: OrbitParameters = Orbit.cartesian_to_orbit_parameters(attractor=attractor, position=r_0, velocity=v_0)
-    print(op)
+    
     assert op.conic_type == "circle"
     assert np.isclose(op.specific_angular_momentum.to_value(), r_geo * v_geo, atol=1e-1)
     assert np.isclose(op.eccentricity, 0, atol=1e-4)

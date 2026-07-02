@@ -41,7 +41,7 @@ export default function StatusBar(): react.JSX.Element
 
         const rmWSS = globalThis.window.callback.onWebSocketSimulation((sim: WebSocketSimulation) =>
         {
-            setSim(sim)
+            react.startTransition(() => { setSim(sim) })
 
             if (sim.counter === sim.total && sim.counter != 0)
             {
@@ -71,9 +71,9 @@ export default function StatusBar(): react.JSX.Element
     }, [notification])
 
     // --- RENDERING ---
-
+    
     const value: number = (sim && sim.total > 0) ? Math.min(100, Math.round((sim.counter / sim.total) * 100)) : 0
-
+    
     const status: string = (sim && value !== 100) ? `Simulation [${sim.source}]` : ""
 
     const toastTitle: string = sim ? `Simulation [${sim.source}]` : ""

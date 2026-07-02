@@ -17,7 +17,6 @@ class SimulationModel(pydantic.BaseModel):
     lunarGravity: bool
     solarGravity: bool
 
-
 # * Nodal Regression
 
 class NodalRegressionInModelInfo(pydantic.BaseModel):

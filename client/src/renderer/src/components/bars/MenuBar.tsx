@@ -34,6 +34,9 @@ import NodalRegressionDialog from "../dialogs/tools/orbital_perturbations/NodalR
 import ApsidalRotationDialog from "../dialogs/tools/orbital_perturbations/ApsidalRotationDialog"
 import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSynchronousDialog"
 
+import OrbitParametersDialog from "../dialogs/tools/circular_restricted_three_body_problem/OrbitParametersDialog"
+import ZeroVelocityCurvesDialog from "../dialogs/tools/circular_restricted_three_body_problem/ZeroVelocityCurvesDialog"
+
 const DIALOGS =
 {
     aboutDialog: AboutDialog,
@@ -61,6 +64,9 @@ const DIALOGS =
     nodalRegressionDialog: NodalRegressionDialog,
     apsidalRotationDialog: ApsidalRotationDialog,
     sunSynchronousDialog: SunSynchronousDialog,
+
+    OrbitParametersDialog: OrbitParametersDialog,
+    ZeroVelocityCurvesDialog: ZeroVelocityCurvesDialog,
 } as const
 
 interface Props
@@ -179,6 +185,14 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
                 { label: "Nodal Regression", action: () => setOpenDialog("nodalRegressionDialog") },
                 { label: "Apsidal Rotation", action: () => setOpenDialog("apsidalRotationDialog") },
                 { label: "Sun-Synchronous Orbit", action: () => setOpenDialog("sunSynchronousDialog") }
+            ]
+        },
+        {
+            label: "Circular Restricted 3-Body Problem",
+            children:
+            [
+                { label: "Orbit Parameters", action: () => setOpenDialog("OrbitParametersDialog") },
+                { label: "Zero Velocity Curves", action: () => setOpenDialog("ZeroVelocityCurvesDialog") }
             ]
         }
     ]

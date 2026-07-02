@@ -18,6 +18,7 @@ from routers.orbital_maneuvers import router as router_orbital_maneuvers
 from routers.relative_motion import router as router_relative_motion
 from routers.interplanetary import router as router_interplanetary
 from routers.orbital_perturbations import router as router_orbital_perturbations
+from routers.circular_restricted_three_body_problem import router as router_circular_restricted_three_body_problem
 from routers.tools import router as router_tools
 
 HOST: str = "mongodb://localhost:27017"
@@ -144,6 +145,7 @@ app.include_router(router=router_relative_motion)
 app.include_router(router=router_interplanetary)
 app.include_router(router=router_tools)
 app.include_router(router=router_orbital_perturbations)
+app.include_router(router=router_circular_restricted_three_body_problem)
 
 @app.get("/")
 async def get_root():

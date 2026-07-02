@@ -28,6 +28,7 @@ interface Props
     value: number | string
     min?: number
     max?: number
+    step?: number
     disabled?: boolean
     pattern?: string
     options?: Array<{ label: string; value: string | number }>
@@ -68,6 +69,190 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
     // --- RENDERING ---
 
+    let fieldContent: react.ReactNode
+
+    if (props.type === "select")
+    {
+        fieldContent = (
+            <Themes.Flex direction={"column"} gap={"2"}>
+
+                <Themes.Text className="flex justify-between text-sm text-neutral-300">
+
+                    {props.label}
+
+                    {icon && <img src={icon} alt="icon" width={20} />}
+
+                </Themes.Text>
+
+                <Themes.Select.Root
+                    required
+                    disabled={props.disabled}
+                    name={props.name}
+                    value={String(props.value)}
+                    onValueChange={(value: string) =>
+                        props.onChange?.({ target: { name: props.name, value } } as any) }
+                >
+
+                    <Themes.Select.Trigger variant="soft" style={{ fontFamily: "Oxanium" }} />
+
+                    <Themes.Select.Content>
+
+                        {props.options?.map(opt =>
+                            <Themes.Select.Item
+                                key={opt.value}
+                                value={String(opt.value)}
+                            >
+                                {opt.label}
+                            </Themes.Select.Item>)
+                        }
+
+                    </Themes.Select.Content>
+
+                </Themes.Select.Root>
+
+            </Themes.Flex>
+        )
+    }
+    else if (props.type === "range")
+    {
+        fieldContent = (
+            <Themes.Flex direction={"column"} gap={"2"}>
+
+                {props.label && (
+                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
+                        {props.label}
+                        {icon && <img src={icon} alt="icon" width={20} />}
+                    </Themes.Text>
+                )}
+
+                <div
+                    className={utility.cn(
+                        "flex items-center rounded bg-orange-400/10 h-8 overflow-hidden",
+                        "focus-within:ring-2 focus-within:ring-orange-400/50 focus-within:border-orange-400",
+                        "transition mx-0.5",
+                        props.disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                >
+
+                    {/* LEFT SLOT (symbol) */}
+                    <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                        <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                    </div>
+
+                    {/* RANGE INPUT */}
+                    <Form.Control asChild>
+                        <input
+                            style={{ fontFamily: "Oxanium" }}
+                            required
+                            disabled={props.disabled}
+                            name={props.name}
+                            type="range"
+                            value={props.value}
+                            onChange={props.onChange}
+                            min={props.min}
+                            max={props.max}
+                            step={props.step ?? "any"}
+                            list={`${props.name}-ticks`}
+                            className="w-full bg-transparent outline-none accent-orange-400 mx-4"
+                        />
+                    </Form.Control>
+
+                    {/* INLINE VALUE DISPLAY */}
+                    <div className="px-2 h-8 flex items-center text-sm text-orange-300 font-mono">
+                        {Number(props.value).toFixed(3)}
+                    </div>
+
+                    {/* RIGHT SLOT (unit) */}
+                    <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
+                        <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+                    </div>
+
+                </div>
+
+            </Themes.Flex>
+        )
+    }
+    else
+    {
+        fieldContent = (
+            <Themes.Flex direction={"column"} gap={"2"}>
+
+            {
+                (!props.tooltip && props.label) &&
+
+                <Themes.Text className="flex justify-between text-sm text-neutral-300">
+
+                    {props.label}
+
+                    {icon && <img src={icon} alt="icon" width={20} />}
+
+                </Themes.Text>
+
+            }
+
+                <div
+                    className={utility.cn(
+                        "flex items-center rounded bg-orange-400/10 h-8 overflow-hidden",
+                        "focus-within:ring-2 focus-within:ring-orange-400/50 focus-within:border-orange-400",
+                        "transition mx-0.5",
+                        props.disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                    >
+
+                    {/* LEFT SLOT (symbol) */}
+
+                    {
+                        props.tooltip
+                        
+                        ?
+                        
+                        <Tooltip title={props.label ?? ""} side="top">
+
+                            <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                                <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                            </div>
+
+                        </Tooltip>
+
+                        :
+                        
+                        <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
+                            <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
+                        </div>
+                    }
+
+                    {/* INPUT */}
+
+                    <Form.Control asChild>
+                        <input
+                            style={{ fontFamily: "Oxanium" }}
+                            required
+                            disabled={props.disabled}
+                            name={props.name}
+                            type={props.type ?? "text"}
+                            placeholder="Insert value..."
+                            value={props.value}
+                            onChange={props.onChange}
+                            min={props.min}
+                            max={props.max}
+                            pattern={props.pattern}
+                            step={props.step ?? "any"}
+                            className="w-full px-2 bg-transparent outline-none text-orange-200"
+                        />
+                    </Form.Control>
+
+                    {/* RIGHT SLOT (unit) */}
+
+                    <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
+                        <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+                    </div>
+
+                </div>
+
+            </Themes.Flex>
+        )
+    }
+
     return (
         <Form.Field name={props.name} className={`flex flex-col space-y-2 ${props.className ?? ""}`}>
 
@@ -83,128 +268,7 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
             </div> */}
 
-            {
-                props.type === "select"
-
-                ?
-
-                <Themes.Flex direction={"column"} gap={"2"}>
-
-                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
-
-                        {props.label}
-
-                        {icon && <img src={icon} alt="icon" width={20} />}
-
-                    </Themes.Text>
-
-                    <Themes.Select.Root
-                        required
-                        disabled={props.disabled}
-                        name={props.name}
-                        value={String(props.value)}
-                        onValueChange={(value: string) =>
-                            props.onChange?.({ target: { name: props.name, value } } as any) }
-                    >
-
-                        <Themes.Select.Trigger variant="soft" style={{ fontFamily: "Oxanium" }} />
-
-                        <Themes.Select.Content>
-
-                            {props.options?.map(opt =>
-                                <Themes.Select.Item
-                                    key={opt.value}
-                                    value={String(opt.value)}
-                                >
-                                    {opt.label}
-                                </Themes.Select.Item>)
-                            }
-
-                        </Themes.Select.Content>
-
-                    </Themes.Select.Root>
-
-                </Themes.Flex>
-
-                :
-
-                <Themes.Flex direction={"column"} gap={"2"}>
-
-                {
-                    (!props.tooltip && props.label) &&
-
-                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
-
-                        {props.label}
-
-                        {icon && <img src={icon} alt="icon" width={20} />}
-
-                    </Themes.Text>
-
-                }
-
-                    <div
-                        className={utility.cn(
-                            "flex items-center rounded bg-orange-400/10 h-8 overflow-hidden",
-                            "focus-within:ring-2 focus-within:ring-orange-400/50 focus-within:border-orange-400",
-                            "transition mx-0.5",
-                            props.disabled && "opacity-50 cursor-not-allowed"
-                        )}
-                        >
-
-                        {/* LEFT SLOT (symbol) */}
-
-                        {
-                            props.tooltip
-                            
-                            ?
-                            
-                            <Tooltip title={props.label ?? ""} side="top">
-
-                                <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
-                                    <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
-                                </div>
-
-                            </Tooltip>
-
-                            :
-                            
-                            <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
-                                <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
-                            </div>
-                        }
-
-                        {/* INPUT */}
-
-                        <Form.Control asChild>
-                            <input
-                                style={{ fontFamily: "Oxanium" }}
-                                required
-                                disabled={props.disabled}
-                                name={props.name}
-                                type={props.type ?? "text"}
-                                placeholder="Insert value..."
-                                value={props.value}
-                                onChange={props.onChange}
-                                min={props.min}
-                                max={props.max}
-                                pattern={props.pattern}
-                                step="any"
-                                className="w-full px-2 bg-transparent outline-none text-orange-200"
-                            />
-                        </Form.Control>
-
-                        {/* RIGHT SLOT (unit) */}
-
-                        <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
-                            <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
-                        </div>
-
-                    </div>
-
-                </Themes.Flex>
-
-            }
+            { fieldContent }
 
             <Form.Message className="text-sm text-red-400" match="valueMissing">Required</Form.Message>
 
