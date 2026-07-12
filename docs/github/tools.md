@@ -164,49 +164,20 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
 
 </div>
 
-## 🌀 Orbital Perturbations
+## 🚀 Orbital Maneuvers
 
-The `Orbital Perturbations` dialogs furnishes different utilities to analyse the effects of various forces on orbital
-motion.
-
-<div class="side-view">
-
-  <div>
-    <h3>Nodal Regression</h3>
-    <p>
-      Analyse the secular effect of the Earth's oblateness (J₂) and third-body perturbations (lunar and solar) on the
-      right ascension of the ascending node.
-    </p>
-  </div>
-
-  <img src="../images/tools-page/nodal-regression.png" alt="image">
-
-</div>
+The `Orbital Maneuvers` dialogs furnishes different utilities to analyse the orbital maneuvers characteristics.
 
 <div class="side-view">
 
   <div>
-    <h3>Apsidal Rotation</h3>
+    <h3>Non-Impulsive Maneuvers</h3>
     <p>
-      Analyse the secular effect of the Earth's oblateness (J₂) and third-body perturbations (lunar and solar) on the
-      argument of periapsis.
+      Compute non-impulsive maneuvers, including coplanar circle-to-circle transfers, inclination changes, and transfers between inclined circular orbits.
     </p>
   </div>
 
-  <img src="../images/tools-page/apsidal-rotation.png" alt="image">
-
-</div>
-
-<div class="side-view">
-
-  <div>
-    <h3>Sun-Synchronous Orbit</h3>
-    <p>
-      Compute the inclination conditions for maintaining a sun-synchronous orbit, considering the Earth's oblateness (J₂).
-    </p>
-  </div>
-
-  <img src="../images/tools-page/sun-synchronous-orbit.png" alt="image">
+  <img src="../images/tools-page/non-impulsive-maneuvers.png" alt="image">
 
 </div>
 
@@ -288,7 +259,53 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
 
 </div>
 
-## Circular Restricted Three-Body Problem
+## 🌀 Orbital Perturbations
+
+The `Orbital Perturbations` dialogs furnishes different utilities to analyse the effects of various forces on orbital
+motion.
+
+<div class="side-view">
+
+  <div>
+    <h3>Nodal Regression</h3>
+    <p>
+      Analyse the secular effect of the Earth's oblateness (J₂) and third-body perturbations (lunar and solar) on the
+      right ascension of the ascending node.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/nodal-regression.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Apsidal Rotation</h3>
+    <p>
+      Analyse the secular effect of the Earth's oblateness (J₂) and third-body perturbations (lunar and solar) on the
+      argument of periapsis.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/apsidal-rotation.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Sun-Synchronous Orbit</h3>
+    <p>
+      Compute the inclination conditions for maintaining a sun-synchronous orbit, considering the Earth's oblateness (J₂).
+    </p>
+  </div>
+
+  <img src="../images/tools-page/sun-synchronous-orbit.png" alt="image">
+
+</div>
+
+## 🔺 Circular Restricted Three-Body Problem
 
 The `Circular Restricted Three-Body Problem` dialog furnishes different utilities used in the analysis of the motion of a small body under the gravitational influence of two larger bodies (primaries) that are in circular orbits around their common center of mass.
 

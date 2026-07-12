@@ -10,5 +10,9 @@
     ],
     "files.associations": {
         "*.spec": "python"
-    }
+    },
+    "workbench.editor.enablePreview": true,
+    "workbench.editor.enablePreviewFromQuickOpen": true,
+    "workbench.editor.enablePreviewFromCodeNavigation": true,
+    "workbench.list.openMode": "singleClick"
 }

@@ -161,3 +161,72 @@ class PlaneChangeInModelInfo(BaseInModelInfo):
         data: Data
 
     maneuver: ManeuverInfo
+
+# * Coplanar Circle-to-Circle
+
+class CoplanarCircleCircleInModelInfo(BaseInModelInfo):
+    
+    class ManeuverInfo(pydantic.BaseModel):
+    
+        class Data(pydantic.BaseModel):
+        
+            sma: float
+        
+        type: typing.Literal['coplanar-circle-circle']
+        data: Data
+
+    maneuver: ManeuverInfo
+
+# * Inclination Change Non-Impulsive
+
+class InclinationChangeNonImpulsiveInModelInfo(BaseInModelInfo):
+    
+    class ManeuverInfo(pydantic.BaseModel):
+    
+        class Data(pydantic.BaseModel):
+        
+            inc: float
+        
+        type: typing.Literal['inclination-change-non-impulsive']
+        data: Data
+
+    maneuver: ManeuverInfo
+
+# * Coplanar Circle-to-Circle
+
+class ToolsCoplanarCircleCircleInModelInfo(pydantic.BaseModel):
+    
+    attractor: str
+    spacecraft: Spacecraft
+    initialRadius: float
+    finalRadius: float
+    earthShadow: bool
+
+# * Inclination change for circular orbit (non-impulsive)
+
+class ToolsInclinationChangeInModelInfo(pydantic.BaseModel):
+    
+    attractor: str
+    spacecraft: Spacecraft
+    radius: float
+    initialInclination: float
+    finalInclination: float
+
+# * Inclination change between different circular orbits
+
+class ToolsInclinedCircularOrbitsInModelInfo(pydantic.BaseModel):
+    
+    attractor: str
+    spacecraft: Spacecraft
+    initialRadius: float
+    finalRadius: float
+    initialInclination: float
+    finalInclination: float
+
+# * Common response for non-impulsive maneuvers
+
+class NonImpulsiveOutModelInfo(pydantic.BaseModel):
+    
+    timeOfFlight: float
+    propellantMass: float
+    deltaVelocity: float

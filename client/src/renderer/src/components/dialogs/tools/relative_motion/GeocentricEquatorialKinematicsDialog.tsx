@@ -225,8 +225,8 @@ export default function GeocentricEquatorialKinematicsDialog(props: Readonly<Pro
                         unit="deg"
                         value={formIn.orbitalElementsTarget.inc}
                         onChange={handleChange}
-                        min={-360}
-                        max={360}
+                        min={0}
+                        max={180}
                         tooltip
                     />
 

@@ -32,8 +32,8 @@ export default function PlaneChange(props: Readonly<Props>): react.JSX.Element
                 unit="deg"
                 value={data.inc}
                 onChange={handleChange}
-                min={-360}
-                max={360}
+                min={0}
+                max={180}
             />
 
             <InputField

@@ -136,9 +136,9 @@ class Orbit:
         
         eps: float = (pi_2 / 3)**(1/3)
 
-        x0_L1: float = 1 - eps
-        x0_L2: float = 1 + eps
-        x0_L3: float = - 1 - 5 * pi_2 / 12
+        x0_lagrange_1: float = 1 - eps
+        x0_lagrange_2: float = 1 + eps
+        x0_lagrange_3: float = - 1 - 5 * pi_2 / 12
         
         # >>> Bracketed roots (guaranteed)
         
@@ -149,17 +149,17 @@ class Orbit:
         # >>> Optional Newton refinement
         
         try:
-            csi_1 = optimize.newton(f, x0=x0_L1, maxiter=100, tol=1e-8)
+            csi_1 = optimize.newton(f, x0=x0_lagrange_1, maxiter=100, tol=1e-8)
         except any:
             pass
 
         try:
-            csi_2 = optimize.newton(f, x0=x0_L2, maxiter=100, tol=1e-8)
+            csi_2 = optimize.newton(f, x0=x0_lagrange_2, maxiter=100, tol=1e-8)
         except any:
             pass
 
         try:
-            csi_3 = optimize.newton(f, x0=x0_L3, maxiter=100, tol=1e-8)
+            csi_3 = optimize.newton(f, x0=x0_lagrange_3, maxiter=100, tol=1e-8)
         except any:
             pass
         

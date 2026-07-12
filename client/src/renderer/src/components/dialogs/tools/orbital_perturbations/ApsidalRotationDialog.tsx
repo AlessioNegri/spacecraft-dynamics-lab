@@ -165,8 +165,8 @@ export default function ApsidalRotationDialog(props: Readonly<Props>): react.JSX
                     unit="deg"
                     value={formIn.orbitalElements.inc}
                     onChange={handleChange}
-                    min={-90}
-                    max={90}
+                    min={0}
+                    max={180}
                 />
 
             </Form.Root>

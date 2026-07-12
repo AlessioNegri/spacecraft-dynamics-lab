@@ -101,6 +101,8 @@ Here are some references that were used to develop the application:
 
 ➡️ [ORBITAL PERTURBATIONS](docs/github/orbital-perturbations.md)
 
+➡️ [CIRCULAR RESTRICTED THREE-BODY PROBLEM](docs/github/circular-restricted-three-body-problem.md)
+
 ➡️ [SETTINGS](docs/github/settings.md)
 
 ## 🖼️ Images

@@ -187,7 +187,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     unit="deg"
                     value={formIn.oe.inc}
                     onChange={handleChange}
-                    min={-90}
+                    min={0}
                     max={180}
                 />
 

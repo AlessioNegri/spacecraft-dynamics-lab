@@ -170,8 +170,8 @@ export default function KeplerianCartesianDialog(props: Readonly<Props>): react.
                     unit="deg"
                     value={formIn.oe.inc}
                     onChange={handleChange}
-                    min={-360}
-                    max={360}
+                    min={0}
+                    max={180}
                 />
 
                 <InputField

@@ -32,6 +32,7 @@ interface Props
     disabled?: boolean
     pattern?: string
     options?: Array<{ label: string; value: string | number }>
+    groups?: Array<{ caption: string; options: Array<{ label: string; value: string | number }> }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
     className?: string
     tooltip?: boolean
@@ -97,13 +98,35 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
                     <Themes.Select.Content>
 
-                        {props.options?.map(opt =>
-                            <Themes.Select.Item
-                                key={opt.value}
-                                value={String(opt.value)}
-                            >
-                                {opt.label}
-                            </Themes.Select.Item>)
+                        {
+                            props.options?.map(option =>
+                                <Themes.Select.Item key={option.value} value={String(option.value)}>
+                                    {option.label}
+                                </Themes.Select.Item>
+                            )
+                        }
+
+                        {
+                            props.groups?.map((group, index) =>
+                                <Themes.Select.Group key={group.caption}>
+
+                                    <Themes.Select.Label className="uppercase">{group.caption}</Themes.Select.Label>
+
+                                    {
+                                        group.options.map(option =>
+                                            <Themes.Select.Item key={option.value} value={String(option.value)}>
+                                                {option.label}
+                                            </Themes.Select.Item>
+                                        )
+                                    }
+
+                                    {
+                                        props.groups && index < props.groups?.length - 1 &&
+                                        <Themes.Select.Separator />
+                                    }
+
+                                </Themes.Select.Group>
+                            )
                         }
 
                     </Themes.Select.Content>
@@ -170,6 +193,31 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                 </div>
 
             </Themes.Flex>
+        )
+    }
+    else if (props.type === "checkbox")
+    {
+        fieldContent = (
+            <Themes.Text as="label" size="3" className="h-8 pt-8">
+
+                <Themes.Flex as="span" gap="2" className="text-neutral-300">
+
+                    <Themes.Checkbox
+                        size="3"
+                        variant="soft"
+                        checked={Boolean(props.value)}
+                        disabled={props.disabled}
+                        defaultChecked
+                        onCheckedChange={(checked: boolean) =>
+                            props.onChange?.({ target: { name: props.name, value: checked as boolean } } as any)
+                        }
+                    />
+
+                    {props.label}
+
+                </Themes.Flex>
+
+            </Themes.Text>
         )
     }
     else

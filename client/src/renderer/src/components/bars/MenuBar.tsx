@@ -23,6 +23,8 @@ import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/Topocen
 import AngleRangeDialog from "../dialogs/tools/orbit_determination/AngleRangeDialog"
 import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
 
+import NonImpulsiveManeuversDialog from "../dialogs/tools/orbital_maneuvers/NonImpulsiveManeuversDialog"
+
 import LvlhKinematicsDialog from "../dialogs/tools/relative_motion/LvlhKinematicsDialog"
 import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_motion/GeocentricEquatorialKinematicsDialog"
 
@@ -53,6 +55,8 @@ const DIALOGS =
     topocentricFrameDialog: TopocentricFrameDialog,
     angleRangeDialog: AngleRangeDialog,
     gaussMethodDialog: GaussMethodDialog,
+
+    nonImpulsiveManeuversDialog: NonImpulsiveManeuversDialog,
 
     lvlhKinematicsDialog: LvlhKinematicsDialog,
     geocentricEquatorialKinematicsDialog: GeocentricEquatorialKinematicsDialog,
@@ -159,6 +163,13 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
                 { label: "Topocentric Frame", action: () => setOpenDialog("topocentricFrameDialog") },
                 { label: "Angle Range", action: () => setOpenDialog("angleRangeDialog") },
                 { label: "Gauss Method", action: () => setOpenDialog("gaussMethodDialog") }
+            ]
+        },
+        {
+            label: "Orbital Maneuvers",
+            children:
+            [
+                { label: "Non-Impulsive Maneuvers", action: () => setOpenDialog("nonImpulsiveManeuversDialog") }
             ]
         },
         {

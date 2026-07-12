@@ -5,7 +5,9 @@ type IOrbitalManeuverType = 'hohmann' |
                             'apse-line-rotation' |
                             'chase' |
                             'inclination-change' |
-                            'plane-change'
+                            'plane-change' |
+                            'coplanar-circle-circle' |
+                            'inclination-change-non-impulsive'
 
 type HohmannDirection = 0 | 1
 
@@ -61,6 +63,16 @@ interface IPlaneChange
     raan: number
 }
 
+interface ICoplanarCircleCircle
+{
+    sma: number
+}
+
+interface IInclinationChangeNonImpulsive
+{
+    inc: number
+}
+
 type IOrbitalManeuverData = IHohmann |
                             IBiEllipticHohmann |
                             IPhasing |
@@ -68,7 +80,16 @@ type IOrbitalManeuverData = IHohmann |
                             IApseLineRotation |
                             IChase |
                             IInclinationChange |
-                            IPlaneChange
+                            IPlaneChange |
+                            ICoplanarCircleCircle |
+                            IInclinationChangeNonImpulsive
+
+interface Spacecraft
+{
+    mass: number
+    specificImpulse: number
+    thrust: number
+}
 
 interface IOrbitalManeuver
 {
@@ -78,12 +99,7 @@ interface IOrbitalManeuver
 
 interface IOrbitalManeuverFormInput
 {
-    spacecraft:
-    {
-        mass: number
-        specificImpulse: number
-        thrust: number
-    }
+    spacecraft: Spacecraft
     attractor: string
     orbitalElements: IOrbitalElements
     maneuver: IOrbitalManeuver
@@ -109,4 +125,41 @@ interface IOrbits
     initial: IVector3D[]
     transfer: IVector3D[]
     final: IVector3D[]
+}
+
+// * Tools
+
+interface IToolsCoplanarCircleCircleFormInput
+{
+    attractor: string
+    spacecraft: Spacecraft
+    initialRadius: number
+    finalRadius: number
+    earthShadow: boolean
+}
+
+interface IToolsInclinationChangeInModelInfo
+{    
+    attractor: string
+    spacecraft: Spacecraft
+    radius: number
+    initialInclination: number
+    finalInclination: number
+}
+
+interface IToolsInclinedCircularOrbitsInModelInfo
+{    
+    attractor: string
+    spacecraft: Spacecraft
+    initialRadius: number
+    finalRadius: number
+    initialInclination: number
+    finalInclination: number
+}
+
+class INonImpulsiveFormOut
+{
+    timeOfFlight: number
+    propellantMass: number
+    deltaVelocity: number
 }

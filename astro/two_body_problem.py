@@ -27,7 +27,9 @@ import typing
 
 import astro.bodies as bodies
 import astro.common as common
-import astro.orbital_maneuvers as om
+import astro.enums as ae
+
+from astro.orbital_maneuvers import RocketMotor
 
 class Result:
     """Result of integration
@@ -248,13 +250,25 @@ class Orbit:
         
         self.epoch = epoch
     
-    def propagate_until(self, end_epoch: time.Time, rocket_motor: om.RocketMotor = None) -> Result:
+    def propagate_until(self,
+                        end_epoch: time.Time,
+                        rocket_motor: RocketMotor = None,
+                        thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                        initial_radius: float = 0,
+                        target_radius: float = 0,
+                        initial_inclination: float = 0,
+                        target_inclination: float = 0) -> Result:
         """
         Propagate the orbit until end_epoch
 
         Args:
             end_epoch (time.Time): End epoch for propagation
-            rocket_motor (om.RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
+            target_radius (float, optional): Target radius for thrust. Defaults to 0.
+            initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
+            target_inclination (float, optional): Target inclination for thrust. Defaults to 0.
 
         Returns:
             Result: Integration result
@@ -264,14 +278,26 @@ class Orbit:
         
         if end_epoch < self.epoch: raise TypeError(f"'end_epoch' {end_epoch} must come after 'epoch' {self.epoch}")
         
-        return self._propagate((end_epoch - self.epoch).to_value(u.s), rocket_motor)
+        return self._propagate((end_epoch - self.epoch).to_value(u.s), rocket_motor, thrust_direction, initial_inclination, target_inclination)
 
-    def propagate_for(self, delta: time.TimeDelta, rocket_motor: om.RocketMotor = None) -> Result:
+    def propagate_for(self,
+                      delta: time.TimeDelta,
+                      rocket_motor: RocketMotor = None,
+                      thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                      initial_radius: float = 0,
+                      target_radius: float = 0,
+                      initial_inclination: float = 0,
+                      target_inclination: float = 0) -> Result:
         """Propagate the orbit for delta time
 
         Args:
             delta (time.TimeDelta): Delta time for propagation
-            rocket_motor (om.RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
+            target_radius (float, optional): Target radius for thrust. Defaults to 0.
+            initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
+            target_inclination (float, optional): Target inclination for thrust. Defaults to 0.
 
         Returns:
             Result: Integration result
@@ -279,17 +305,29 @@ class Orbit:
         
         common.check_time_delta(delta)
         
-        return self._propagate(delta.to_value(u.s), rocket_motor)
-        
+        return self._propagate(delta.to_value(u.s), rocket_motor, thrust_direction, initial_inclination, target_inclination)
+
     # --- PRIVATE ---
     
-    def _propagate(self, delta: float, rocket_motor: om.RocketMotor = None):
+    def _propagate(self,
+                   delta: float,
+                   rocket_motor: RocketMotor = None,
+                   thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                   initial_radius: float = 0,
+                   target_radius: float = 0,
+                   initial_inclination: float = 0,
+                   target_inclination: float = 0) -> Result:
         """
         Propagate the orbit
 
         Args:
             delta (float): Delta time for propagation
-            rocket_motor (om.RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
+            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
+            target_radius (float, optional): Target radius for thrust. Defaults to 0.
+            initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
+            target_inclination (float, optional): Target inclination for thrust. Defaults to 0.
 
         Returns:
             Result: Integration result
@@ -333,11 +371,20 @@ class Orbit:
                                            y0=np.hstack([self.position,
                                                          self.velocity,
                                                          np.array([rocket_motor.spacecraft_mass.to_value(u.kg)])]),
-                                           method='RK45',
-                                           args=(rocket_motor.thrust.to_value(u.N) * 1e-3,
-                                                 rocket_motor.specific_impulse.to_value(u.s)),
-                                           rtol=1e-8,
+                                           method='BDF', # ! Low‑thrust dynamics are stiff
+                                           args=(rocket_motor.thrust.to_value(u.N) * 1e-3, # ? kg * km / s²
+                                                 rocket_motor.specific_impulse.to_value(u.s),
+                                                 thrust_direction,
+                                                 initial_radius,
+                                                 target_radius,
+                                                 initial_inclination,
+                                                 target_inclination),
+                                           rtol=1e-6,
                                            atol=1e-8)
+            
+            if not solution['success']:
+                
+                print(f"Integration failed: {solution['message']}")
             
             result.success = solution['success']
             result.time = solution['t'] * u.s
@@ -355,7 +402,7 @@ class Orbit:
         """
         Equations of relative motion under a central gravitational field.
         
-        This function integrates the classical two‑body equations:
+        This function integrates the classical two-body equations:
 
             Let the state vector be:
                 X = [x, y, z, v_x, v_y, v_z]
@@ -401,43 +448,77 @@ class Orbit:
         return dx_dt
     
     def _equations_relative_motion_with_thrust(self,
-                                               t : float,
-                                               X : np.ndarray,
-                                               thrust : float,
-                                               specific_impulse : float) -> np.ndarray:
+                                               t: float,
+                                               X: np.ndarray,
+                                               thrust: float,
+                                               specific_impulse: float,
+                                               thrust_direction: ae.ThrustDirection,
+                                               initial_radius: float,
+                                               target_radius: float,
+                                               initial_inclination: float,
+                                               target_inclination: float) -> np.ndarray:
         """
-        Equations of motion for a point‑mass spacecraft under central gravity and continuous thrust, expressed in the
-        inertial frame.
+        Equations of motion for a point-mass spacecraft under central gravity and continuous low thrust, expressed in
+        Cartesian inertial coordinates.
 
-            The state vector is:
-                X = [x, y, z, v_x, v_y, v_z, m]
-            
-            The equations of motion are:
+        The state vector is:
+            X = [x, y, z, v_x, v_y, v_z, m]
+        
+        where:
+        - (x, y, z)      : position components [km]
+        - (v_x, v_y, v_z): velocity components [km/s]
+        - m              : spacecraft mass [kg]
+        
+        The dynamical model includes:
+        - Newtonian two-body gravity from the attractor
+        - Continuous thrust acceleration
+        - Mass depletion according to the rocket equation
+        
+        Thrust direction modes
+        ----------------------
+        The thrust acceleration vector is constructed according to the selected
+        `thrust_direction`:
 
-                dx/dt   = v_x
-                dy/dt   = v_y
-                dz/dt   = v_z
+            1. ALONG_VELOCITY
+                Thrust is aligned with the instantaneous velocity vector:
+                    a_thrust = (T / m) * v̂
+                where v̂ = v_vec / ||v_vec||.
 
-                dv_x/dt = - μ * x / r³ + (T / m) * (v_x / v)
-                dv_y/dt = - μ * y / r³ + (T / m) * (v_y / v)
-                dv_z/dt = - μ * z / r³ + (T / m) * (v_z / v)
+            2. ALONG_ANGULAR_MOMENTUM
+                Thrust is aligned with the orbital angular momentum vector:
+                    a_thrust = (T / m) * ĥ
+                where:
+                    h_vec = r_vec x v_vec
+                    ĥ = h_vec / ||h_vec||.
+        
+        Equations of motion
+        -------------------
+        dx/dt   = v_x
+        dy/dt   = v_y
+        dz/dt   = v_z
 
-                dm/dt   = - T / (I_sp * g₀)
+        dv_x/dt = - μ * x / r³ + a_thrust_x
+        dv_y/dt = - μ * y / r³ + a_thrust_y
+        dv_z/dt = - μ * z / r³ + a_thrust_z
 
-            The model includes:
-                - Newtonian two‑body gravity from the attractor
-                - Thrust acceleration aligned with the instantaneous velocity vector
-                - Mass depletion according to the rocket equation
+        dm/dt   = - T / (I_sp * g₀)
 
         Args:
             t (float): Time (unused, included for ODE solver compatibility)
             X (np.ndarray): State vector [x, y, z, v_x, v_y, v_z, m]
             thrust (float): Thrust magnitude [N]
             specific_impulse (float): Specific impulse [s]
+            thrust_direction (ae.ThrustDirection): Direction of the thrust
+            initial_radius (float): Initial radius in km
+            target_radius (float): Target radius in km
+            initial_inclination (float): Initial inclination in rad
+            target_inclination (float): Target inclination in rad
 
         Returns:
             np.ndarray: Time derivative dx_dt
         """
+        
+        # * Unpack state vector and parameters
         
         T: float = thrust
         
@@ -449,18 +530,68 @@ class Orbit:
         
         v: float = np.sqrt(v_x**2 + v_y**2 + v_z**2)
         
+        h: np.ndarray = np.cross(np.array([x, y, z]), np.array([v_x, v_y, v_z]))
+        
+        h_m: float = np.linalg.norm(h)
+        
         mu: float = self.attractor.mu.to_value(u.km**3 / u.s**2)
         
         g_0: float = self.attractor.g_0.to_value(u.km / u.s**2)
+        
+        # * Thrust direction
+        
+        a_thrust: np.ndarray = np.zeros(3)
+        
+        if thrust_direction == ae.ThrustDirection.ALONG_VELOCITY:
+            
+            if np.isclose(v, 0.0, rtol=1e-09, atol=1e-09):
+                
+                v_hat = np.zeros(3)
+                
+            else:
+                
+                v_hat = np.array([v_x, v_y, v_z]) / v
+            
+            if initial_radius <= target_radius:
+                
+                sign: int = 1 # ? Along with v_hat
+                
+            else:
+                
+                sign: int = -1 # ? Opposite to v_hat
+            
+            a_thrust = sign * T / m * v_hat
+            
+        elif thrust_direction == ae.ThrustDirection.ALONG_ANGULAR_MOMENTUM:
+            
+            if np.isclose(h_m, 0.0, rtol=1e-09, atol=1e-09):
+            
+                h_hat = np.zeros(3)
+                
+            else:
+                
+                h_hat = h / h_m
+            
+            if initial_inclination <= target_inclination:
+                
+                sign: int = 1 # ? Along with h_hat
+                
+            else:
+                
+                sign: int = -1 # ? Opposite to h_hat
+            
+            a_thrust = sign * T / m * h_hat
+        
+        # * Equations of motion
         
         dx_dt = np.zeros(shape=(7))
         
         dx_dt[0] = v_x
         dx_dt[1] = v_y
         dx_dt[2] = v_z
-        dx_dt[3] = - (mu / r**3) * x + (T / m) * (v_x / v)
-        dx_dt[4] = - (mu / r**3) * y + (T / m) * (v_y / v)
-        dx_dt[5] = - (mu / r**3) * z + (T / m) * (v_z / v)
+        dx_dt[3] = - (mu / r**3) * x + a_thrust[0]
+        dx_dt[4] = - (mu / r**3) * y + a_thrust[1]
+        dx_dt[5] = - (mu / r**3) * z + a_thrust[2]
         dx_dt[6] = - T / (I_sp * g_0)
         
         return dx_dt

@@ -14,6 +14,7 @@ interface Props
     setOpened: (opened: boolean) => void
 }
 
+/** @function JulianDayDialog */
 export default function JulianDayDialog(props: Readonly<Props>): react.JSX.Element
 {
     // --- USE STATE ---

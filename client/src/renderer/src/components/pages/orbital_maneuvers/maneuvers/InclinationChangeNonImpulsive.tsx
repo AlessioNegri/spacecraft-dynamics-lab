@@ -4,21 +4,21 @@ import InputField from "@renderer/components/dialogs/InputField"
 
 import useManeuverState from "./Common"
 
-const defaultManeuver: IInclinationChange =
+const defaultManeuver: IInclinationChangeNonImpulsive =
 {
-    inc: 10
+    inc: 169
 }
 
 interface Props
 {
-    data: IInclinationChange
-    onChange: (data: IInclinationChange) => void
+    data: IInclinationChangeNonImpulsive
+    onChange: (data: IInclinationChangeNonImpulsive) => void
 }
 
-/** @function InclinationChange */
-export default function InclinationChange(props: Readonly<Props>): react.JSX.Element
+/** @function InclinationChangeNonImpulsive */
+export default function InclinationChangeNonImpulsive(props: Readonly<Props>): react.JSX.Element
 {
-    const { data, handleChange } = useManeuverState<IInclinationChange>(defaultManeuver, props.onChange)
+    const { data, handleChange } = useManeuverState<IInclinationChangeNonImpulsive>(defaultManeuver, props.onChange)
 
     return (
         <react.Fragment>

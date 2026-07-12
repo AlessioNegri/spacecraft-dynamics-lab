@@ -296,8 +296,8 @@ export default function LvlhKinematicsDialog(props: Readonly<Props>): react.JSX.
                         unit="deg"
                         value={formIn.orbitalElementsTarget.inc}
                         onChange={handleChange}
-                        min={-360}
-                        max={360}
+                        min={0}
+                        max={180}
                         tooltip
                     />
 
@@ -377,8 +377,8 @@ export default function LvlhKinematicsDialog(props: Readonly<Props>): react.JSX.
                         unit="deg"
                         value={formIn.orbitalElementsChaser.inc}
                         onChange={handleChange}
-                        min={-360}
-                        max={360}
+                        min={0}
+                        max={180}
                         tooltip
                     />
 

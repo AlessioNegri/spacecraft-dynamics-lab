@@ -2,11 +2,15 @@ import astropy.time as time
 import astropy.units as u
 import copy
 import fastapi
+import numpy as np
 import typing
 
 import schemas.orbital_maneuvers_schema as schema
 
+import routers.utility as utility
+
 import astro.bodies as bodies
+import astro.enums as ae
 import astro.orbit_3d as o3d
 import astro.orbital_maneuvers as om
 import astro.two_body_problem as tbp
@@ -146,6 +150,117 @@ def calculate_simulation_time(attractor: bodies.Attractor,
             t_sim = t_1 - t_2
     
     return t_sim
+
+def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
+                                            rocket_motor: om.RocketMotor,
+                                            orbital_elements: o3d.OrbitalElements,
+                                            target_semi_major_axis: u.Quantity,
+                                            time_step: u.Quantity = 10 * u.s)\
+                                                -> typing.Tuple[om.NonImpulsiveManeuverResult, tbp.Result]:
+    """
+    Compute a low-thrust coplanar circle-to-circle transfer
+
+    Args:
+        attractor (bodies.Attractor): Main attractor
+        rocket_motor (om.RocketMotor): Rocket motor
+        orbital_elements (o3d.OrbitalElements): Orbital elements
+        target_semi_major_axis (u.Quantity): Target value for the semimajor axis
+        time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
+
+    Returns:
+        typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]: Maneuver result & integration result
+    """
+
+    if orbital_elements.eccentricity.to_value() != 0:
+        
+        print('The initial orbit must be circular for this maneuver.')
+        
+        return om.NonImpulsiveManeuverResult(), tbp.Result()
+
+    # * Estimation of the time of flight for the integration
+
+    initial_radius: u.Quantity = orbital_elements.semimajor_axis
+    
+    final_radius: u.Quantity = target_semi_major_axis
+
+    tof, _, _ = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        initial_radius=initial_radius,
+        final_radius=final_radius
+    )
+
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+    
+    return om.OrbitalManeuvers.non_impulsive_maneuver(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        initial_position=r_0,
+        initial_velocity=v_0,
+        burning_time_guess=tof,
+        time_step=time_step,
+        final_position=np.array([final_radius.to_value(u.km), 0.0, 0.0]) * u.km,
+        semi_major_axis_target=True,
+        initial_radius=initial_radius,
+        final_radius=final_radius
+    )
+
+def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attractor,
+                                                     rocket_motor: om.RocketMotor,
+                                                     orbital_elements: o3d.OrbitalElements,
+                                                     target_inclination: u.Quantity,
+                                                     time_step: u.Quantity = 10 * u.s)\
+                                                         -> typing.Tuple[om.NonImpulsiveManeuverResult, tbp.Result]:
+    """
+    Compute a low-thrust coplanar circle-to-circle transfer
+
+    Args:
+        attractor (bodies.Attractor): Main attractor
+        rocket_motor (om.RocketMotor): Rocket motor
+        orbital_elements (o3d.OrbitalElements): Orbital elements
+        target_inclination (u.Quantity): Target value for the inclination
+        time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
+
+    Returns:
+        typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]: Maneuver result & integration result
+    """
+
+    if orbital_elements.eccentricity.to_value() != 0:
+        
+        print('The initial orbit must be circular for this maneuver.')
+        
+        return om.NonImpulsiveManeuverResult(), tbp.Result()
+
+    # * Estimation of the time of flight for the integration
+    
+    tof, _, _ = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        radius=orbital_elements.semimajor_axis,
+        initial_inclination=orbital_elements.inclination,
+        final_inclination=target_inclination
+    )
+
+    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+    
+    orbit: tbp.Orbit = tbp.Orbit()
+    
+    orbit.from_cartesian(attractor=attractor, position=r_0, velocity=v_0)
+    
+    return om.OrbitalManeuvers.non_impulsive_maneuver(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        initial_position=r_0,
+        initial_velocity=v_0,
+        burning_time_guess=tof,
+        time_step=time_step,
+        final_position=np.array([orbital_elements.semimajor_axis.to_value(u.km), 0.0, 0.0]) * u.km,
+        inclination_target=True,
+        initial_inclination=orbital_elements.inclination,
+        final_inclination=target_inclination,
+        thrust_direction=ae.ThrustDirection.ALONG_ANGULAR_MOMENTUM,
+        tolerance=1e-3
+    )
 
 # --- HTTP ---
 
@@ -613,14 +728,14 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     oe: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
-    nu_T: u.Quantity = data.maneuver.data.trueAnomalyTarget * u.deg
+    nu_t: u.Quantity = data.maneuver.data.trueAnomalyTarget * u.deg
     
     dt: time.TimeDelta = time.TimeDelta(u.Quantity(data.maneuver.data.dt, u.hour))
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.chase_maneuver(attractor=attractor,
                                                                      rocket_motor=rocket_motor,
                                                                      orbital_elements=oe,
-                                                                     true_anomaly_target=nu_T,
+                                                                     true_anomaly_target=nu_t,
                                                                      delta_time=dt)
     
     # * Initial Orbit
@@ -837,3 +952,279 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     )
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/coplanar-circle-circle", response_model=schema.OrbitalManeuverOutModelInfo)
+async def put_coplanar_circle_circle(data: schema.CoplanarCircleCircleInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Execute a coplanar circle-to-circle maneuver."""
+    
+    # * Maneuver
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+
+    maneuver, result = compute_coplanar_circle_circle_maneuver(attractor=attractor,
+                                                               rocket_motor=rocket_motor,
+                                                               orbital_elements=oe_1,
+                                                               target_semi_major_axis=data.maneuver.data.sma * u.km)
+    
+    if not result.success or maneuver.burn_time == 0 * u.s:
+        
+        return utility.error(status_code=fastapi.status.HTTP_400_BAD_REQUEST, message="Maneuver could not be computed.")
+    
+    position: u.Quantity = np.array([result.position_x[-1].to_value(),
+                                     result.position_y[-1].to_value(),
+                                     result.position_z[-1].to_value()]) * u.km
+    
+    velocity: u.Quantity = np.array([result.velocity_x[-1].to_value(),
+                                     result.velocity_y[-1].to_value(),
+                                     result.velocity_z[-1].to_value()]) * u.km / u.s
+    
+    initial_velocity: u.Quantity = np.array([result.velocity_x[0].to_value(),
+                                             result.velocity_y[0].to_value(),
+                                             result.velocity_z[0].to_value()]) * u.km / u.s
+    
+    oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                   position=position,
+                                                                   velocity=velocity)
+    
+    # * Initial Orbit
+
+    initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
+                                                                  orbital_elements=oe_1,
+                                                                  delta_time=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
+
+    # * Transfer Orbit
+    
+    transfer_orbit: typing.List[schema.Vector3D] = []
+    
+    for x, y, z in zip(result.position_x.to_value(), result.position_y.to_value(), result.position_z.to_value()):
+        
+        transfer_orbit.append(schema.Vector3D(x=x, y=y, z=z))
+
+    # * Final Orbit
+
+    final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
+                                                                orbital_elements=oe_2,
+                                                                delta_time=time.TimeDelta(oe_2.calc_orbital_period(attractor)))
+
+    # * Result
+    
+    result_model: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
+        orbitalElements=schema.OrbitalElements(
+            sam=oe_2.specific_angular_momentum.to_value(),
+            sma=oe_2.semimajor_axis.to_value(),
+            ecc=oe_2.eccentricity.to_value(),
+            inc=oe_2.inclination.to_value(),
+            raan=oe_2.right_ascension_of_ascending_node.to_value(),
+            aop=oe_2.argument_of_periapsis.to_value(),
+            ta=oe_2.true_anomaly.to_value()
+        ),
+        maneuver=schema.Maneuver(
+            dv=np.linalg.norm((velocity - initial_velocity).to_value(u.km / u.s)),
+            dt=result.time[-1].to_value(u.hour),
+            dm=(rocket_motor.spacecraft_mass - result.mass_spacecraft[-1]).to_value(u.kg),
+            burnTime=result.time[-1].to_value(u.s)
+        ),
+        initialOrbit=initial_orbit,
+        transferOrbit=transfer_orbit,
+        finalOrbit=final_orbit
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
+
+@router.put("/inclination-change-non-impulsive", response_model=schema.OrbitalManeuverOutModelInfo)
+async def put_inclination_change_non_impulsive(data: schema.InclinationChangeNonImpulsiveInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Execute a inclination change non-impulsive maneuver."""
+
+    # * Maneuver
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+
+    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+
+    maneuver, result = compute_inclination_change_non_impulsive_maneuver(attractor=attractor,
+                                                                         rocket_motor=rocket_motor,
+                                                                         orbital_elements=oe_1,
+                                                                         target_inclination=data.maneuver.data.inc * u.deg)
+    
+    if not result.success or maneuver.burn_time == 0 * u.s:
+        
+        return utility.error(status_code=fastapi.status.HTTP_400_BAD_REQUEST, message="Maneuver could not be computed.")
+    
+    position: u.Quantity = np.array([result.position_x[-1].to_value(),
+                                     result.position_y[-1].to_value(),
+                                     result.position_z[-1].to_value()]) * u.km
+    
+    velocity: u.Quantity = np.array([result.velocity_x[-1].to_value(),
+                                     result.velocity_y[-1].to_value(),
+                                     result.velocity_z[-1].to_value()]) * u.km / u.s
+    
+    initial_velocity: u.Quantity = np.array([result.velocity_x[0].to_value(),
+                                             result.velocity_y[0].to_value(),
+                                             result.velocity_z[0].to_value()]) * u.km / u.s
+    
+    oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                   position=position,
+                                                                   velocity=velocity)
+    
+    # * Initial Orbit
+
+    initial_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
+                                                                  orbital_elements=oe_1,
+                                                                  delta_time=time.TimeDelta(oe_1.calc_orbital_period(attractor)))
+
+    # * Transfer Orbit
+    
+    transfer_orbit: typing.List[schema.Vector3D] = []
+    
+    for x, y, z in zip(result.position_x.to_value(), result.position_y.to_value(), result.position_z.to_value()):
+        
+        transfer_orbit.append(schema.Vector3D(x=x, y=y, z=z))
+
+    # * Final Orbit
+
+    final_orbit: typing.List[schema.Vector3D] = propagate_orbit(attractor=attractor,
+                                                                orbital_elements=oe_2,
+                                                                delta_time=time.TimeDelta(oe_2.calc_orbital_period(attractor)))
+
+    # * Result
+    
+    result_model: schema.OrbitalManeuverOutModelInfo = schema.OrbitalManeuverOutModelInfo(
+        orbitalElements=schema.OrbitalElements(
+            sam=oe_2.specific_angular_momentum.to_value(),
+            sma=oe_2.semimajor_axis.to_value(),
+            ecc=oe_2.eccentricity.to_value(),
+            inc=oe_2.inclination.to_value(),
+            raan=oe_2.right_ascension_of_ascending_node.to_value(),
+            aop=oe_2.argument_of_periapsis.to_value(),
+            ta=oe_2.true_anomaly.to_value()
+        ),
+        maneuver=schema.Maneuver(
+            dv=np.linalg.norm((velocity - initial_velocity).to_value(u.km / u.s)),
+            dt=result.time[-1].to_value(u.hour),
+            dm=(rocket_motor.spacecraft_mass - result.mass_spacecraft[-1]).to_value(u.kg),
+            burnTime=result.time[-1].to_value(u.s)
+        ),
+        initialOrbit=initial_orbit,
+        transferOrbit=transfer_orbit,
+        finalOrbit=final_orbit
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
+
+# * Tools
+
+@router.put("/tools/coplanar-circle-circle", response_model=schema.NonImpulsiveOutModelInfo)
+async def put_tools_coplanar_circle_circle(data: schema.ToolsCoplanarCircleCircleInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute coplanar circle-to-circle transfer
+
+    Args:
+        data (schema.ToolsCoplanarCircleCircleInModelInfo): Data
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    # * Compute
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+
+    tof, m_p, dv = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        initial_radius=data.initialRadius * u.km,
+        final_radius=data.finalRadius * u.km,
+        earth_shadow=data.earthShadow
+    )
+    
+    # * Result
+    
+    result_model: schema.NonImpulsiveOutModelInfo = schema.NonImpulsiveOutModelInfo(
+        timeOfFlight=tof.to_value(u.s),
+        propellantMass=m_p.to_value(u.kg),
+        deltaVelocity=dv.to_value(u.km / u.s)
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
+
+@router.put("/tools/inclination-change", response_model=schema.NonImpulsiveOutModelInfo)
+async def put_tools_inclination_change(data: schema.ToolsInclinationChangeInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute non-impulsive inclination change
+
+    Args:
+        data (schema.ToolsInclinationChangeInModelInfo): Data
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    # * Compute
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+
+    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        radius=data.radius * u.km,
+        initial_inclination=data.initialInclination * u.deg,
+        final_inclination=data.finalInclination * u.deg
+    )
+
+    # * Result
+    
+    result_model: schema.NonImpulsiveOutModelInfo = schema.NonImpulsiveOutModelInfo(
+        timeOfFlight=tof.to_value(u.s),
+        propellantMass=m_p.to_value(u.kg),
+        deltaVelocity=dv.to_value(u.km / u.s)
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
+
+@router.put("/tools/inclined-circular-orbits", response_model=schema.NonImpulsiveOutModelInfo)
+async def put_tools_inclined_circular_orbits(data: schema.ToolsInclinedCircularOrbitsInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute non-impulsive transfer between two inclined circular orbits
+
+    Args:
+        data (schema.ToolsInclinedCircularOrbitsInModelInfo): Data
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    # * Compute
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+
+    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclined_circular_orbits_transfer(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        initial_radius=data.initialRadius * u.km,
+        final_radius=data.finalRadius * u.km,
+        initial_inclination=data.initialInclination * u.deg,
+        final_inclination=data.finalInclination * u.deg
+    )
+
+    # * Result
+    
+    result_model: schema.NonImpulsiveOutModelInfo = schema.NonImpulsiveOutModelInfo(
+        timeOfFlight=tof.to_value(u.s),
+        propellantMass=m_p.to_value(u.kg),
+        deltaVelocity=dv.to_value(u.km / u.s)
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())

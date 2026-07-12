@@ -36,6 +36,10 @@ function checkError(file: string, error: any): string | null
 
                 message += details.join(' - ')
             }
+            else if (error.response.data.error)
+            {
+                message += error.response.data.error
+            }
             else
             {
                 message += error.response.data.detail

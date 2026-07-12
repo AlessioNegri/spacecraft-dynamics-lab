@@ -243,28 +243,28 @@ export default function CartesianKeplerianDialog(props: Readonly<Props>): react.
                 <OutputField
                     label="Inclination"
                     symbol="i"
-                    unit="DEG"
+                    unit="deg"
                     value={formOut.inc}
                 />
 
                 <OutputField
                     label="Right Ascension of Ascending Node"
                     symbol="\Omega"
-                    unit="DEG"
+                    unit="deg"
                     value={formOut.raan}
                 />
 
                 <OutputField
                     label="Argument Of Periapsis"
                     symbol="\omega"
-                    unit="DEG"
+                    unit="deg"
                     value={formOut.aop}
                 />
 
                 <OutputField
                     label="True Anomaly"
                     symbol="\theta"
-                    unit="DEG"
+                    unit="deg"
                     value={formOut.ta}
                 />
 

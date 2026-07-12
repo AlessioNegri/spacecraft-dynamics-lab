@@ -194,8 +194,8 @@ export default function LeftPanel(props: Readonly<Props>): react.JSX.Element
                         unit="deg"
                         value={formIn.orbitalElements.inc}
                         onChange={handleChange}
-                        min={-360}
-                        max={360}
+                        min={0}
+                        max={180}
                         tooltip
                     />
     

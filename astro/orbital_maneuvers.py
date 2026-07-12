@@ -10,6 +10,7 @@ References:
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 3: Orbit Determination
     - Chapter 7: Impulsive Orbital Maneuvers
+    - Chapter 9: Low-Thrust Transfers
 """
 
 __author__      = "Alessio Negri"
@@ -26,6 +27,7 @@ import typing
 
 import astro.bodies as bd
 import astro.common as cm
+import astro.enums as ae
 import astro.orbit_3d as o3d
 import astro.orbital_position as op
 import astro.orbit_determination as od
@@ -74,10 +76,10 @@ class RocketMotor:
         
         dv: float = delta_velocity.to_value(u.km / u.s)
         g_0: float = sea_level_gravity.to_value(u.km / u.s**2)
-        I_sp: float = self.specific_impulse.to_value(u.s)
+        i_sp: float = self.specific_impulse.to_value(u.s)
         m_sc: float = self.spacecraft_mass.to_value(u.kg)
         
-        self.propellant_mass = m_sc * (1 - np.exp(-dv / (I_sp * g_0))) * u.kg
+        self.propellant_mass = m_sc * (1 - np.exp(-dv / (i_sp * g_0))) * u.kg
         
         return self.propellant_mass
     
@@ -95,14 +97,52 @@ class RocketMotor:
         
         m_prop: float = propellant_mass.to_value(u.kg)
         g_0: float = sea_level_gravity.to_value(u.m / u.s**2)
-        I_sp: float = self.specific_impulse.to_value(u.s)
+        i_sp: float = self.specific_impulse.to_value(u.s)
         T: float = self.thrust.to_value(u.N)
         
-        m_dot: float = T / (I_sp * g_0) # ? Engine mass-flow rate
+        m_dot: float = T / (i_sp * g_0) # ? Engine mass-flow rate
         
         burn_time: u.Quantity = m_prop / m_dot * u.s
         
         return burn_time
+    
+    def calc_effective_exhaust_velocity(self, sea_level_gravity: u.Quantity) -> u.Quantity:
+        """
+        Effective exhaust velocity calculation
+
+        Args:
+            sea_level_gravity (u.Quantity): Standard gravitational acceleration near sea level
+
+        Returns:
+            u.Quantity: Effective exhaust velocity
+        """
+        
+        g_0: u.Quantity = sea_level_gravity.to(u.m / u.s**2)
+        
+        i_sp: u.Quantity = self.specific_impulse.to(u.s)
+        
+        c: u.Quantity = i_sp * g_0
+        
+        return c
+    
+    def calc_propellant_mass_flow_rate(self, sea_level_gravity: u.Quantity) -> u.Quantity:
+        """
+        Propellant mass flow-rate calculation
+
+        Args:
+            sea_level_gravity (u.Quantity): Standard gravitational acceleration near sea level
+
+        Returns:
+            u.Quantity: Propellant mass flow-rate
+        """
+        
+        T: float = self.thrust.to(u.N)
+        
+        c: u.Quantity = self.calc_effective_exhaust_velocity(sea_level_gravity=sea_level_gravity)
+        
+        m_dot: u.Quantity = T / c
+        
+        return m_dot
 
 class HohmannDirection(enum.IntEnum):
     """List of Hohmann transfer directions"""
@@ -110,19 +150,24 @@ class HohmannDirection(enum.IntEnum):
     PERICENTER_APOCENTER = 0
     APOCENTER_PERICENTER = 1
 
+class SpiralDirection(enum.IntEnum):
+    """List of Spiral transfer directions"""
+    
+    OUTWARD = 0
+    INWARD = 1
+
 @dc.dataclass
 class NonImpulsiveManeuverResult:
-    """Result of non-impulsive maneuver integration
-    """
+    """Result of non-impulsive maneuver integration"""
     
-    t_burn: u.Quantity = dc.field(default_factory=lambda: 0 * u.s)
-    r_x: u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
-    r_y: u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
-    r_z: u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
-    v_x: u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
-    v_y: u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
-    v_z: u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
-    m_sc: u.Quantity = dc.field(default_factory=lambda: 0 * u.kg)
+    burn_time       : u.Quantity = dc.field(default_factory=lambda: 0 * u.s)
+    position_x      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
+    position_y      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
+    position_z      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
+    velocity_x      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
+    velocity_y      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
+    velocity_z      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km / u.s)
+    spacecraft_mass : u.Quantity = dc.field(default_factory=lambda: 0 * u.kg)
 
 class OrbitalManeuvers():
     """Orbital Maneuvers
@@ -175,9 +220,9 @@ class OrbitalManeuvers():
         """
         Hohmann transfer maneuver
         
-        The Hohmann transfer is a two‑impulse orbital maneuver used to transfer a spacecraft between two coplanar,
-        elliptical or circular orbits around the same central body. It is the minimum‑energy transfer between two 
-        circular orbits and a widely used approximation for transfers between low‑eccentricity orbits.
+        The Hohmann transfer is a two-impulse orbital maneuver used to transfer a spacecraft between two coplanar,
+        elliptical or circular orbits around the same central body. It is the minimum-energy transfer between two 
+        circular orbits and a widely used approximation for transfers between low-eccentricity orbits.
         
         This implementation generalizes the classical Hohmann transfer to allow transfers between arbitrary coplanar 
         elliptical orbits, using one of two possible geometric configurations
@@ -271,7 +316,7 @@ class OrbitalManeuvers():
         
         v_a_t: float = h_t / r_a_t
         
-        T_t = 2 * np.pi / float(np.sqrt(mu)) * a_t**(3/2) # ? Orbital Period
+        t_t = 2 * np.pi / float(np.sqrt(mu)) * a_t**(3/2) # ? Orbital Period
         
         # >>> 4. Delta-V Calculations
         
@@ -331,7 +376,7 @@ class OrbitalManeuvers():
         maneuver: ManeuverResult = ManeuverResult()
         
         maneuver.delta_velocity_list=[dv_1 * u.km / u.s, dv_2 * u.km / u.s]
-        maneuver.flight_time_list=[0.5 * T_t * u.s]
+        maneuver.flight_time_list=[0.5 * t_t * u.s]
         maneuver.delta_mass_list=[dm_1, dm_2]
         maneuver.burn_time_list=[t_burn_1, t_burn_2]
         maneuver.orbital_elements_list=[oe_t]
@@ -349,13 +394,13 @@ class OrbitalManeuvers():
         """
         Bi-Elliptic Hohmann transfer maneuver
         
-        The bi‑elliptic Hohmann transfer is a three‑impulse orbital maneuver used to transfer a spacecraft between two 
+        The bi-elliptic Hohmann transfer is a three-impulse orbital maneuver used to transfer a spacecraft between two 
         coplanar orbits when the ratio between the final and initial orbital radii is sufficiently large.
-        Unlike the classical Hohmann transfer, which uses a single transfer ellipse, the bi‑elliptic transfer introduces
+        Unlike the classical Hohmann transfer, which uses a single transfer ellipse, the bi-elliptic transfer introduces
         an intermediate apoapsis r_3, allowing the spacecraft to perform part of the maneuver at a very low velocity.
         This can reduce the total Δv when the target orbit is much larger than the initial one.
         
-        This implementation generalizes the bi‑elliptic transfer to elliptical orbits by computing the maneuver at the
+        This implementation generalizes the bi-elliptic transfer to elliptical orbits by computing the maneuver at the
         appropriate pericenter or apoapsis radii of the initial and final orbits.
 
         Args:
@@ -436,7 +481,7 @@ class OrbitalManeuvers():
         """
         Phasing maneuver from chaser A to target B
         
-        A phasing maneuver is a two‑impulse orbital strategy used to synchronize the position of a chaser spacecraft (A)
+        A phasing maneuver is a two-impulse orbital strategy used to synchronize the position of a chaser spacecraft (A)
         with a target spacecraft (B) located on the same orbital plane. The goal is to adjust the orbital period of the
         chaser so that, after completing a specified number of revolutions on a temporary “phasing orbit,” it arrives at
         the same true anomaly as the target.
@@ -479,29 +524,29 @@ class OrbitalManeuvers():
         
         # >>> 2. Time from A (pericenter - chaser) to B (target) placed at true_anomaly_target w.r.t. A
         
-        t_AB: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
+        t_ab: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
                                                                     period=T_1 * u.s,
                                                                     eccentricity=orbital_elements.eccentricity)
         
         # >>> 3. Orbit 2 (Phasing Orbit with kick at pericenter)
         
-        T_2: float = T_1 - t_AB.to_value(u.s) / num_revolutions
+        T_2: float = T_1 - t_ab.to_value(u.s) / num_revolutions
         
         a_2: float = (np.sqrt(mu) * T_2 / (2 * np.pi))**(2/3)
         
-        r_A: float = orbital_elements.calc_perigee_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
+        r_a: float = orbital_elements.calc_perigee_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
         
-        r_D: float = 2 * a_2 - r_A # ? Opposite point of the phasing orbit
+        r_d: float = 2 * a_2 - r_a # ? Opposite point of the phasing orbit
         
-        h_2: float = np.sqrt(2 * mu) * np.sqrt(r_A * r_D / (r_A + r_D))
+        h_2: float = np.sqrt(2 * mu) * np.sqrt(r_a * r_d / (r_a + r_d))
         
-        v_p_A: float = h_2 / r_A
+        v_p_a: float = h_2 / r_a
         
         # >>> 4. Delta-V Calculations
         
-        dv_1: float = np.abs(v_p_A - v_p_1)
+        dv_1: float = np.abs(v_p_a - v_p_1)
         
-        dv_2: float = np.abs(v_p_1 - v_p_A)
+        dv_2: float = np.abs(v_p_1 - v_p_a)
         
         # >>> 5. Result
         
@@ -519,7 +564,7 @@ class OrbitalManeuvers():
         
         oe_t: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h_2 * u.km**2 / u.s,
                                                         semimajor_axis=a_2 * u.km,
-                                                        eccentricity=(r_D - r_A) / (r_D + r_A) * u.one,
+                                                        eccentricity=(r_d - r_a) / (r_d + r_a) * u.one,
                                                         inclination=orbital_elements.inclination,
                                                         right_ascension_of_ascending_node=orbital_elements.right_ascension_of_ascending_node,
                                                         argument_of_periapsis=orbital_elements.argument_of_periapsis,
@@ -544,9 +589,9 @@ class OrbitalManeuvers():
         """
         Non-Hohmann transfer between coaxial elliptical orbits
         
-        A non‑Hohmann transfer is a general two‑impulse maneuver used to move a spacecraft from an initial elliptical
-        orbit to a target point located at a specified radius and true anomaly on a second coaxial (same‑focus) orbit.
-        Unlike the classical Hohmann transfer, which is constrained to pericenter‑to‑apocenter geometry, the non‑Hohmann
+        A non-Hohmann transfer is a general two-impulse maneuver used to move a spacecraft from an initial elliptical
+        orbit to a target point located at a specified radius and true anomaly on a second coaxial (same-focus) orbit.
+        Unlike the classical Hohmann transfer, which is constrained to pericenter-to-apocenter geometry, the non-Hohmann
         transfer allows the spacecraft to intercept the target at an arbitrary true anomaly. This makes it suitable for
         rendezvous, phasing, and transfers between elliptical orbits where the target point is not aligned with the
         apsides.
@@ -627,52 +672,52 @@ class OrbitalManeuvers():
         # ? respectively. Since the transfer orbit is coaxial with the initial orbit, ta_1 is equal to the true anomaly
         # ? of the initial orbit at the maneuver point, same for ta_2 on target orbit.
         
-        e_T: float = - (r_2 - r_1) / (r_2 * np.cos(ta_2) - r_1 * np.cos(ta_1))
+        e_t: float = - (r_2 - r_1) / (r_2 * np.cos(ta_2) - r_1 * np.cos(ta_1))
         
-        h_T: float = np.sqrt(mu * r_1 * r_2) * np.sqrt((np.cos(ta_2) - np.cos(ta_1)) /\
+        h_t: float = np.sqrt(mu * r_1 * r_2) * np.sqrt((np.cos(ta_2) - np.cos(ta_1)) /\
             (r_2 * np.cos(ta_2) - r_1 * np.cos(ta_1)))
         
-        r_p_T: float = h_T**2 / mu * 1 / (1 + e_T)
+        r_p_t: float = h_t**2 / mu * 1 / (1 + e_t)
         
-        r_a_T: float = h_T**2 / mu * 1 / (1 - e_T)
+        r_a_t: float = h_t**2 / mu * 1 / (1 - e_t)
         
-        a_T: float = 0.5 * (r_p_T + r_a_T) if e_T < 1 else 0
+        a_t: float = 0.5 * (r_p_t + r_a_t) if e_t < 1 else 0
         
-        T_T: float = 2 * np.pi / float(np.sqrt(mu)) * a_T**(3/2) if e_T < 1 else 0
+        period_t: float = 2 * np.pi / float(np.sqrt(mu)) * a_t**(3/2) if e_t < 1 else 0
         
         # >>> 3. Starting point of the transfer orbit (maneuver point)
         
-        v_t_T_1: float = h_T / r_1
+        v_t_t_1: float = h_t / r_1
         
-        v_r_T_1: float = mu / h_T * e_T * np.sin(ta_1)
+        v_r_t_1: float = mu / h_t * e_t * np.sin(ta_1)
         
-        v_T_1: float = np.sqrt(v_r_T_1**2 + v_t_T_1**2)
+        v_t_1: float = np.sqrt(v_r_t_1**2 + v_t_t_1**2)
         
-        fpa_T_1: float = np.arctan(v_r_T_1 / v_t_T_1)
+        fpa_t_1: float = np.arctan(v_r_t_1 / v_t_t_1)
         
         # >>> 4. Target point of the transfer orbit (interception point)
         
-        v_t_T_2: float = h_T / r_2
+        v_t_t_2: float = h_t / r_2
         
-        v_r_T_2: float = mu / h_T * e_T * np.sin(ta_2)
+        v_r_t_2: float = mu / h_t * e_t * np.sin(ta_2)
         
-        v_T_2: float = np.sqrt(v_r_T_2**2 + v_t_T_2**2)
+        v_t_2: float = np.sqrt(v_r_t_2**2 + v_t_t_2**2)
         
-        fpa_T_2: float = np.arctan(v_r_T_2 / v_t_T_2)
+        fpa_t_2: float = np.arctan(v_r_t_2 / v_t_t_2)
         
         # >>> 4. Result
         
-        delta_fpa_1: float = (fpa_T_1 - fpa_1)
-        delta_fpa_2: float = (fpa_T_2 - fpa_2)
+        delta_fpa_1: float = (fpa_t_1 - fpa_1)
+        delta_fpa_2: float = (fpa_t_2 - fpa_2)
         
-        dv_1: float = np.sqrt(v_1**2 + v_T_1**2 - 2 * v_1 * v_T_1 * np.cos(delta_fpa_1))
-        dv_2: float = np.sqrt(v_2**2 + v_T_2**2 - 2 * v_2 * v_T_2 * np.cos(delta_fpa_2))
+        dv_1: float = np.sqrt(v_1**2 + v_t_1**2 - 2 * v_1 * v_t_1 * np.cos(delta_fpa_1))
+        dv_2: float = np.sqrt(v_2**2 + v_t_2**2 - 2 * v_2 * v_t_2 * np.cos(delta_fpa_2))
         
-        #phi_1: float = np.arctan2((v_r_T_1 - v_r_1), (v_t_T_1 - v_t_1))
-        #phi_2: float = np.arctan2((v_r_2 - v_r_T_2), (v_t_2 - v_t_T_2))
+        #phi_1: float = np.arctan2((v_r_t_1 - v_r_1), (v_t_t_1 - v_t_1))
+        #phi_2: float = np.arctan2((v_r_2 - v_r_t_2), (v_t_2 - v_t_t_2))
         
-        phi_1: float = np.pi - np.arcsin(v_T_1 / dv_1 * np.sin(delta_fpa_1)) + fpa_1
-        phi_2: float = np.pi - np.arcsin(v_T_2 / dv_2 * np.sin(delta_fpa_2)) + fpa_2
+        phi_1: float = np.pi - np.arcsin(v_t_1 / dv_1 * np.sin(delta_fpa_1)) + fpa_1
+        phi_2: float = np.pi - np.arcsin(v_t_2 / dv_2 * np.sin(delta_fpa_2)) + fpa_2
         
         if (phi_1 < 0):
             
@@ -682,17 +727,17 @@ class OrbitalManeuvers():
             
             phi_2 += np.pi
         
-        if e_T < 1:
+        if e_t < 1:
             
             t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
-                                                                    period=T_T * u.s,
-                                                                    eccentricity=e_T * u.one)
+                                                                    period=period_t * u.s,
+                                                                    eccentricity=e_t * u.one)
         
         else:
             
             t_1: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
-                                                                       specific_angular_momentum=h_T * u.km**2 / u.s,
-                                                                       eccentricity=e_T * u.one,
+                                                                       specific_angular_momentum=h_t * u.km**2 / u.s,
+                                                                       eccentricity=e_t * u.one,
                                                                        attractor=attractor)
         
         dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, sea_level_gravity=g_0)
@@ -701,26 +746,26 @@ class OrbitalManeuvers():
         
         rocket_motor.spacecraft_mass -= dm_1
         
-        if e_T < 1:
+        if e_t < 1:
             
             t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
-                                                                    period=T_T * u.s,
-                                                                    eccentricity=e_T * u.one)
+                                                                    period=period_t * u.s,
+                                                                    eccentricity=e_t * u.one)
             
         else:
             
             t_2: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
-                                                                       specific_angular_momentum=h_T * u.km**2 / u.s,
-                                                                       eccentricity=e_T * u.one,
+                                                                       specific_angular_momentum=h_t * u.km**2 / u.s,
+                                                                       eccentricity=e_t * u.one,
                                                                        attractor=attractor)
         
         dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, sea_level_gravity=g_0)
         
         t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, sea_level_gravity=g_0)
         
-        oe_t: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h_T * u.km**2 / u.s,
-                                                        semimajor_axis=a_T * u.km,
-                                                        eccentricity=e_T * u.dimensionless_unscaled,
+        oe_t: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h_t * u.km**2 / u.s,
+                                                        semimajor_axis=a_t * u.km,
+                                                        eccentricity=e_t * u.dimensionless_unscaled,
                                                         inclination=orbital_elements_1.inclination,
                                                         right_ascension_of_ascending_node=orbital_elements_1.right_ascension_of_ascending_node,
                                                         argument_of_periapsis=orbital_elements_1.argument_of_periapsis,
@@ -748,7 +793,7 @@ class OrbitalManeuvers():
         """
         Apse line rotation from angle variation eta
         
-        An apse‑line rotation maneuver is a two‑impulse orbital maneuver used to rotate the line of apsides (the line
+        An apse-line rotation maneuver is a two-impulse orbital maneuver used to rotate the line of apsides (the line
         connecting pericenter and apocenter) of an elliptical orbit by a specified angle eta, without changing the
         orbital energy or inclination. This maneuver is required when the spacecraft must realign its argument of
         perigee to match a target orbit or to achieve a specific geometric configuration for rendezvous, phasing, or
@@ -894,9 +939,9 @@ class OrbitalManeuvers():
         Apse line rotation from true anomaly
         
         This maneuver computes the rotation of the line of apsides (argument of perigee change) produced by a single,
-        finite‑magnitude impulse applied at a given true anomaly on an elliptical orbit. Unlike apse‑line rotation
+        finite-magnitude impulse applied at a given true anomaly on an elliptical orbit. Unlike apse-line rotation
         maneuvers defined by a desired angle between two orbits, this formulation starts from a prescribed Δv vector
-        (magnitude and flight‑path angle) and determines the resulting change in the orbit’s geometry.
+        (magnitude and flight-path angle) and determines the resulting change in the orbit’s geometry.
         
         The algorithm assumes:
         - coplanar motion around a central body
@@ -1007,12 +1052,12 @@ class OrbitalManeuvers():
         """
         Chase maneuver from Chaser C to Target T
         
-        A chase maneuver is a two‑impulse orbital maneuver used to intercept a target spacecraft located at a known true
+        A chase maneuver is a two-impulse orbital maneuver used to intercept a target spacecraft located at a known true
         anomaly after a specified time interval. Unlike a phasing maneuver, which adjusts the orbital period to achieve
         alignment after several revolutions, the chase maneuver computes a single transfer ellipse that brings the
         chaser to the target’s position exactly after a prescribed time of flight Delta t.
         
-        This maneuver is essential for time‑critical rendezvous operations, interception trajectories, and short‑arc
+        This maneuver is essential for time-critical rendezvous operations, interception trajectories, and short-arc
         pursuit strategies.
 
         Args:
@@ -1049,35 +1094,35 @@ class OrbitalManeuvers():
         
         e: float = orbital_elements.eccentricity.to_value()
         
-        ta_C: float = orbital_elements.true_anomaly.to_value(u.rad)
+        ta_c: float = orbital_elements.true_anomaly.to_value(u.rad)
         
-        r_C: float = h**2 / mu * 1 / (1 + e * np.cos(ta_C)) * np.array([np.cos(ta_C), np.sin(ta_C), 0])
+        r_c: float = h**2 / mu * 1 / (1 + e * np.cos(ta_c)) * np.array([np.cos(ta_c), np.sin(ta_c), 0])
         
-        v_C: float = mu / h * np.array([-np.sin(ta_C), (e + np.cos(ta_C)), 0])
+        v_c: float = mu / h * np.array([-np.sin(ta_c), (e + np.cos(ta_c)), 0])
         
         # >>> 3. New Perifocal Frame state vector for Target T after dt
         
-        t_T: float = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
+        t_t: float = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
                                                               period=T * u.s,
                                                               eccentricity=e * u.one).to_value(u.s)
         
-        t_T_new: float = t_T + delta_time.to_value(u.s)
+        t_t_new: float = t_t + delta_time.to_value(u.s)
         
-        ta_T_new: float = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_T_new * u.s,
+        ta_t_new: float = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_t_new * u.s,
                                                                            period=T * u.s,
                                                                            eccentricity=e * u.one).to_value(u.rad)
         
-        r_T: float = h**2 / mu * 1 / (1 + e * np.cos(ta_T_new)) * np.array([np.cos(ta_T_new), np.sin(ta_T_new), 0])
+        r_t: float = h**2 / mu * 1 / (1 + e * np.cos(ta_t_new)) * np.array([np.cos(ta_t_new), np.sin(ta_t_new), 0])
         
-        v_T: float = mu / h * np.array([-np.sin(ta_T_new), (e + np.cos(ta_T_new)), 0])
+        v_t: float = mu / h * np.array([-np.sin(ta_t_new), (e + np.cos(ta_t_new)), 0])
         
         # >>> 4. Lambert problem solution for the transfer from C to T in time dt
         
-        r_C: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
-                                                                                         perifocal_position=r_C * u.km)
+        r_c: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
+                                                                                         perifocal_position=r_c * u.km)
         
-        r_T: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
-                                                                                         perifocal_position=r_T * u.km)
+        r_t: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
+                                                                                         perifocal_position=r_t * u.km)
         
         if orbital_elements.inclination <= 90.0 * u.deg:
             
@@ -1087,9 +1132,9 @@ class OrbitalManeuvers():
             
             direction = od.OrbitDirection.RETROGRADE
         
-        v_t_C, v_t_T, oe_t, ta_t_2 = od.OrbitDetermination.lambert(attractor=attractor,
-                                                                   departure_position=r_C,
-                                                                   arrival_position=r_T,
+        v_t_c, v_t_t, oe_t, ta_t_2 = od.OrbitDetermination.lambert(attractor=attractor,
+                                                                   departure_position=r_c,
+                                                                   arrival_position=r_t,
                                                                    delta_time=delta_time,
                                                                    direction=direction)
         
@@ -1099,9 +1144,9 @@ class OrbitalManeuvers():
         
         # >>> 5. Result
         
-        dv_1: u.Quantity = np.linalg.norm(v_t_C.to_value(u.km / u.s) - v_C) * u.km / u.s
+        dv_1: u.Quantity = np.linalg.norm(v_t_c.to_value(u.km / u.s) - v_c) * u.km / u.s
         
-        dv_2: u.Quantity = np.linalg.norm(v_T - v_t_T.to_value(u.km / u.s)) * u.km / u.s
+        dv_2: u.Quantity = np.linalg.norm(v_t - v_t_t.to_value(u.km / u.s)) * u.km / u.s
         
         dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1, sea_level_gravity=g_0)
         
@@ -1174,11 +1219,11 @@ class OrbitalManeuvers():
         
         ta_current: float = cm.wrap_angle(orbital_elements_1.true_anomaly.to_value(u.rad), low=0, high=2 * np.pi)
 
-        ta_AN: float = cm.wrap_angle(-omega, low=0, high=2 * np.pi) # ? True anomaly of Ascending Node
+        ta_an: float = cm.wrap_angle(-omega, low=0, high=2 * np.pi) # ? True anomaly of Ascending Node
         
-        ta_DN: float = cm.wrap_angle(np.pi - omega, low=0, high=2 * np.pi) # ? True anomaly of Descending Node
+        ta_dn: float = cm.wrap_angle(np.pi - omega, low=0, high=2 * np.pi) # ? True anomaly of Descending Node
         
-        ta_1: float = ta_DN if (ta_AN < ta_current < ta_DN) else ta_AN
+        ta_1: float = ta_dn if (ta_an < ta_current < ta_dn) else ta_an
         
         r_1: float = h_1**2 / mu * 1 / (1 + e_1 * np.cos(ta_1))
         
@@ -1219,7 +1264,7 @@ class OrbitalManeuvers():
         """
         Plane change maneuver from dihedral angle between orbital planes
         
-        A plane change maneuver is a single‑impulse orbital maneuver used to change the inclination and/or the right
+        A plane change maneuver is a single-impulse orbital maneuver used to change the inclination and/or the right
         ascension of the ascending node (RAAN) of a spacecraft’s orbit. When two orbits have different orientations, 
         the angle between their orbital planes is called the dihedral angle.
         
@@ -1444,24 +1489,26 @@ class OrbitalManeuvers():
     @staticmethod
     def constant_tangential_thrust_transfer_from_time(attractor: bd.Attractor,
                                                       rocket_motor: RocketMotor,
-                                                      r_0 : u.Quantity,
-                                                      tof : u.Quantity) -> typing.List[u.Quantity]:
+                                                      initial_radius: u.Quantity,
+                                                      time_of_flight: u.Quantity,
+                                                      direction: SpiralDirection) -> typing.List[u.Quantity]:
         """
         Constant tangential thrust transfer from burning time
         
         This maneuver computes the final radius and propellant mass consumed for a constant tangential thrust transfer
         given the initial radius and the time of flight. The algorithm assumes a constant tangential thrust applied over
-        the specified time interval, resulting in a continuous acceleration that modifies the spacecraft’s orbit.
+        the specified time interval, resulting in a continuous acceleration that modifies the spacecraf's orbit.
         
         By integrating the equations of motion under constant tangential thrust, the maneuver calculates the final
-        orbital radius after the burn and the total propellant mass consumed based on the rocket motor’s parameters and
+        orbital radius after the burn and the total propellant mass consumed based on the rocket motor's parameters and
         specific impulse. 
 
         Args:
             attractor (bd.Attractor): Main attractor
             rocket_motor (RocketMotor): Rocket motor parameters
-            r_0 (u.Quantity): Initial radius
-            tof (u.Quantity): Time of flight
+            initial_radius (u.Quantity): Initial circular orbit radius
+            time_of_flight (u.Quantity): Time of flight
+            direction (SpiralDirection): Direction of the spiral
 
         Returns:
             typing.List[u.Quantity]: [final radius, propellant mass]
@@ -1470,124 +1517,346 @@ class OrbitalManeuvers():
         cm.check_attractor(attractor)
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        g_0: float = bd.BODIES[attractor].g_0.to_value(u.km / u.s**2)
         
-        T: float = rocket_motor.thrust.to_value(u.N) * 1e-3 # ? Convert meters to kilometers
-        I_sp: float = rocket_motor.specific_impulse.to_value(u.s)
+        g_0: u.Quantity = bd.BODIES[attractor].g_0.to(u.m / u.s**2)
+        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
-        r_0: float = r_0.to_value(u.km)
-        tof: float = tof.to_value(u.s)
+        r_0: float = initial_radius.to_value(u.km)
+        
+        tof: float = time_of_flight.to_value(u.s)
         
         # >>> 1. Target radius
         
-        r: float = mu / (np.sqrt(mu / r_0) + I_sp * g_0 * np.log(1 - T * tof / (m_0 * g_0 * I_sp)))**2
+        v_0: float = np.sqrt(mu / r_0) # ? Initial circular orbit velocity
+        
+        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        
+        sign: float = +1 if direction == SpiralDirection.OUTWARD else -1
+        
+        r: float = mu / (v_0 + sign * c * np.log(1 - m_dot / m_0 * tof))**2
         
         # >>> 2. Propellant mass
         
-        m_p: float = T / (I_sp * g_0) * tof
+        m_p: float = m_dot * tof
         
         return [r * u.km, m_p * u.kg]
     
     @staticmethod
     def constant_tangential_thrust_transfer_from_radius(attractor: bd.Attractor,
                                                         rocket_motor: RocketMotor,
-                                                        r_0 : u.Quantity,
-                                                        r_f : u.Quantity) -> typing.List[u.Quantity]:
+                                                        initial_radius: u.Quantity,
+                                                        final_radius: u.Quantity,
+                                                        earth_shadow: bool = False) -> typing.List[u.Quantity]:
         """
         Constant tangential thrust transfer from final radius
         
         This maneuver computes the time of flight and propellant mass consumed for a constant tangential thrust transfer
         given the initial and final radii. The algorithm assumes a constant tangential thrust applied over the transfer,
-        resulting in a continuous acceleration that modifies the spacecraft’s orbit.
+        resulting in a continuous acceleration that modifies the spacecraft's orbit.
         
         By integrating the equations of motion under constant tangential thrust, the maneuver calculates the time of
-        flight required to reach the final radius and the total propellant mass consumed based on the rocket motor’s
+        flight required to reach the final radius and the total propellant mass consumed based on the rocket motor's
         parameters and specific impulse.
 
         Args:
             attractor (bd.Attractor): Main attractor
             rocket_motor (RocketMotor): Rocket motor parameters
-            r_0 (u.Quantity): Initial radius
-            r_f (u.Quantity): Final radius
+            initial_radius (u.Quantity): Initial circular orbit radius
+            final_radius (u.Quantity): Final circular orbit radius
+            earth_shadow (bool): Enable/disable the earth shadow effect. Defaults to False.
 
         Returns:
-            list: [time of flight, propellant mass]
+            list: [time of flight, propellant mass, delta velocity]
         """
         
         cm.check_attractor(attractor)
         
         mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        g_0: float = bd.BODIES[attractor].g_0.to_value(u.km / u.s**2)
         
-        T: float = rocket_motor.thrust.to_value(u.N) * 1e-3 # ? Convert meters to kilometers
-        I_sp: float = rocket_motor.specific_impulse.to_value(u.s)
+        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        
+        g_0: u.Quantity = bd.BODIES[attractor].g_0.to(u.m / u.s**2)
+        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
-        r_0: float = r_0.to_value(u.km)
-        r_f: float = r_f.to_value(u.km)
+        r_0: float = initial_radius.to_value(u.km)
+        
+        r_f: float = final_radius.to_value(u.km)
         
         # >>> 1. Flight time
         
-        tof: float = m_0 * g_0 * I_sp / T * (1 - np.exp(1 / (I_sp * g_0) * (np.sqrt(mu / r_f) - np.sqrt(mu / r_0))))
+        v_0: float = np.sqrt(mu / r_0) # ? Initial circular orbit velocity
+        
+        v_f: float = np.sqrt(mu / r_f) # ? Final circular orbit velocity
+        
+        dv: float = - np.abs(v_f - v_0)
+        
+        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        
+        c_tilde: float = dv
+        
+        if earth_shadow:
+            
+            coeff: float = np.pi / R_E
+            
+            c_tilde = np.sqrt(coeff * mu) * (np.arctanh(np.sqrt(coeff * r_f) + 0j) - np.arctanh(np.sqrt(coeff * r_0) + 0j))
+        
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        
+        tof: float = m_0 / m_dot * (1 - np.exp(c_tilde.real / c))
         
         # >>> 2. Propellant mass
         
-        m_p: float = T / (I_sp * g_0) * tof
+        m_p: float = m_dot * tof
         
-        return [tof * u.s, m_p * u.kg]
+        return [tof * u.s, m_p * u.kg, dv * u.km / u.s]
+    
+    @staticmethod
+    def earth_shadow(attractor: bd.Attractor, radius: u.Quantity) -> u.Quantity:
+        """
+        Compute the percentage of time the spacecraft spends in sunlight over one orbital revolution
+
+        Args:
+            attractor (bd.Attractor): Main attractor
+            radius (u.Quantity): Circular orbit radius
+
+        Returns:
+            u.Quantity: Percentage of sunlight
+        """
+        
+        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        
+        r: float = radius.to_value(u.km)
+        
+        # >>> 1. Earth-shadow angle
+        
+        phi: float = 2 * np.arcsin(R_E / r)
+        
+        # >>> 2. Sunlight weighting function
+        
+        w: float = 1 - phi / (2 * np.pi)
+        
+        return w * u.one
+    
+    @staticmethod
+    def non_impulsive_inclination_change_maneuver(attractor: bd.Attractor,
+                                                  rocket_motor: RocketMotor,
+                                                  radius: u.Quantity,
+                                                  initial_inclination: u.Quantity,
+                                                  final_inclination: u.Quantity) -> typing.List[u.Quantity]:
+        """
+        Non-impulsive inclination change maneuver
+
+        Args:
+            attractor (bd.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor object
+            radius (u.Quantity): Circular orbit radius
+            initial_inclination (u.Quantity): Initial orbital inclination
+            final_inclination (u.Quantity): Final orbital inclination
+
+        Returns:
+            list: [time of flight, propellant mass, delta velocity]
+        """
+        
+        cm.check_attractor(attractor)
+        
+        cm.check_angle(initial_inclination.to_value(u.deg))
+        cm.check_angle(final_inclination.to_value(u.deg))
+        
+        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        g_0: u.Quantity = bd.BODIES[attractor].g_0.to(u.m / u.s**2)
+        
+        m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
+        
+        r: float = radius.to_value(u.km)
+        
+        i_0: float = initial_inclination.to_value(u.rad)
+        
+        i_f: float = final_inclination.to_value(u.rad)
+        
+        # >>> 1. Flight time
+        
+        v: float = np.sqrt(mu / r) # ? Circular orbit velocity
+        
+        d_i: float = np.abs(i_f - i_0)
+        
+        dv: float = d_i * np.pi * v / 2
+        
+        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        
+        tof: float = m_0 / m_dot * (1 - np.exp(- dv / c))
+        
+        # >>> 2. Propellant mass
+        
+        m_p: float = m_dot * tof
+        
+        return [tof * u.s, m_p * u.kg, dv * u.km / u.s]
+    
+    @staticmethod
+    def non_impulsive_inclined_circular_orbits_transfer(attractor: bd.Attractor,
+                                                        rocket_motor: RocketMotor,
+                                                        initial_radius: u.Quantity,
+                                                        final_radius: u.Quantity,
+                                                        initial_inclination: u.Quantity,
+                                                        final_inclination: u.Quantity) -> typing.List[u.Quantity]:
+        """
+        Non-impulsive transfer between two inclined circular orbits
+
+        Args:
+            attractor (bd.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor object
+            initial_radius (u.Quantity): Initial circular orbit radius
+            final_radius (u.Quantity): Final circular orbit radius
+            initial_inclination (u.Quantity): Initial orbital inclination
+            final_inclination (u.Quantity): Final orbital inclination
+
+        Returns:
+            list: [time of flight, propellant mass, delta velocity]
+        """
+        
+        cm.check_attractor(attractor)
+        
+        cm.check_angle(initial_inclination.to_value(u.deg))
+        cm.check_angle(final_inclination.to_value(u.deg))
+        
+        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        g_0: u.Quantity = bd.BODIES[attractor].g_0.to(u.m / u.s**2)
+        
+        m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
+        
+        r_0: float = initial_radius.to_value(u.km)
+        
+        r_f: float = final_radius.to_value(u.km)
+        
+        i_0: float = initial_inclination.to_value(u.rad)
+        
+        i_f: float = final_inclination.to_value(u.rad)
+        
+        # >>> 1. Flight time
+        
+        v_0: float = np.sqrt(mu / r_0) # ? Initial circular orbit velocity
+        
+        v_f: float = np.sqrt(mu / r_f) # ? Final circular orbit velocity
+        
+        d_i: float = i_f - i_0
+        
+        # * T. N. Edelbaum equation
+        
+        dv: float = np.sqrt(v_0**2 + v_f**2 - 2 * v_0 * v_f * np.cos(d_i * np.pi / 2))
+        
+        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        
+        tof: float = m_0 / m_dot * (1 - np.exp(- dv / c))
+        
+        # >>> 2. Propellant mass
+        
+        m_p: float = m_dot * tof
+        
+        return [tof * u.s, m_p * u.kg, dv * u.km / u.s]
     
     @staticmethod
     def non_impulsive_maneuver(attractor: bd.Attractor,
                                rocket_motor: RocketMotor,
-                               r_0: u.Quantity,
-                               v_0: u.Quantity,
-                               t_0: u.Quantity,
-                               dt: u.Quantity,
-                               r_f: u.Quantity,
+                               initial_position: u.Quantity,
+                               initial_velocity: u.Quantity,
+                               burning_time_guess: u.Quantity,
+                               time_step: u.Quantity,
+                               final_position: u.Quantity,
                                semi_major_axis_target: bool = False,
-                               tol: float = 1e-8) -> NonImpulsiveManeuverResult:
+                               inclination_target: bool = False,
+                               initial_radius: u.Quantity = 0 * u.km,
+                               final_radius: u.Quantity = 0 * u.km,
+                               initial_inclination: u.Quantity = 0 * u.deg,
+                               final_inclination: u.Quantity = 0 * u.deg,
+                               thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                               tolerance: float = 1e-0) -> typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]:
         """
-        Non impulsive maneuver
+        Non impulsive maneuver that, starting from an initial position and velocity, computes the final position and
+        velocity after a given burning time guess. That guess is adjusted iteratively until the final position is close
+        enough to the target position or the semi-major axis.
         
-        
+        If the 'semi_major_axis_target' is set to True, the algorithm will try to match the semi-major axis of the final
+        orbit to the norm of the final position vector. Otherwise, it will try to match the final position vector norm
+        to the target final position vector norm.
 
         Args:
-            t_0 (float): Initial burning time guess
-            dt (float): Time step for burning time calculation
-            r_0 (np.ndarray): Initial position vector
-            v_0 (np.ndarray): Initial velocity vector
-            r_f (np.ndarray): Final position vector
-            m_0 (float): Initial mass
-            T (float): Thrust
-            I_sp (float): Specific impulse
-            semiMajorAxis (bool, optional): True for semi-major axis target - False for position vector norm target. Defaults to False.
-            tol (float, optional): Tolerance. Defaults to 1e-8.
+            attractor (bd.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor object
+            initial_position (u.Quantity): Initial position vector
+            initial_velocity (u.Quantity): Initial velocity vector
+            burning_time_guess (u.Quantity): Initial burning time guess
+            time_step (u.Quantity): Time step for burning time calculation
+            final_position (u.Quantity): Final position vector
+            semi_major_axis_target (bool, optional): Semi-major axis target. Defaults to False.
+            inclination_target (bool, optional): Inclination target. Defaults to False.
+            initial_radius (u.Quantity, optional): Initial radius. Defaults to 0 * u.km.
+            final_radius (u.Quantity, optional): Final radius. Defaults to 0 * u.km.
+            initial_inclination (u.Quantity, optional): Initial inclination. Defaults to 0 * u.deg.
+            final_inclination (u.Quantity, optional): Final inclination. Defaults to 0 * u.deg.
+            thrust_direction (ae.ThrustDirection, optional): Thrust direction. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            tolerance (float, optional): Tolerance. Defaults to 1e-0.
 
         Returns:
-            list: [burning time, final state vector]
+            typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]: Maneuver result & integration result
         """
         
-        if t_0.to_value(u.s) <= 0: raise ValueError('Initial burning time guess must be greater than zero.')
+        if burning_time_guess.to_value(u.s) <= 0:
+            
+            raise ValueError('Initial burning time guess must be greater than zero.')
         
-        t_burn: time.TimeDelta = time.TimeDelta(t_0.to_value(u.s) * u.s)
+        t_burn: time.TimeDelta = time.TimeDelta(burning_time_guess.to_value(u.s) * u.s)
         
         prev_epsilon: float = 0.0
         
         maneuver: NonImpulsiveManeuverResult = NonImpulsiveManeuverResult()
         
+        result: tbp.Result = tbp.Result()
+        
+        maneuver.burn_time = t_burn.to(u.s)
+        
+        max_iterations: int = 100
+        
+        iteration: int = 0
+        
         while True:
+            
+            if iteration > max_iterations:
+                
+                print('Reached max iterations.')
+                
+                break
             
             # >>> 1. Integrate
             
             orbit: tbp.Orbit = tbp.Orbit()
             
-            orbit.from_cartesian(attractor=attractor, position=r_0, velocity=v_0,
+            orbit.from_cartesian(attractor=attractor,
+                                 position=initial_position,
+                                 velocity=initial_velocity,
                                  epoch=time.Time('2026-01-01T00:00:00', format='isot', scale='utc'))
             
-            result: tbp.Result = orbit.propagate_for(delta=t_burn, rocket_motor=rocket_motor)
+            result = orbit.propagate_for(delta=t_burn,
+                                         rocket_motor=rocket_motor,
+                                         thrust_direction=thrust_direction,
+                                         initial_radius=initial_radius.to_value(u.km),
+                                         target_radius=final_radius.to_value(u.km),
+                                         initial_inclination=initial_inclination.to_value(u.rad),
+                                         target_inclination=final_inclination.to_value(u.rad))
             
-            if not result.success: raise RuntimeError('Integration failed.')
+            if not result.success:
+                
+                print('Integration failed.')
+                
+                break
             
             r: u.Quantity = np.array([result.position_x[-1].to_value(u.km),
                                       result.position_y[-1].to_value(u.km),
@@ -1607,15 +1876,27 @@ class OrbitalManeuvers():
             
             if semi_major_axis_target:
                 
-                epsilon: float = oe.semimajor_axis.to_value(u.km) - np.linalg.norm(r_f.to_value(u.km))
+                epsilon: float = oe.semimajor_axis.to_value(u.km) - np.linalg.norm(final_position.to_value(u.km))
                 
-                maneuver.r_x = r[0]
-                maneuver.r_y = r[1]
-                maneuver.r_z = r[2]
-                maneuver.v_x = v[0]
-                maneuver.v_y = v[1]
-                maneuver.v_z = v[2]
-                maneuver.m_sc = m_sc
+                maneuver.position_x = r[0]
+                maneuver.position_y = r[1]
+                maneuver.position_z = r[2]
+                maneuver.velocity_x = v[0]
+                maneuver.velocity_y = v[1]
+                maneuver.velocity_z = v[2]
+                maneuver.spacecraft_mass = m_sc
+            
+            elif inclination_target:
+                
+                epsilon: float = oe.inclination.to_value(u.deg) - final_inclination.to_value(u.deg)
+                
+                maneuver.position_x = r[0]
+                maneuver.position_y = r[1]
+                maneuver.position_z = r[2]
+                maneuver.velocity_x = v[0]
+                maneuver.velocity_y = v[1]
+                maneuver.velocity_z = v[2]
+                maneuver.spacecraft_mass = m_sc
                 
             else:
             
@@ -1626,38 +1907,40 @@ class OrbitalManeuvers():
                                                                           initial_velocity=v,
                                                                           delta_true_anomaly=delta_theta)
             
-                epsilon: float = np.linalg.norm(l_r_f.to_value(u.km)) - np.linalg.norm(r_f.to_value(u.km))
+                epsilon: float = np.linalg.norm(l_r_f.to_value(u.km)) - np.linalg.norm(final_position.to_value(u.km))
                 
-                maneuver.r_x = l_r_f[0]
-                maneuver.r_y = l_r_f[1]
-                maneuver.r_z = l_r_f[2]
-                maneuver.v_x = l_v_f[0]
-                maneuver.v_y = l_v_f[1]
-                maneuver.v_z = l_v_f[2]
-                maneuver.m_sc = m_sc
+                maneuver.position_x = l_r_f[0]
+                maneuver.position_y = l_r_f[1]
+                maneuver.position_z = l_r_f[2]
+                maneuver.velocity_x = l_v_f[0]
+                maneuver.velocity_y = l_v_f[1]
+                maneuver.velocity_z = l_v_f[2]
+                maneuver.spacecraft_mass = m_sc
             
             # >>> 4. Check error
             
-            if np.abs(epsilon) < tol: break
+            if np.abs(epsilon) < tolerance: break
             
             # >>> 5. Update time interval
             
             if not np.isclose(prev_epsilon, 0.0, rtol=1e-09, atol=1e-09) and prev_epsilon * epsilon < 0:
                 
-                dt = dt / 2.0
+                time_step = time_step / 2.0
             
             if epsilon < 0:
                 
-                t_burn += time.TimeDelta(dt.to_value(u.s) * u.s)
+                t_burn += time.TimeDelta(time_step.to_value(u.s) * u.s)
                 
             else:
                 
-                t_burn -= time.TimeDelta(dt.to_value(u.s) * u.s)
+                t_burn -= time.TimeDelta(time_step.to_value(u.s) * u.s)
             
-            maneuver.t_burn = t_burn.to(u.s)
-                
+            maneuver.burn_time = t_burn.to(u.s)
+            
             # >>> 6. Update error
             
             prev_epsilon = epsilon
+            
+            iteration += 1
         
-        return maneuver
+        return maneuver, result

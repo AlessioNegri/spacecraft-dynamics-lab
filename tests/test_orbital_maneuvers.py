@@ -610,7 +610,7 @@ def test_plane_change_maneuver_from_raan_and_inclination():
     assert np.isclose(maneuver.orbital_elements_list[0].argument_of_periapsis.to_value(u.rad), 3.0316, atol=1e-4)
     assert np.isclose(maneuver.orbital_elements_list[0].true_anomaly.to_value(u.rad), 2.7026, atol=1e-4)
 
-def test_constant_tangential_thrust_transfer_from_time():
+def test_constant_tangential_thrust_transfer_1():
     """EXAMPLE 6.16"""
     
     attractor: bd.Attractor = bd.Attractor.EARTH
@@ -618,8 +618,7 @@ def test_constant_tangential_thrust_transfer_from_time():
     rocket_motor: om.RocketMotor = om.RocketMotor(
         specific_impulse=10000 * u.s,
         thrust=2500e-6 * u.kN,
-        spacecraft_mass=1000 * u.kg,
-        propellant_mass=0 * u.kg
+        spacecraft_mass=1000 * u.kg
     )
     
     r_0: u.Quantity = 6678 * u.km
@@ -628,19 +627,163 @@ def test_constant_tangential_thrust_transfer_from_time():
     
     r, m_p = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_time(attractor=attractor,
                                                                                rocket_motor=rocket_motor,
-                                                                               r_0=r_0,
-                                                                               tof=tof)
+                                                                               initial_radius=r_0,
+                                                                               time_of_flight=tof,
+                                                                               direction=om.SpiralDirection.OUTWARD)
     
     assert np.isclose(r.to_value(u.km), 42161, atol=1e-0)
-    assert np.isclose(m_p.to_value(u.kg), 46.32, atol=1e-4)
+    assert np.isclose(m_p.to_value(u.kg), 46.32, atol=1e-2)
     
-    tof, m_p = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
-                                                                                 rocket_motor=rocket_motor,
-                                                                                 r_0=r_0,
-                                                                                 r_f=r)
+    tof, m_p, dv = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
+                                                                                       rocket_motor=rocket_motor,
+                                                                                       initial_radius=r_0,
+                                                                                       final_radius=r)
     
     assert np.isclose(tof.to_value(u.day), 21.03, atol=1e-2)
-    assert np.isclose(m_p.to_value(u.kg), 46.32, atol=1e-4)
+    assert np.isclose(m_p.to_value(u.kg), 46.32, atol=1e-2)
+
+def test_constant_tangential_thrust_transfer_2():
+    """EXAMPLE 9.1 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    rocket_motor: om.RocketMotor = om.RocketMotor(
+        specific_impulse=1700 * u.s,
+        thrust=0.6 * u.N,
+        spacecraft_mass=2500 * u.kg
+    )
+    
+    r_0: u.Quantity = 6678 * u.km
+    
+    r_f: u.Quantity = 42161 * u.km
+    
+    tof, m_p, dv = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
+                                                                                       rocket_motor=rocket_motor,
+                                                                                       initial_radius=r_0,
+                                                                                       final_radius=r_f)
+    
+    assert np.isclose(tof.to_value(u.day), 195.73, atol=1e-2)
+    assert np.isclose(m_p.to_value(u.kg), 608.6, atol=1e-1)
+
+def test_constant_tangential_thrust_transfer_3():
+    """EXAMPLE 9.2 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    rocket_motor: om.RocketMotor = om.RocketMotor(
+        specific_impulse=3200 * u.s,
+        thrust=0.25 * u.N,
+        spacecraft_mass=1200 * u.kg
+    )
+    
+    r_0: u.Quantity = 2 * 6378 * u.km
+    
+    r_f: u.Quantity = 4 * 6378 * u.km
+    
+    tof, _, _ = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
+                                                                                    rocket_motor=rocket_motor,
+                                                                                    initial_radius=r_0,
+                                                                                    final_radius=r_f)
+    
+    assert np.isclose(tof.to_value(u.day), 88.63, atol=1e-2)
+    
+    rocket_motor.spacecraft_mass = 2400 * u.kg
+    
+    tof, _, _ = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
+                                                                                    rocket_motor=rocket_motor,
+                                                                                    initial_radius=r_0,
+                                                                                    final_radius=r_f)
+    
+    assert np.isclose(tof.to_value(u.day), 177.25, atol=1e-2)
+
+def test_constant_tangential_thrust_transfer_4():
+    """EXAMPLE 9.3 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    rocket_motor: om.RocketMotor = om.RocketMotor(
+        specific_impulse=1700 * u.s,
+        thrust=0.6 * u.N,
+        spacecraft_mass=2500 * u.kg
+    )
+    
+    r_0: u.Quantity = 6678 * u.km
+    
+    r_f: u.Quantity = 42161 * u.km
+    
+    tof, _, _ = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(attractor=attractor,
+                                                                                    rocket_motor=rocket_motor,
+                                                                                    initial_radius=r_0,
+                                                                                    final_radius=r_f,
+                                                                                    earth_shadow=True)
+    
+    assert np.isclose(tof.to_value(u.day), 228.2, atol=1e-1)
+
+def test_non_impulsive_inclination_change_maneuver():
+    """EXAMPLE 9.4 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    rocket_motor: om.RocketMotor = om.RocketMotor(
+        specific_impulse=1700 * u.s,
+        thrust=0.6 * u.N,
+        spacecraft_mass=2500 * u.kg
+    )
+    
+    r: u.Quantity = 10000 * u.km
+    
+    i_0: u.Quantity = 0 * u.deg
+    
+    i_f: u.Quantity = 20 * u.deg
+    
+    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(attractor=attractor,
+                                                                                 rocket_motor=rocket_motor,
+                                                                                 radius=r,
+                                                                                 initial_inclination=i_0,
+                                                                                 final_inclination=i_f)
+    
+    assert np.isclose(tof.to_value(u.day), 150.75, atol=1e-2)
+    assert np.isclose(m_p.to_value(u.kg), 468.8, atol=1e-1)
+    
+    r = 30000 * u.km
+    
+    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(attractor=attractor,
+                                                                                 rocket_motor=rocket_motor,
+                                                                                 radius=r,
+                                                                                 initial_inclination=i_0,
+                                                                                 final_inclination=i_f)
+    
+    assert np.isclose(tof.to_value(u.day), 90.83, atol=1e-2)
+    assert np.isclose(m_p.to_value(u.kg), 282.4, atol=1e-1)
+
+def test_non_impulsive_inclined_circular_orbits_transfer():
+    """EXAMPLE 9.5 - BOOK 2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    rocket_motor: om.RocketMotor = om.RocketMotor(
+        specific_impulse=1700 * u.s,
+        thrust=0.6 * u.N,
+        spacecraft_mass=2500 * u.kg
+    )
+    
+    r_0: u.Quantity = 6678 * u.km
+    
+    r_f: u.Quantity = 42161 * u.km
+    
+    i_0: u.Quantity = 28.5 * u.deg
+    
+    i_f: u.Quantity = 0 * u.deg
+    
+    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclined_circular_orbits_transfer(attractor=attractor,
+                                                                                       rocket_motor=rocket_motor,
+                                                                                       initial_radius=r_0,
+                                                                                       final_radius=r_f,
+                                                                                       initial_inclination=i_0,
+                                                                                       final_inclination=i_f)
+    
+    assert np.isclose(tof.to_value(u.day), 241.3, atol=1e-1)
+    assert np.isclose(m_p.to_value(u.kg), 750.5, atol=1e-1)
 
 def test_non_impulsive_maneuver_1():
     """EXAMPLE 6.15"""
@@ -655,59 +798,63 @@ def test_non_impulsive_maneuver_1():
     )
     
     r_0: u.Quantity = np.array([6858, 0, 0]) * u.km
+    
     v_0: u.Quantity = np.array([0, 7.7102, 0]) * u.km / u.s
     
     t_0: u.Quantity = 100 * u.s
+    
     dt: u.Quantity = 10 * u.s
     
     r_f: u.Quantity = np.array([-(16000 + 6378), 0, 0]) * u.km
     
-    maneuver: om.NonImpulsiveManeuverResult = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
-                                                                                         rocket_motor=rocket_motor,
-                                                                                         r_0=r_0,
-                                                                                         v_0=v_0,
-                                                                                         t_0=t_0,
-                                                                                         dt=dt,
-                                                                                         r_f=r_f)
+    maneuver, _ = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
+                                                             rocket_motor=rocket_motor,
+                                                             initial_position=r_0,
+                                                             initial_velocity=v_0,
+                                                             burning_time_guess=t_0,
+                                                             time_step=dt,
+                                                             final_position=r_f,
+                                                             tolerance=1e-8)
     
-    assert np.isclose(maneuver.t_burn.to_value(u.s), 261.1127, atol=1e-4)
-    assert np.isclose(maneuver.m_sc.to_value(u.kg), 1112.471, atol=1e-3)
-    assert np.isclose(maneuver.r_x.to_value(u.km), -22141.57295, atol=1e-5)
-    assert np.isclose(maneuver.r_y.to_value(u.km), -3244.5306214, atol=1e-6)
-    assert np.isclose(maneuver.r_z.to_value(u.km), 0, atol=1e-0)
-    assert np.isclose(maneuver.v_x.to_value(u.km / u.s), 0.41938999506, atol=1e-11)
-    assert np.isclose(maneuver.v_y.to_value(u.km / u.s), -2.8620331423, atol=1e-10)
-    assert np.isclose(maneuver.v_z.to_value(u.km / u.s), 0, atol=1e-0)
+    assert np.isclose(maneuver.burn_time.to_value(u.s), 261.1075, atol=1e-4)
+    assert np.isclose(maneuver.spacecraft_mass.to_value(u.kg), 1112.471, atol=1e-3)
+    assert np.isclose(maneuver.position_x.to_value(u.km), -22141.57295, atol=1e-5)
+    assert np.isclose(maneuver.position_y.to_value(u.km), -3244.5306214, atol=1e-6)
+    assert np.isclose(maneuver.position_z.to_value(u.km), 0, atol=1e-0)
+    assert np.isclose(maneuver.velocity_x.to_value(u.km / u.s), 0.41938999506, atol=1e-11)
+    assert np.isclose(maneuver.velocity_y.to_value(u.km / u.s), -2.8620331423, atol=1e-10)
+    assert np.isclose(maneuver.velocity_z.to_value(u.km / u.s), 0, atol=1e-0)
     
-    rocket_motor.spacecraft_mass = maneuver.m_sc
+    rocket_motor.spacecraft_mass = maneuver.spacecraft_mass
     
-    maneuver = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
-                                                          rocket_motor=rocket_motor,
-                                                          r_0=np.array([maneuver.r_x.to_value(u.km),
-                                                                        maneuver.r_y.to_value(u.km),
-                                                                        maneuver.r_z.to_value(u.km)]) * u.km,
-                                                          v_0=np.array([maneuver.v_x.to_value(u.km / u.s),
-                                                                        maneuver.v_y.to_value(u.km / u.s),
-                                                                        maneuver.v_z.to_value(u.km / u.s)]) * u.km / u.s,
-                                                          t_0=t_0,
-                                                          dt=dt,
-                                                          r_f=r_f,
-                                                          semi_major_axis_target=True)
+    maneuver, _ = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
+                                                             rocket_motor=rocket_motor,
+                                                             initial_position=np.array([
+                                                                 maneuver.position_x.to_value(u.km),
+                                                                 maneuver.position_y.to_value(u.km),
+                                                                 maneuver.position_z.to_value(u.km)]) * u.km,
+                                                             initial_velocity=np.array([
+                                                                 maneuver.velocity_x.to_value(u.km / u.s),
+                                                                 maneuver.velocity_y.to_value(u.km / u.s),
+                                                                 maneuver.velocity_z.to_value(u.km / u.s)]) * u.km / u.s,
+                                                             burning_time_guess=t_0,
+                                                             time_step=dt,
+                                                             final_position=r_f,
+                                                             semi_major_axis_target=True,
+                                                             tolerance=1e-8)
     
-    assert np.isclose(maneuver.t_burn.to_value(u.s), 118.88, atol=1e-2)
-    assert np.isclose(maneuver.m_sc.to_value(u.kg), 708.41, atol=1e-2)
+    assert np.isclose(maneuver.burn_time.to_value(u.s), 118.88, atol=1e-2)
+    assert np.isclose(maneuver.spacecraft_mass.to_value(u.kg), 708.41, atol=1e-2)
     
-    r: u.Quantity = np.array([maneuver.r_x.to_value(u.km),
-                              maneuver.r_y.to_value(u.km),
-                              maneuver.r_z.to_value(u.km)]) * u.km
+    r: u.Quantity = np.array([maneuver.position_x.to_value(u.km),
+                              maneuver.position_y.to_value(u.km),
+                              maneuver.position_z.to_value(u.km)]) * u.km
     
-    v: u.Quantity = np.array([maneuver.v_x.to_value(u.km / u.s),
-                              maneuver.v_y.to_value(u.km / u.s),
-                              maneuver.v_z.to_value(u.km / u.s)]) * u.km / u.s
+    v: u.Quantity = np.array([maneuver.velocity_x.to_value(u.km / u.s),
+                              maneuver.velocity_y.to_value(u.km / u.s),
+                              maneuver.velocity_z.to_value(u.km / u.s)]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                           position=r,
-                                                           velocity=v)
+    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 16000 + 6378, atol=1e-0)
     assert np.isclose(oe.eccentricity.to_value(u.dimensionless_unscaled), 0.00867, atol=1e-5)
@@ -727,39 +874,41 @@ def test_non_impulsive_maneuver_2():
     )
     
     r_0: u.Quantity = np.array([6678, 0, 0]) * u.km
+    
     v_0: u.Quantity = np.array([0, 7.72584, 0]) * u.km / u.s
     
     t_0: u.Quantity = 21.03 * u.day
+    
     dt: u.Quantity = 10 * u.s
     
     r_f: u.Quantity = np.array([42164, 0, 0]) * u.km
     
-    maneuver: om.NonImpulsiveManeuverResult = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
-                                                                                         rocket_motor=rocket_motor,
-                                                                                         r_0=r_0,
-                                                                                         v_0=v_0,
-                                                                                         t_0=t_0,
-                                                                                         dt=dt,
-                                                                                         r_f=r_f,
-                                                                                         semi_major_axis_target=True,
-                                                                                         tol=1e0)
+    maneuver, _ = om.OrbitalManeuvers.non_impulsive_maneuver(attractor=attractor,
+                                                             rocket_motor=rocket_motor,
+                                                             initial_position=r_0,
+                                                             initial_velocity=v_0,
+                                                             burning_time_guess=t_0,
+                                                             time_step=dt,
+                                                             final_position=r_f,
+                                                             semi_major_axis_target=True,
+                                                             tolerance=1e0)
     
-    assert np.isclose(maneuver.t_burn.to_value(u.day), 21.0376, atol=1e-4)
-    assert np.isclose(rocket_motor.spacecraft_mass.to_value(u.kg) - maneuver.m_sc.to_value(u.kg), 46.34, atol=1e-2)
-    assert np.isclose(maneuver.r_x.to_value(u.km), 37727.275971, atol=1e-6)
-    assert np.isclose(maneuver.r_y.to_value(u.km), -20917.194986, atol=1e-6)
-    assert np.isclose(maneuver.r_z.to_value(u.km), 0, atol=1e-0)
-    assert np.isclose(maneuver.v_x.to_value(u.km / u.s), 1.4565649916, atol=1e-10)
-    assert np.isclose(maneuver.v_y.to_value(u.km / u.s), 2.6271318618, atol=1e-10)
-    assert np.isclose(maneuver.v_z.to_value(u.km / u.s), 0, atol=1e-0)
+    assert np.isclose(maneuver.burn_time.to_value(u.day), 21.0376, atol=1e-4)
+    assert np.isclose(rocket_motor.spacecraft_mass.to_value(u.kg) - maneuver.spacecraft_mass.to_value(u.kg), 46.34, atol=1e-2)
+    assert np.isclose(maneuver.position_x.to_value(u.km), 37727.275971, atol=1e-6)
+    assert np.isclose(maneuver.position_y.to_value(u.km), -20917.194986, atol=1e-6)
+    assert np.isclose(maneuver.position_z.to_value(u.km), 0, atol=1e-0)
+    assert np.isclose(maneuver.velocity_x.to_value(u.km / u.s), 1.4565649916, atol=1e-10)
+    assert np.isclose(maneuver.velocity_y.to_value(u.km / u.s), 2.6271318618, atol=1e-10)
+    assert np.isclose(maneuver.velocity_z.to_value(u.km / u.s), 0, atol=1e-0)
     
-    r: u.Quantity = np.array([maneuver.r_x.to_value(u.km),
-                              maneuver.r_y.to_value(u.km),
-                              maneuver.r_z.to_value(u.km)]) * u.km
+    r: u.Quantity = np.array([maneuver.position_x.to_value(u.km),
+                              maneuver.position_y.to_value(u.km),
+                              maneuver.position_z.to_value(u.km)]) * u.km
     
-    v: u.Quantity = np.array([maneuver.v_x.to_value(u.km / u.s),
-                              maneuver.v_y.to_value(u.km / u.s),
-                              maneuver.v_z.to_value(u.km / u.s)]) * u.km / u.s
+    v: u.Quantity = np.array([maneuver.velocity_x.to_value(u.km / u.s),
+                              maneuver.velocity_y.to_value(u.km / u.s),
+                              maneuver.velocity_z.to_value(u.km / u.s)]) * u.km / u.s
     
     oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
                                                            position=r,

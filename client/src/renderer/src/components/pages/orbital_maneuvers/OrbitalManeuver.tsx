@@ -10,6 +10,8 @@ import ApseLineRotation from "./maneuvers/ApseLineRotation"
 import Chase from "./maneuvers/Chase"
 import PlaneChange from "./maneuvers/PlaneChange"
 import InclinationChange from "./maneuvers/InclinationChange"
+import CoplanarCircleCircle from "./maneuvers/CoplanarCircleCircle"
+import InclinationChangeNonImpulsive from "./maneuvers/InclinationChangeNonImpulsive"
 
 interface Props
 {
@@ -51,16 +53,30 @@ export default function OrbitalManeuver(props: Readonly<Props>): react.JSX.Eleme
                 type="select"
                 value={maneuver.type}
                 onChange={(e) => setManeuver({...maneuver, type: e.target.value as IOrbitalManeuverType})}
-                options={
+                groups={
                     [
-                        { label: "Hohmann", value: 'hohmann' },
-                        { label: "Bi-Elliptic Hohmann", value: 'bi-elliptic-hohmann' },
-                        { label: "Phasing", value: 'phasing' },
-                        { label: "Non-Hohmann", value: 'non-hohmann' },
-                        { label: "Apse Line Rotation", value: 'apse-line-rotation' },
-                        { label: "Chase", value: 'chase' },
-                        { label: "Inclination Change", value: 'inclination-change' },
-                        { label: "Plane Change", value: 'plane-change' }
+                        {
+                            caption: "Impulsive Maneuvers",
+                            options:
+                            [
+                                { label: "Hohmann", value: 'hohmann' },
+                                { label: "Bi-Elliptic Hohmann", value: 'bi-elliptic-hohmann' },
+                                { label: "Phasing", value: 'phasing' },
+                                { label: "Non-Hohmann", value: 'non-hohmann' },
+                                { label: "Apse Line Rotation", value: 'apse-line-rotation' },
+                                { label: "Chase", value: 'chase' },
+                                { label: "Inclination Change", value: 'inclination-change' },
+                                { label: "Plane Change", value: 'plane-change' }
+                            ]
+                        },
+                        {
+                            caption: "Non-Impulsive Maneuvers",
+                            options:
+                            [
+                                { label: "Coplanar Circle-to-Circle", value: "coplanar-circle-circle" },
+                                { label: "Inclination Change", value: "inclination-change-non-impulsive" }
+                            ]
+                        }
                     ]}
             />
 
@@ -102,6 +118,16 @@ export default function OrbitalManeuver(props: Readonly<Props>): react.JSX.Eleme
             {
                 maneuver.type === 'plane-change' &&
                 <PlaneChange data={maneuver.data as IPlaneChange} onChange={handleChange} />
+            }
+
+            {
+                maneuver.type === 'coplanar-circle-circle' &&
+                <CoplanarCircleCircle data={maneuver.data as ICoplanarCircleCircle} onChange={handleChange} />
+            }
+
+            {
+                maneuver.type === 'inclination-change-non-impulsive' &&
+                <InclinationChangeNonImpulsive data={maneuver.data as IInclinationChangeNonImpulsive} onChange={handleChange} />
             }
 
         </div>
