@@ -1,9 +1,8 @@
 """
 Two-Body Problem
 
-Implements core algorithms for solving the classical two-body problem,
-including orbital geometry, conic classification, and the fundamental
-relationships between position, velocity, and orbital elements.
+Implements core algorithms for solving the classical two-body problem including orbital geometry, conic classification,
+and the fundamental relationships between position, velocity, and orbital elements.
 
 References:
 - Howard D. Curtis, "Orbital Mechanics for Engineering Students"
@@ -14,68 +13,25 @@ References:
     - Chapter 2: Two-Body Orbital Mechanics
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.time as time
 import astropy.units as u
-import dataclasses
 import numpy as np
 import scipy.integrate as ode
 import typing
 
 import astro.bodies as bodies
 import astro.common as common
-import astro.enums as ae
+import astro.enums as astroenums
 
-from astro.orbital_maneuvers import RocketMotor
-
-class Result:
-    """Result of integration
-    """
-    
-    success         : bool
-    time            : u.Quantity
-    position_x      : u.Quantity
-    position_y      : u.Quantity
-    position_z      : u.Quantity
-    velocity_x      : u.Quantity
-    velocity_y      : u.Quantity
-    velocity_z      : u.Quantity
-    mass_spacecraft : u.Quantity
-    
-@dataclasses.dataclass
-class OrbitParameters:
-    """Orbit parameters based on orbit geometry (linear - circular - elliptical - parabolic - hyperbolic)
-    """
-    
-    conic_type                  : str = ""                              # ? Type of conic section
-    specific_angular_momentum   : u.Quantity = 0.0 * u.km**2 / u.s      # ? Specific Angular Momentum
-    transverse_velocity         : u.Quantity = 0.0 * u.km / u.s         # ? Transverse Velocity
-    specific_energy             : u.Quantity = 0.0 * u.km**2 / u.s**2   # ? Specific Mechanical Energy
-    semilatus_rectum            : u.Quantity = 0.0 * u.km               # ? Semilatus Rectum (Parameter)
-    semimajor_axis              : u.Quantity = 0.0 * u.km               # ? Semimajor Axis
-    eccentricity                : u.Quantity = 0.0 * u.one              # ? Eccentricity
-    periapsis_radius            : u.Quantity = 0.0 * u.km               # ? Periapsis Radius
-    apoapsis_radius             : u.Quantity = 0.0 * u.km               # ? Apoapsis Radius
-    semiminor_axis              : u.Quantity = 0.0 * u.km               # ? Semi-Minor Axis
-    period                      : u.Quantity = 0.0 * u.s                # ? Orbital Period
-    escape_velocity             : u.Quantity = 0.0 * u.km / u.s         # ? Escape Velocity
-    hyperbolic_excess_speed     : u.Quantity = 0.0 * u.km / u.s         # ? Hyperbolic Excess Speed
-    turning_angle               : u.Quantity = 0.0 * u.deg              # ? Turning Angle
-    asymptotic_true_anomaly     : u.Quantity = 0.0 * u.deg              # ? Infinite True Anomaly
-    asymptote_angle             : u.Quantity = 0.0 * u.deg              # ? Hyperbola Asymptote Angle
-    aiming_radius               : u.Quantity = 0.0 * u.km               # ? Aiming Radius
-    characteristic_energy       : u.Quantity = 0.0 * u.km**2 / u.s**2   # ? Characteristic Energy
+from astro.models.results import Result
+from astro.models.orbit_parameters import OrbitParameters
+from astro.models.rocket_motor import RocketMotor
 
 class Orbit:
-    """Generic orbit in two-body problem
-    """
+    """Generic orbit in two-body problem"""
     
     def __init__(self):
-        """Constructor
-        """
+        """Constructor"""
         
         self.ready: bool = False
         
@@ -253,7 +209,7 @@ class Orbit:
     def propagate_until(self,
                         end_epoch: time.Time,
                         rocket_motor: RocketMotor = None,
-                        thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                        thrust_direction: astroenums.ThrustDirection = astroenums.ThrustDirection.ALONG_VELOCITY,
                         initial_radius: float = 0,
                         target_radius: float = 0,
                         initial_inclination: float = 0,
@@ -264,7 +220,7 @@ class Orbit:
         Args:
             end_epoch (time.Time): End epoch for propagation
             rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
-            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            thrust_direction (astroenums.ThrustDirection, optional): Direction of thrust. Defaults to astroenums.ThrustDirection.ALONG_VELOCITY.
             initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
             target_radius (float, optional): Target radius for thrust. Defaults to 0.
             initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
@@ -283,7 +239,7 @@ class Orbit:
     def propagate_for(self,
                       delta: time.TimeDelta,
                       rocket_motor: RocketMotor = None,
-                      thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                      thrust_direction: astroenums.ThrustDirection = astroenums.ThrustDirection.ALONG_VELOCITY,
                       initial_radius: float = 0,
                       target_radius: float = 0,
                       initial_inclination: float = 0,
@@ -293,7 +249,7 @@ class Orbit:
         Args:
             delta (time.TimeDelta): Delta time for propagation
             rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
-            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            thrust_direction (astroenums.ThrustDirection, optional): Direction of thrust. Defaults to astroenums.ThrustDirection.ALONG_VELOCITY.
             initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
             target_radius (float, optional): Target radius for thrust. Defaults to 0.
             initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
@@ -312,7 +268,7 @@ class Orbit:
     def _propagate(self,
                    delta: float,
                    rocket_motor: RocketMotor = None,
-                   thrust_direction: ae.ThrustDirection = ae.ThrustDirection.ALONG_VELOCITY,
+                   thrust_direction: astroenums.ThrustDirection = astroenums.ThrustDirection.ALONG_VELOCITY,
                    initial_radius: float = 0,
                    target_radius: float = 0,
                    initial_inclination: float = 0,
@@ -323,7 +279,7 @@ class Orbit:
         Args:
             delta (float): Delta time for propagation
             rocket_motor (RocketMotor, optional): Rocket motor for thrust. Defaults to None.
-            thrust_direction (ae.ThrustDirection, optional): Direction of thrust. Defaults to ae.ThrustDirection.ALONG_VELOCITY.
+            thrust_direction (astroenums.ThrustDirection, optional): Direction of thrust. Defaults to astroenums.ThrustDirection.ALONG_VELOCITY.
             initial_radius (float, optional): Initial radius for thrust. Defaults to 0.
             target_radius (float, optional): Target radius for thrust. Defaults to 0.
             initial_inclination (float, optional): Initial inclination for thrust. Defaults to 0.
@@ -452,7 +408,7 @@ class Orbit:
                                                X: np.ndarray,
                                                thrust: float,
                                                specific_impulse: float,
-                                               thrust_direction: ae.ThrustDirection,
+                                               thrust_direction: astroenums.ThrustDirection,
                                                initial_radius: float,
                                                target_radius: float,
                                                initial_inclination: float,
@@ -508,7 +464,7 @@ class Orbit:
             X (np.ndarray): State vector [x, y, z, v_x, v_y, v_z, m]
             thrust (float): Thrust magnitude [N]
             specific_impulse (float): Specific impulse [s]
-            thrust_direction (ae.ThrustDirection): Direction of the thrust
+            thrust_direction (astroenums.ThrustDirection): Direction of the thrust
             initial_radius (float): Initial radius in km
             target_radius (float): Target radius in km
             initial_inclination (float): Initial inclination in rad
@@ -522,7 +478,7 @@ class Orbit:
         
         T: float = thrust
         
-        I_sp: float = specific_impulse
+        i_sp: float = specific_impulse
         
         x, y, z, v_x, v_y, v_z, m = X
         
@@ -542,7 +498,7 @@ class Orbit:
         
         a_thrust: np.ndarray = np.zeros(3)
         
-        if thrust_direction == ae.ThrustDirection.ALONG_VELOCITY:
+        if thrust_direction == astroenums.ThrustDirection.ALONG_VELOCITY:
             
             if np.isclose(v, 0.0, rtol=1e-09, atol=1e-09):
                 
@@ -562,7 +518,7 @@ class Orbit:
             
             a_thrust = sign * T / m * v_hat
             
-        elif thrust_direction == ae.ThrustDirection.ALONG_ANGULAR_MOMENTUM:
+        elif thrust_direction == astroenums.ThrustDirection.ALONG_ANGULAR_MOMENTUM:
             
             if np.isclose(h_m, 0.0, rtol=1e-09, atol=1e-09):
             
@@ -592,6 +548,6 @@ class Orbit:
         dx_dt[3] = - (mu / r**3) * x + a_thrust[0]
         dx_dt[4] = - (mu / r**3) * y + a_thrust[1]
         dx_dt[5] = - (mu / r**3) * z + a_thrust[2]
-        dx_dt[6] = - T / (I_sp * g_0)
+        dx_dt[6] = - T / (i_sp * g_0)
         
         return dx_dt

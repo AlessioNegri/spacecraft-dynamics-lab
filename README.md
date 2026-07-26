@@ -75,6 +75,10 @@ Here are some references that were used to develop the application:
 | **Publisher** | Wiley |
 | **URL** | [https://www.google.it/books/](https://www.google.it/books/edition/Space_Flight_Dynamics/Cp1PDwAAQBAJ?hl=it&gbpv=0) |
 
+<p align="center">
+    <img src="./docs/images/references.png" width="50%" alt="about">
+</p>
+
 ## 📋 Table Of Contents
 
 > Click on the links below to navigate through the documentation.

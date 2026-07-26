@@ -75,7 +75,7 @@ async def put_cr3bp_orbit_parameters(data: schema.OrbitParametersInModelInfo) ->
     body_1: bd.Attractor = bd.Attractor(data.body1.lower())
     body_2: bd.Attractor = bd.Attractor(data.body2.lower())
 
-    parameters: cr3bp.OrbitParameters = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    parameters: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
     
     result: schema.OrbitParametersOutModelInfo = schema.OrbitParametersOutModelInfo(
         inertialAngularVelocity=parameters.inertial_angular_velocity.to_value(u.deg / u.day),

@@ -1,20 +1,926 @@
 [
     {
-        "name": "AcrimSAT",
+        "name": "ACE",
+        "description": "Advanced Composition Explorer",
+        "scale": 0.005,
+        "minimumPixelSize": 300,
+        "maximumScale": 500
+    },
+    {
+        "name": "AcrimSAT-A",
+        "description": "Active Cavity Irradiance Monitor Satellite (AcrimSAT) (A)",
+        "scale": 3,
+        "minimumPixelSize": 200000,
+        "maximumScale": 500000
+    },
+    {
+        "name": "AcrimSAT-B",
+        "description": "Active Cavity Irradiance Monitor Satellite (AcrimSAT) (B)",
         "scale": 0.0005,
         "minimumPixelSize": 50,
         "maximumScale": 100
     },
     {
-        "name": "Aqua",
+        "name": "AIM",
+        "description": "Aeronomy Of Ice In The Mesosphere",
+        "scale": 0.075,
+        "minimumPixelSize": 5000,
+        "maximumScale": 10000
+    },
+    {
+        "name": "Aqua-A",
+        "description": "Aqua (A)",
         "scale": 0.015,
         "minimumPixelSize": 2000,
         "maximumScale": 4000
     },
     {
-        "name": "InternationalSpaceStation",
+        "name": "Aqua-B",
+        "description": "Aqua (B)",
+        "scale": 0.015,
+        "minimumPixelSize": 2000,
+        "maximumScale": 4000
+    },
+    {
+        "name": "Aqua-C",
+        "description": "Aqua (C)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Aquarius-A",
+        "description": "Aquarius (A)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Aquarius-B-Compact",
+        "description": "Aquarius (B) (compact)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "ASTRE",
+        "description": "Atmosphere-Space Transition Region Explorer (ASTRE)",
+        "scale": 0.05,
+        "minimumPixelSize": 5000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Aura-A",
+        "description": "Aura (A)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Aura-B",
+        "description": "Aura (B)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Aura-C",
+        "description": "Aura (C)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Aura-D",
+        "description": "Aura (D)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Cassini-Huygens-A",
+        "description": "Cassini-Huygens (A)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Cassini-Huygens-A-No-Cassini",
+        "description": "Cassini-Huygens (A) (without Cassini)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Cassini-Huygens-A-No-Hyugens",
+        "description": "Cassini-Huygens (A) (without Hyugens)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Cassini-Huygens-B",
+        "description": "Cassini-Huygens (B)",
+        "scale": 0.1,
+        "minimumPixelSize": 5000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Clementine",
+        "description": "Clementine",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "CALIPSO",
+        "description": "Cloud-Aerosol Lidar and Infrared Pathfinder Satellite (CALIPSO)",
+        "scale": 0.1,
+        "minimumPixelSize": 5000,
+        "maximumScale": 10000
+    },
+    {
+        "name": "CloudSat-A",
+        "description": "CloudSat (A)",
+        "scale": 0.05,
+        "minimumPixelSize": 5000,
+        "maximumScale": 10000
+    },
+    {
+        "name": "CloudSat-B",
+        "description": "CloudSat (B)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "CloudSat-C",
+        "description": "CloudSat (C)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Cluster",
+        "description": "Cluster",
+        "scale": 0.5,
+        "minimumPixelSize": 20000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Cluster-2",
+        "description": "Cluster II",
+        "scale": 1.0,
+        "minimumPixelSize": 40000,
+        "maximumScale": 80000
+    },
+    {
+        "name": "CNOFS",
+        "description": "Communication and Navigation Outage Forecast System (CNOFS)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Constellation-X",
+        "description": "Constellation-X",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "CubeSat_1_RU",
+        "description": "CubeSat - 1 RU Generic",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "CubeSat_2_RU",
+        "description": "CubeSat - 2 RU Generic",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "CubeSat_ICECube",
+        "description": "CubeSat - ICECube",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "CubeSat_MiRaTa",
+        "description": "CubeSat - MiRaTae",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Dawn",
+        "description": "Dawn",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Deep_Impact",
+        "description": "Deep Impact",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Deep_Impact_EPOXI_w_impactor",
+        "description": "Deep Impact - EPOXI (with impactor)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Deep_Impact_EPOXI_wo_impactor",
+        "description": "Deep Impact - EPOXI (without impactor)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Deep_Space_1",
+        "description": "Deep Space 1",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "DESDynI",
+        "description": "Deformation, Ecosystem Structure, and Dynamics of Ice (DESDynI)",
+        "scale": 0.5,
+        "minimumPixelSize": 20000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "EO_1",
+        "description": "Earth Observing-1 (EO-1)",
+        "scale": 0.05,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "FUSE",
+        "description": "Far Ultraviolet Spectroscopic Explorer",
+        "scale": 4.0,
+        "minimumPixelSize": 400000,
+        "maximumScale": 800000
+    },
+    {
+        "name": "FGST",
+        "description": "Fermi Gamma-ray Large Area Space Telescope",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Firefly",
+        "description": "Firefly",
+        "scale": 0.5,
+        "minimumPixelSize": 20000,
+        "maximumScale": 40000
+    },
+    {
+        "name": "Galileo",
+        "description": "Galileo",
+        "scale": 0.025,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "GRO",
+        "description": "Gamma Ray Observatory",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Gateway",
+        "description": "Gateway Core",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "GOES",
+        "description": "Geostationary Operational Environmental Satellites",
+        "scale": 25.0,
+        "minimumPixelSize": 1000000,
+        "maximumScale": 2000000
+    },
+    {
+        "name": "GEOTAIL",
+        "description": "GeoTailSAT",
+        "scale": 0.001,
+        "minimumPixelSize": 200,
+        "maximumScale": 400
+    },
+    {
+        "name": "GPM",
+        "description": "Global Precipitation Measurement",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "GRACE_A",
+        "description": "Gravity Recovery and Climate Experiment (GRACE) (A)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "GRACE_B",
+        "description": "Gravity Recovery and Climate Experiment (GRACE) (B)",
+        "scale": 0.5,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "HESSI",
+        "description": "HESSI-RHESSI",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "HETE",
+        "description": "High Energy Transient Explorer",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Hinode",
+        "description": "Hinode (Solar-B)",
+        "scale": 0.1,
+        "minimumPixelSize": 5000,
+        "maximumScale": 10000
+    },
+    {
+        "name": "HST_A",
+        "description": "Hubble Space Telescope (A)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "HST_B",
+        "description": "Hubble Space Telescope (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ICESat_A",
+        "description": "Ice, Clouds, and Land Elevation Satellite (ICESat) (A)",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "ICESat_B",
+        "description": "Ice, Clouds, and Land Elevation Satellite (ICESat) (B)",
+        "scale": 3.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ICESat_2_A",
+        "description": "Ice, Clouds, and Land Elevation Satellite-2 (ICESat-2) (A)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ICESat_2_B",
+        "description": "Ice, Clouds, and Land Elevation Satellite-2 (ICESat-2) (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ICESat_2_C",
+        "description": "Ice, Clouds, and Land Elevation Satellite-2 (ICESat-2) (C)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ISS_A",
+        "description": "International Space Station (ISS) (A)",
         "scale": 0.25,
         "minimumPixelSize": 30000,
         "maximumScale": 60000
+    },
+    {
+        "name": "IXO",
+        "description": "International X-ray Observatory",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "IBEX",
+        "description": "Interstellar Boundary Explorer (IBEX)",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "ICON",
+        "description": "Ionospheric Connection Explorer (ICON)",
+        "scale": 0.025,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "JWST_A",
+        "description": "James Webb Space Telescope (A)",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "JWST_B",
+        "description": "James Webb Space Telescope (B)",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Sentinel_6",
+        "description": "Jason Continuity of Service (Sentinel-6)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Kepler_A",
+        "description": "Kepler (A)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Landsat_1_2_3",
+        "description": "Landsat 1, 2, and 3",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Landsat_4_5",
+        "description": "Landsat 4 and 5",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Landsat_7",
+        "description": "Landsat 7",
+        "scale": 5.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Landsat_8",
+        "description": "Landsat 8",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "LISA",
+        "description": "Laser Interferometer Space Antenna (LISA) (2006)",
+        "scale": 3.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "LADEE",
+        "description": "Lunar Atmosphere and Dust Environment Explorer (LADEE)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "LLCD",
+        "description": "Lunar Laser Communications Demonstration (LLCD)",
+        "scale": 0.1,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "LRO_A",
+        "description": "Lunar Reconnaissance Orbiter (A)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "LRO_B",
+        "description": "Lunar Reconnaissance Orbiter (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Magellan",
+        "description": "Magellan",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MMS_A",
+        "description": "Magnetospheric Multiscale (MMS) (A)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MMS_B",
+        "description": "Magnetospheric Multiscale (MMS) (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MAVEN_A",
+        "description": "Mars Atmosphere and Volatile EvolutioN (MAVEN) (A)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MAVEN_B",
+        "description": "Mars Atmosphere and Volatile EvolutioN (MAVEN) (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MGS",
+        "description": "Mars Global Surveyor",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MGS_MOI",
+        "description": "Mars Global Surveyor (MOI)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "MGS_mapping",
+        "description": "Mars Global Surveyor (mapping)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "MGS_launch",
+        "description": "Mars Global Surveyor (launch)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "MO",
+        "description": "Mars Odyssey",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MRO_A",
+        "description": "Mars Reconnaissance Orbiter (MRO) (A)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "MRO_B",
+        "description": "Mars Reconnaissance Orbiter (MRO) (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "MRO_C",
+        "description": "Mars Reconnaissance Orbiter (MRO) (C)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Mir",
+        "description": "Mir",
+        "scale": 0.005,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "NGRST_A",
+        "description": "Nancy Grace Roman Space Telescope (A)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "NGRST_B",
+        "description": "Nancy Grace Roman Space Telescope (B)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "NEAR",
+        "description": "NEAR Shoemaker",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "OCO",
+        "description": "Orbiting Carbon Observatory (OCO) 2",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "OSIRIS-REx",
+        "description": "Origins, Spectral Interpretation, Resource Identification, and Security - Regolith Explorer (OSIRIS-REx)",
+        "scale": 0.25,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "PSP",
+        "description": "Parker Solar Probe",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Pioneer_10",
+        "description": "Pioneer 10",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Polar",
+        "description": "Polar",
+        "scale": 1.0,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "POES",
+        "description": "Polar Operational Environmental Satellite (POES)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "RADARSAT_1",
+        "description": "Radar Satellite-1 (RADARSAT-1)",
+        "scale": 0.1,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "SAC_C",
+        "description": "Satellite for Scientific Applications (SAC-C)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "SeaStar",
+        "description": "SeaStar",
+        "scale": 0.1,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "SSL",
+        "description": "Space Systems Loral (SSL-1300)",
+        "scale": 0.1,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "SST",
+        "description": "Spitzer Space Telescope",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Stardust",
+        "description": "Stardust",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Stardust_capsule_closed",
+        "description": "Stardust capsule closed",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Stardust_capsule",
+        "description": "Stardust capsule",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Stardust_without_capsule",
+        "description": "Stardust without capsule",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "SWAS",
+        "description": "Submillimeter Wave Astronomy Satellite (SWAS)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Suomi_NPP",
+        "description": "Suomi National Polar-orbiting Partnership (Suomi NPP)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Suzaku",
+        "description": "Suzaku",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "Swift",
+        "description": "Swift",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Terra",
+        "description": "Terra",
+        "scale": 0.0005,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "THEMIS",
+        "description": "Time History of Events and Macroscale Interactions During Substorms (THEMIS)",
+        "scale": 1.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "TOPEX-Poseidon",
+        "description": "TOPEX-Poseidon",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "TOMS",
+        "description": "Total Ozone Mapping Spectrometer (TOMS)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TDRS_A",
+        "description": "Tracking and Data Relay Satellites (TDRS) (A)",
+        "scale": 10.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "TDRS_B",
+        "description": "Tracking and Data Relay Satellites (TDRS) (B)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TDRS_C",
+        "description": "Tracking and Data Relay Satellites (TDRS) (C)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TDRS_D",
+        "description": "Tracking and Data Relay Satellites (TDRS) (D)",
+        "scale": 2.0,
+        "minimumPixelSize": 100000,
+        "maximumScale": 200000
+    },
+    {
+        "name": "TDRS_E",
+        "description": "Tracking and Data Relay Satellites (TDRS) (E)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TESS-A",
+        "description": "Transiting Exoplanet Survey Satellite (TESS) (A)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TESS_B",
+        "description": "Transiting Exoplanet Survey Satellite (TESS) (B)",
+        "scale": 1.0,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "TRMM",
+        "description": "Tropical Rainfall Measuring Mission (TRMM)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "Tselina-2",
+        "description": "Tselina-2",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "Ulysses",
+        "description": "Ulysses",
+        "scale": 1.0,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "VAP",
+        "description": "Van Allen Probes",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "Voyager_A",
+        "description": "Voyager Probe (A)",
+        "scale": 10.0,
+        "minimumPixelSize": 1000000,
+        "maximumScale": 2000000
+    },
+    {
+        "name": "Voyager_B",
+        "description": "Voyager Probe (B)",
+        "scale": 0.5,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "WIRE",
+        "description": "Wide-Field Infrared Explorer (WIRE)",
+        "scale": 0.1,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
+    },
+    {
+        "name": "WMAP",
+        "description": "Wilkinson Microwave Anisotropy Probe (WMAP)",
+        "scale": 0.01,
+        "minimumPixelSize": 1000,
+        "maximumScale": 2000
+    },
+    {
+        "name": "Wind",
+        "description": "Wind",
+        "scale": 1.0,
+        "minimumPixelSize": 10000,
+        "maximumScale": 20000
     }
 ]

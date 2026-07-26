@@ -13,50 +13,19 @@ References:
     - Chapter 5: Non-Keplerian Motion
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.time as time
 import astropy.units as u
-import dataclasses
 import numpy as np
 import scipy.integrate as ode
 import scipy.optimize as optimize
 import typing
 
-import astro.bodies as bd
-import astro.common as cm
-import astro.physical_constants as pc
+import astro.bodies as bodies
+import astro.common as common
+import astro.physical_constants as physical_constants
 
-@dataclasses.dataclass
-class OrbitParameters:
-    """Orbit parameters"""
-    
-    lagrangian_equilibrium_point_1  : u.Quantity = np.array([0.0, 0.0, 0.0]) * u.km
-    lagrangian_equilibrium_point_2  : u.Quantity = np.array([0.0, 0.0, 0.0]) * u.km
-    lagrangian_equilibrium_point_3  : u.Quantity = np.array([0.0, 0.0, 0.0]) * u.km
-    lagrangian_equilibrium_point_4  : u.Quantity = np.array([0.0, 0.0, 0.0]) * u.km
-    lagrangian_equilibrium_point_5  : u.Quantity = np.array([0.0, 0.0, 0.0]) * u.km
-    inertial_angular_velocity       : u.Quantity = 0.0 * u.rad / u.s
-    dimensionless_mass_ratio_1      : u.Quantity = 0.0 * u.one
-    dimensionless_mass_ratio_2      : u.Quantity = 0.0 * u.one
-    gravitational_parameter_1       : u.Quantity = 0.0 * u.km**3 / u.s**2
-    gravitational_parameter_2       : u.Quantity = 0.0 * u.km**3 / u.s**2
-    body_position_1                 : u.Quantity = 0.0 * u.km
-    body_position_2                 : u.Quantity = 0.0 * u.km
-
-class Result:
-    """Result of integration"""
-    
-    success         : bool
-    time            : u.Quantity
-    position_x      : u.Quantity
-    position_y      : u.Quantity
-    position_z      : u.Quantity
-    velocity_x      : u.Quantity
-    velocity_y      : u.Quantity
-    velocity_z      : u.Quantity
+from astro.models.orbit_parameters import OrbitParametersCR3BP
+from astro.models.results import ResultCR3BP
 
 class Orbit:
     """Generic orbit in circular restricted three-body problem"""
@@ -66,9 +35,9 @@ class Orbit:
         
         self.ready: bool = False
         
-        self.body_1: bd.Body = bd.get_body(bd.Attractor.EARTH)
+        self.body_1: bodies.Body = bodies.get_body(bodies.Attractor.EARTH)
         
-        self.body_2: bd.Body = bd.get_body(bd.Attractor.MOON)
+        self.body_2: bodies.Body = bodies.get_body(bodies.Attractor.MOON)
         
         self.position: np.ndarray = np.zeros(3)
         
@@ -77,7 +46,7 @@ class Orbit:
     # --- STATIC ---
     
     @staticmethod
-    def orbit_parameters(body_1: bd.Attractor, body_2: bd.Attractor) -> OrbitParameters:
+    def orbit_parameters(body_1: bodies.Attractor, body_2: bodies.Attractor) -> OrbitParametersCR3BP:
         """Calculate the orbit parameters
 
         Args:
@@ -85,25 +54,25 @@ class Orbit:
             body_2 (bodies.Attractor): Second body
         
         Returns:
-            OrbitParameters: Orbit parameters
+            OrbitParametersCR3BP: Orbit parameters
         """
         
-        cm.check_attractor(body_1)
-        cm.check_attractor(body_2)
+        common.check_attractor(body_1)
+        common.check_attractor(body_2)
         
-        parameters: OrbitParameters = OrbitParameters()
+        parameters: OrbitParametersCR3BP = OrbitParametersCR3BP()
         
         # * Global gravitational parameter
         
-        mass_1: u.Quantity = bd.BODIES[body_1].M
+        mass_1: u.Quantity = bodies.BODIES[body_1].M
         
-        mass_2: u.Quantity = bd.BODIES[body_2].M
+        mass_2: u.Quantity = bodies.BODIES[body_2].M
         
-        mu: u.Quantity = pc.universal_gravitational_constant * (mass_1 + mass_2)
+        mu: u.Quantity = physical_constants.universal_gravitational_constant * (mass_1 + mass_2)
         
         # * Inertial angular velocity
         
-        body_distance: u.Quantity = bd.BODIES[body_2].semi_major_axis.to(u.km)
+        body_distance: u.Quantity = bodies.BODIES[body_2].semi_major_axis.to(u.km)
         
         parameters.inertial_angular_velocity = np.sqrt(mu / body_distance**3) * u.rad
         
@@ -176,7 +145,9 @@ class Orbit:
         return parameters
     
     @staticmethod
-    def zero_velocity_curves(body_1: bd.Attractor, body_2: bd.Attractor, jacobi_constant: u.Quantity) -> np.ndarray:
+    def zero_velocity_curves(body_1: bodies.Attractor,
+                             body_2: bodies.Attractor,
+                             jacobi_constant: u.Quantity) -> np.ndarray:
         """Calculate the Zero Velocity Curves (ZVC) given the Jacobi constant
 
         Args:
@@ -188,7 +159,7 @@ class Orbit:
             np.ndarray: Zero Velocity Curves
         """
         
-        op: OrbitParameters = Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+        op: OrbitParametersCR3BP = Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
         
         C: float = jacobi_constant.to_value(u.km**2 / u.s**2)
         
@@ -202,7 +173,7 @@ class Orbit:
         
         mu_2: float = op.gravitational_parameter_2.to_value(u.km**3 / u.s**2)
         
-        r_12: float = bd.BODIES[body_2].semi_major_axis.to_value(u.km)
+        r_12: float = bodies.BODIES[body_2].semi_major_axis.to_value(u.km)
         
         size: int = 1000
         
@@ -235,7 +206,11 @@ class Orbit:
     
     # --- PUBLIC ---
     
-    def init(self, body_1: bd.Attractor, body_2: bd.Attractor, position: u.Quantity, velocity: u.Quantity) -> None:
+    def init(self,
+             body_1: bodies.Attractor,
+             body_2: bodies.Attractor,
+             position: u.Quantity,
+             velocity: u.Quantity) -> None:
         """
         Initialize the orbit based on cartesian position and velocity vectors
 
@@ -246,10 +221,10 @@ class Orbit:
             velocity (u.Quantity): Velocity vector
         """
         
-        cm.check_attractor(body_1)
-        cm.check_attractor(body_2)
-        cm.check_position_vector(position.to_value(u.km))
-        cm.check_velocity_vector(velocity.to_value(u.km / u.s))
+        common.check_attractor(body_1)
+        common.check_attractor(body_2)
+        common.check_position_vector(position.to_value(u.km))
+        common.check_velocity_vector(velocity.to_value(u.km / u.s))
         
         self.ready = True
         
@@ -261,7 +236,7 @@ class Orbit:
         
         self.velocity = typing.cast(np.ndarray, velocity.to(u.km / u.s).to_value())
     
-    def propagate_for(self, delta: time.TimeDelta) -> Result:
+    def propagate_for(self, delta: time.TimeDelta) -> ResultCR3BP:
         """
         Propagate the orbit for the given delta time
 
@@ -269,16 +244,16 @@ class Orbit:
             delta (float): Delta time for propagation
 
         Returns:
-            Result: Integration result
+            ResultCR3BP: Integration result
         """
         
-        cm.check_time_delta(delta)
+        common.check_time_delta(delta)
         
         if not self.ready: raise ValueError("Orbit object is not ready")
         
-        result: Result = Result()
+        result: ResultCR3BP = ResultCR3BP()
         
-        parameters: OrbitParameters = Orbit.orbit_parameters(body_1=self.body_1, body_2=self.body_2)
+        parameters: OrbitParametersCR3BP = Orbit.orbit_parameters(body_1=self.body_1, body_2=self.body_2)
         
         solution: dict = ode.solve_ivp(fun=self._equations_relative_motion,
                                        t_span=[0, delta.to_value(u.s)],
@@ -301,7 +276,10 @@ class Orbit:
     
     # --- PRIVATE ---
     
-    def _equations_relative_motion(self, t : float, X : np.ndarray, orbit_parameters : OrbitParameters) -> np.ndarray:
+    def _equations_relative_motion(self,
+                                   t: float,
+                                   X: np.ndarray,
+                                   orbit_parameters: OrbitParametersCR3BP) -> np.ndarray:
         """        
         Equations of motion for the Circular Restricted Three-Body Problem (CR3BP) in the rotating synodic frame.
 

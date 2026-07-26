@@ -1,4 +1,6 @@
 import * as electron from 'electron'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 
 import MainWindow from './MainWindow'
 import TCPClient from './TCPClient'
@@ -63,6 +65,26 @@ export default function IPC(): void
     electron.ipcMain.on('tcp:update-url', (_, url: string) =>
     {
         TCPClient.GetInstance().updateUrl(url)
+    })
+
+    // * utils
+
+    electron.ipcMain.handle('utils:get-file-size', (_, filename: string) : number =>
+    {
+        if (!filename || filename.trim() === "")
+        {
+            throw new Error("Filename is empty")
+        }
+
+        const isDev: boolean = !electron.app.isPackaged
+
+        const filePath: string = isDev
+            ? path.join("./src/renderer/public/models", `${filename}.glb`)
+            : path.join(process.resourcesPath, "app.asar/out/renderer/models", `${filename}.glb`)
+
+        const stats: fs.Stats = fs.statSync(filePath)
+
+        return stats.size;
     })
 
     // ? BE --> FE

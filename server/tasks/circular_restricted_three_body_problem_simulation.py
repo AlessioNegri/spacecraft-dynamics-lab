@@ -97,7 +97,7 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
         
         deltas = np.append(deltas, n_full_days * step + remainder)
 
-    parameters: cr3bp.OrbitParameters = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    parameters: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
 
     lagrange_point: u.Quantity = get_lagrange_point(parameters=parameters, name=payload.lagrangePoint)
     
@@ -144,7 +144,7 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
             
         orbit.init(body_1=body_1, body_2=body_2, position=r_0, velocity=v_0)
         
-        result: cr3bp.Result = orbit.propagate_for(delta=t.TimeDelta(dt.to(u.s)))
+        result: cr3bp.ResultCR3BP = orbit.propagate_for(delta=t.TimeDelta(dt.to(u.s)))
 
         if not result.success:
             
@@ -199,11 +199,11 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
 
     return info_data.model_dump()
 
-def get_lagrange_point(parameters: cr3bp.OrbitParameters, name: str) -> u.Quantity:
+def get_lagrange_point(parameters: cr3bp.OrbitParametersCR3BP, name: str) -> u.Quantity:
     """Retrieve the Lagrange point
 
     Args:
-        parameters (cr3bp.OrbitParameters): Orbit parameters
+        parameters (cr3bp.OrbitParametersCR3BP): Orbit parameters
         name (str): Lagrange point name
 
     Returns:

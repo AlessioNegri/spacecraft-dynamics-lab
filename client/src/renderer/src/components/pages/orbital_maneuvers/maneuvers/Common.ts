@@ -9,7 +9,9 @@ export default function useManeuverState<T>(initial: T, onChange: (data: T) => v
 
     // --- USE EFFECT ---
 
-    react.useEffect(() => { onChange(data) }, [])
+    react.useEffect(() => { onChange(initial) }, [initial])
+
+    react.useEffect(() => { onChange(data) }, [data])
 
     // --- HANDLE ---
 
@@ -20,8 +22,6 @@ export default function useManeuverState<T>(initial: T, onChange: (data: T) => v
         const updated = { ...data, [name]: value } as T
 
         setData(updated)
-
-        onChange(updated)
     }
 
     return { data, handleChange }

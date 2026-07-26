@@ -51,12 +51,12 @@ export default function Hohmann(props: Readonly<Props>): react.JSX.Element
                 name="direction"
                 label="Direction"
                 type="select"
-                value={data.direction}
+                value={String(data.direction)}
                 onChange={handleChange}
                 options={
                     [
-                        { label: "Pericenter → Apocenter", value: 0 },
-                        { label: "Apocenter → Pericenter", value: 1 }
+                        { label: "Pericenter → Apocenter", value: "0" },
+                        { label: "Apocenter → Pericenter", value: "1" }
                     ]}
             />
             

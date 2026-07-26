@@ -60,7 +60,7 @@ def test_cowell_method_atmospheric_drag():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0, ballistic_coefficient=ballistic_coefficient)
     orbit.choose_perturbations(atmospheric_drag=True)
     
-    result: op.Result = orbit.propagate_cowell_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_cowell_for(delta=delta)
     
     altitude: np.ndarray = np.sqrt(result.position_x**2 + result.position_y**2 + result.position_z**2) -\
         bd.BODIES[attractor].R_E
@@ -83,7 +83,7 @@ def test_cowell_method_gravitational_perturbation():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0)
     orbit.choose_perturbations(gravitational_perturbation=True)
     
-    result: op.Result = orbit.propagate_cowell_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_cowell_for(delta=delta)
     
     r_f: np.ndarray = np.array([result.position_x[-1].to_value(u.km),
                                 result.position_y[-1].to_value(u.km),
@@ -194,7 +194,7 @@ def test_encke_method():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0)
     orbit.choose_perturbations(gravitational_perturbation=True)
     
-    result: op.Result = orbit.propagate_encke_for(delta=delta, step=step)
+    result: op.ResultOP = orbit.propagate_encke_for(delta=delta, step=step)
     
     oe_i: o3d.OrbitalElements = result.orbital_elements[0]
     oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
@@ -238,7 +238,7 @@ def test_gauss_method_atmospheric_drag():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0, ballistic_coefficient=ballistic_coefficient)
     orbit.choose_perturbations(atmospheric_drag=True)
     
-    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
     assert np.isclose(result.orbital_elements[-1].semimajor_axis.to_value(u.km), 6378 + 257, atol=1e-0)
 
@@ -258,7 +258,7 @@ def test_gauss_method_gravitational_perturbation():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0)
     orbit.choose_perturbations(gravitational_perturbation=True)
     
-    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
     oe_i: o3d.OrbitalElements = result.orbital_elements[0]
     oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
@@ -329,7 +329,7 @@ def test_gauss_method_solar_radiation_pressure():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0, ballistic_coefficient_srp=B_srp)
     orbit.choose_perturbations(solar_radiation_pressure=True)
     
-    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
     oe_i: o3d.OrbitalElements = result.orbital_elements[0]
     oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
@@ -376,7 +376,7 @@ def test_gauss_method_lunar_gravity():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0)
     orbit.choose_perturbations(lunar_gravity=True)
     
-    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
     oe_i: o3d.OrbitalElements = result.orbital_elements[0]
     oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
@@ -412,7 +412,7 @@ def test_gauss_method_sun_gravity():
     orbit.init(attractor=attractor, position=r_0, velocity=v_0, julian_day=JD_0)
     orbit.choose_perturbations(solar_gravity=True)
     
-    result: op.Result = orbit.propagate_gauss_for(delta=delta)
+    result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
     oe_i: o3d.OrbitalElements = result.orbital_elements[0]
     oe_f: o3d.OrbitalElements = result.orbital_elements[-1]

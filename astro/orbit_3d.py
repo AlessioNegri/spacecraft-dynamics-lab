@@ -11,134 +11,32 @@ References:
     - Chapter 3: Orbit Determination
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.units as u
 import astropy.time as time
-import dataclasses as dc
-import typing as t
 import numpy as np
+import typing
 
 import astro.bodies as bodies
 import astro.common as common
 import astro.orbital_position as orbital_position
 import astro.two_body_problem as two_body_problem
 
-@dc.dataclass
-class OrbitalElements:
-    """Classical Orbital Elements"""
-    
-    specific_angular_momentum           : u.Quantity = dc.field(default_factory=lambda: 0 * u.km**2 / u.s)
-    semimajor_axis                      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
-    eccentricity                        : u.Quantity = dc.field(default_factory=lambda: 0 * u.one)
-    inclination                         : u.Quantity = dc.field(default_factory=lambda: 0 * u.deg)
-    right_ascension_of_ascending_node   : u.Quantity = dc.field(default_factory=lambda: 0 * u.deg)
-    argument_of_periapsis               : u.Quantity = dc.field(default_factory=lambda: 0 * u.deg)
-    true_anomaly                        : u.Quantity = dc.field(default_factory=lambda: 0 * u.deg)
-    
-    def calc_semimajor_axis(self, attractor: bodies.Attractor) -> u.Quantity:
-        
-        common.check_attractor(attractor)
-        
-        h: u.Quantity = self.specific_angular_momentum
-        e: u.Quantity = self.eccentricity
-        
-        self.semimajor_axis = h**2 / (bodies.BODIES[attractor].mu * (1 - e**2))
-        
-        return self.semimajor_axis
-    
-    def calc_perigee_radius(self) -> u.Quantity:
-        
-        a: u.Quantity = self.semimajor_axis
-        e: u.Quantity = self.eccentricity
-        
-        return a * (1 - e)
-    
-    def calc_apogee_radius(self) -> u.Quantity:
-        
-        a: u.Quantity = self.semimajor_axis
-        e: u.Quantity = self.eccentricity
-        
-        return a * (1 + e)
-    
-    def calc_specific_angular_momentum(self, attractor: bodies.Attractor) -> u.Quantity:
-        
-        common.check_attractor(attractor)
-        
-        if self.eccentricity < 1:
-            
-            r_p: u.Quantity = self.calc_perigee_radius()
-            r_a: u.Quantity = self.calc_apogee_radius()
-            
-            mu: u.Quantity = bodies.BODIES[attractor].mu
-            
-            self.specific_angular_momentum = np.sqrt(2 * mu) * np.sqrt(r_a * r_p / (r_a + r_p))
-            
-        else:
-            
-            self.specific_angular_momentum = 0 * u.km**2 / u.s
-        
-        return self.specific_angular_momentum
-    
-    def calc_orbital_period(self, attractor: bodies.Attractor) -> u.Quantity:
-        
-        common.check_attractor(attractor)
-        
-        h: u.Quantity = self.calc_specific_angular_momentum(attractor=attractor)
-        a: u.Quantity = self.semimajor_axis
-        e: u.Quantity = self.eccentricity
-        
-        mu: u.Quantity = bodies.BODIES[attractor].mu
-        
-        if a != 0 * u.km:
-            
-            return 2 * np.pi / np.sqrt(mu) * a**(3/2)
-        
-        elif h != 0 * u.km**2 / u.s:
-        
-            return 2 * np.pi / mu**2 * (h / np.sqrt(1 - e**2))**3
-        
-        else:
-            
-            return 0 * u.s
-    
-    def calc_semilatus_rectum(self, attractor: bodies.Attractor) -> u.Quantity:
-        
-        common.check_attractor(attractor)
-        
-        h: u.Quantity = self.specific_angular_momentum
-        a: u.Quantity = self.semimajor_axis
-        e: u.Quantity = self.eccentricity
-        
-        mu: u.Quantity = bodies.BODIES[attractor].mu
-        
-        return (a * (1 - e**2)) if h == 0 else (h**2 / mu)
-    
-    def update_from_perigee_apogee(self, periapsis_radius: u.Quantity, apoapsis_radius: u.Quantity) -> None:
-        
-        r_p: u.Quantity = periapsis_radius.to(u.km)
-        r_a: u.Quantity = apoapsis_radius.to(u.km)
-        
-        self.semimajor_axis = 0.5 * (r_p + r_a)
-        self.eccentricity = (r_a - r_p) / (r_a + r_p)
+from astro.models.orbital_elements import OrbitalElements
 
 class Orbit3D():
-    """Orbit in Three Dimensions
-    """
+    """Orbit in Three Dimensions"""
     
     # --- STATIC ---
     
     @staticmethod
-    def right_ascension_declination(position : u.Quantity) -> t.List[u.Quantity, u.Quantity]:
+    def right_ascension_declination(position: u.Quantity) -> typing.List[u.Quantity, u.Quantity]:
         """Calculate the Right Ascension and Declination of the position vector
 
         Args:
             position (u.Quantity): Position vector
 
         Returns:
-            t.List[u.Quantity, u.Quantity]: [alpha (-180; +180), delta (0; 360)]
+            typing.List[u.Quantity, u.Quantity]: [alpha (-180; +180), delta (0; 360)]
         """
         
         r: np.ndarray = position.to_value(u.km)
@@ -167,8 +65,8 @@ class Orbit3D():
     
     @staticmethod
     def cartesian_to_keplerian(attractor: bodies.Attractor,
-                               position : u.Quantity,
-                               velocity : u.Quantity) -> OrbitalElements:
+                               position: u.Quantity,
+                               velocity: u.Quantity) -> OrbitalElements:
         """
         Calculates the Orbital Elements from position and velocity vectors in Geocentric Equatorial Frame (GEF)
         
@@ -256,11 +154,11 @@ class Orbit3D():
         
         # >>> 8. Magnitude of the line of nodes
         
-        N_m: float = np.linalg.norm(N)
+        n_m: float = np.linalg.norm(N) # ? N_M
         
         # >>> 9. Right ascension of the ascending node (RAAN): N / N_m = cos(raan) * I + sin(raan) * J
         
-        raan: float = np.arccos(N[0] / N_m)
+        raan: float = np.arccos(N[0] / n_m)
         
         oe.right_ascension_of_ascending_node = u.Quantity(raan if N[1] >= 0 else (2 * np.pi - raan), u.rad).to(u.deg)
         
@@ -282,7 +180,7 @@ class Orbit3D():
         
         else: 
         
-            argp: float = np.arccos(np.dot(N, ecc) / (N_m * ecc_m))
+            argp: float = np.arccos(np.dot(N, ecc) / (n_m * ecc_m))
         
             oe.argument_of_periapsis = u.Quantity(argp if ecc[2] >= 0 else (2 * np.pi - argp), u.rad).to(u.deg)
         
@@ -301,7 +199,7 @@ class Orbit3D():
         return oe
     
     @staticmethod
-    def rotation_matrix_ijk_to_pqw(orbital_elements : OrbitalElements) -> np.ndarray:
+    def rotation_matrix_ijk_to_pqw(orbital_elements: OrbitalElements) -> np.ndarray:
         """Rotation matrix from Geocentric Equatorial Frame (IJK) to Perifocal Frame (PQW)
         
         3-1-3 Euler angles IJK --> PQW
@@ -324,35 +222,35 @@ class Orbit3D():
         raan: float = orbital_elements.right_ascension_of_ascending_node.to_value(u.rad)
         argp: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
         
-        R_3_raan: np.ndarray = np.array( # ? Rotation about K through angle RAAN
+        r_3_raan: np.ndarray = np.array( # ? Rotation about K through angle RAAN - R_3_RAAN
             [
                 [ + np.cos(raan) , + np.sin(raan) , 0 ],
                 [ - np.sin(raan) , + np.cos(raan) , 0 ],
                 [ 0              , 0              , 1 ]
             ])
         
-        R_1_inc: np.ndarray = np.array( # ? Rotation about X' through angle inc
+        r_1_inc: np.ndarray = np.array( # ? Rotation about X' through angle inc - R_1_INC
             [
                 [ 1 , 0             , 0             ],
                 [ 0 , + np.cos(inc) , + np.sin(inc) ],
                 [ 0 , - np.sin(inc) , + np.cos(inc) ]
             ])
         
-        R_3_argp: np.ndarray = np.array( # ? Rotation about Z'' through angle argument of periapsis
+        r_3_argp: np.ndarray = np.array( # ? Rotation about Z'' through angle argument of periapsis - R_3_ARGP
             [
                 [ + np.cos(argp) , + np.sin(argp) , 0 ],
                 [ - np.sin(argp) , + np.cos(argp) , 0 ],
                 [ 0              , 0              , 1 ]
             ])
         
-        R: np.ndarray = np.matmul(R_3_argp, np.matmul(R_1_inc, R_3_raan))
+        R: np.ndarray = np.matmul(r_3_argp, np.matmul(r_1_inc, r_3_raan))
         
         return R
     
     @staticmethod
     def geocentric_equatorial_to_perifocal(attractor: bodies.Attractor,
-                                           position : u.Quantity,
-                                           velocity : u.Quantity) -> t.List[u.Quantity, u.Quantity]:
+                                           position: u.Quantity,
+                                           velocity: u.Quantity) -> typing.List[u.Quantity, u.Quantity]:
         """Geocentric Equatiorial Frame (IJK) --> Perifocal Frame (PQW)
 
         Args:
@@ -361,11 +259,11 @@ class Orbit3D():
             velocity (u.Quantity): Velocity vector GEF
 
         Returns:
-            t.List[u.Quantity, u.Quantity]: [r_PF, v_PF]
+            typing.List[u.Quantity, u.Quantity]: [r_PF, v_PF]
         """
         
-        r_GEF: np.ndarray = position.to_value(u.km)
-        v_GEF: np.ndarray = velocity.to_value(u.km / u.s)
+        r_gef: np.ndarray = position.to_value(u.km) # ? r_GEF
+        v_gef: np.ndarray = velocity.to_value(u.km / u.s) # ? v_GEF
         
         common.check_attractor(attractor)
         common.check_position_vector(position)
@@ -381,14 +279,14 @@ class Orbit3D():
         
         # >>> 3. Calculate position and velocity in perifocal frame
         
-        r_PF: u.Quantity = np.matmul(R, r_GEF) * u.km
-        v_PF: u.Quantity = np.matmul(R, v_GEF) * u.km / u.s
+        r_pf: u.Quantity = np.matmul(R, r_gef) * u.km # ? r_PF
+        v_pf: u.Quantity = np.matmul(R, v_gef) * u.km / u.s # ? v_PF
         
-        return [r_PF, v_PF]
+        return [r_pf, v_pf]
     
     @staticmethod
     def keplerian_to_cartesian(attractor: bodies.Attractor,
-                               orbital_elements : OrbitalElements) -> t.List[u.Quantity, u.Quantity]:
+                               orbital_elements : OrbitalElements) -> typing.List[u.Quantity, u.Quantity]:
         """Perifocal Frame --> Geocentric Equatiorial Frame
 
         Args:
@@ -396,7 +294,7 @@ class Orbit3D():
             orbital_elements (OrbitalElements): Orbital Elements
 
         Returns:
-            t.List[u.Quantity, u.Quantity]: [r_GEF, v_GEF]
+            typing.List[u.Quantity, u.Quantity]: [r_GEF, v_GEF]
         """
         
         common.check_attractor(attractor)
@@ -417,11 +315,11 @@ class Orbit3D():
         
         # >>> 1. Calculate position in perifocal frame
         
-        r_PF: np.ndarray = p / (1 + ecc * np.cos(ta)) * np.array([np.cos(ta), np.sin(ta), 0])
+        r_pf: np.ndarray = p / (1 + ecc * np.cos(ta)) * np.array([np.cos(ta), np.sin(ta), 0]) # ? r_PF
         
         # >>> 2. Calculate velocity in perifocal frame
         
-        v_PF: np.ndarray = np.sqrt(mu / p) * np.array([-np.sin(ta), ecc + np.cos(ta), 0])
+        v_pf: np.ndarray = np.sqrt(mu / p) * np.array([-np.sin(ta), ecc + np.cos(ta), 0]) # ? v_PF
         
         # >>> 2. Overall rotation matrix (3-1-3 Euler angles PQW --> IJK)
         
@@ -429,13 +327,13 @@ class Orbit3D():
         
         # >>> 4. Calculate position and velocity in geocentric equatorial frame
         
-        r_GEF: u.Quantity = np.matmul(R, r_PF) * u.km
-        v_GEF: u.Quantity = np.matmul(R, v_PF) * u.km / u.s
+        r_gef: u.Quantity = np.matmul(R, r_pf) * u.km # ? r_GEF
+        v_gef: u.Quantity = np.matmul(R, v_pf) * u.km / u.s # ? v_GEF
         
-        return [r_GEF, v_GEF]
+        return [r_gef, v_gef]
     
     @staticmethod
-    def perifocal_to_geocentric_equatorial_position_vector(orbital_elements : OrbitalElements,
+    def perifocal_to_geocentric_equatorial_position_vector(orbital_elements: OrbitalElements,
                                                            perifocal_position: u.Quantity) -> u.Quantity:
         """Perifocal Frame --> Geocentric Equatiorial Frame for a given position vector
 
@@ -458,12 +356,13 @@ class Orbit3D():
         
         R: np.ndarray = Orbit3D.rotation_matrix_ijk_to_pqw(orbital_elements=orbital_elements).T # ? Transpose
         
-        r_GEF: u.Quantity = np.matmul(R, perifocal_position.to_value(u.km)) * u.km
+        r_gef: u.Quantity = np.matmul(R, perifocal_position.to_value(u.km)) * u.km # ? r_GEF
         
-        return r_GEF
+        return r_gef
     
     @staticmethod
-    def planet_oblateness_effect(attractor: bodies.Attractor, orbital_elements : OrbitalElements) -> t.List[u.Quantity, u.Quantity]:
+    def planet_oblateness_effect(attractor: bodies.Attractor,
+                                 orbital_elements: OrbitalElements) -> typing.List[u.Quantity, u.Quantity]:
         """Calculates the planet oblateness effect
         
         Args:
@@ -471,7 +370,7 @@ class Orbit3D():
             orbital_elements (OrbitalElements): Orbital Elements
 
         Returns:
-            t.List[u.Quantity, u.Quantity]: [dOmega_dt, domega_dt]
+            typing.List[u.Quantity, u.Quantity]: [dOmega_dt, domega_dt]
         """
         
         common.check_attractor(attractor)
@@ -503,8 +402,8 @@ class Orbit3D():
     
     @staticmethod
     def ground_track_propagation(attractor: bodies.Attractor,
-                                 orbital_elements : OrbitalElements,
-                                 time_step : time.TimeDelta) -> t.List[u.Quantity, u.Quantity]:
+                                 orbital_elements: OrbitalElements,
+                                 time_step: time.TimeDelta) -> typing.List[u.Quantity, u.Quantity]:
         """Calculates the Ground Track for the given time step
 
         Args:
@@ -513,7 +412,7 @@ class Orbit3D():
             time_step (time.TimeDelta): Time step
             
         Returns:
-            t.List[u.Quantity, u.Quantity]: [right ascension (-180; +180), declination (0; 360)]
+            typing.List[u.Quantity, u.Quantity]: [right ascension (-180; +180), declination (0; 360)]
         """
         
         common.check_attractor(attractor)
@@ -537,17 +436,18 @@ class Orbit3D():
         
         # >>> 2. Initial condition
         
-        r_GEF, v_GEF = Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+        r_gef, v_gef = Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
         
         op: two_body_problem.OrbitParameters = two_body_problem.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
-                                                                                                    position=r_GEF,
-                                                                                                    velocity=v_GEF)
+                                                                                                    position=r_gef,
+                                                                                                    velocity=v_gef)
         
         t_0: u.Quantity = 0.0 * u.s
         
         if ecc == 0:
             
-            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(true_anomaly=orbital_elements.true_anomaly, period=op.period)
+            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(true_anomaly=orbital_elements.true_anomaly,
+                                                                       period=op.period)
             
         elif ecc < 1.0:
             
@@ -585,7 +485,7 @@ class Orbit3D():
         
         # >>> c) New state
         
-        r_GEF, v_GEF = Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+        r_gef, v_gef = Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
         
         # >>> d) New position
         
@@ -595,7 +495,7 @@ class Orbit3D():
         
         # * Rotation matrix from inertial frame (XYZ) to rotating frame (Earth-fixed, x'y'z')
         
-        R_3_t = np.array(
+        r_3_ta = np.array( # ? R_3_TA
             [
                 [+ np.cos(ta) , + np.sin(ta), 0],
                 [- np.sin(ta) , + np.cos(ta), 0],
@@ -604,6 +504,6 @@ class Orbit3D():
         
         # >>> e) Right Ascension and Declination
         
-        alpha, delta = Orbit3D.right_ascension_declination(position=np.matmul(R_3_t, r_GEF.to_value(u.km)) * u.km)
+        alpha, delta = Orbit3D.right_ascension_declination(position=np.matmul(r_3_ta, r_gef.to_value(u.km)) * u.km)
         
         return [alpha - 180 * u.deg, delta]

@@ -14,7 +14,8 @@ const api =
     info            : (message: string) => electron.ipcRenderer.send('log:message', 'info', message),
     warning         : (message: string) => electron.ipcRenderer.send('log:message', 'warning', message),
     error           : (message: string) => electron.ipcRenderer.send('log:message', 'error', message),
-    updateTcpUrl: (url: string) => electron.ipcRenderer.send('tcp:update-url', url),
+    updateTcpUrl    : (url: string) => electron.ipcRenderer.send('tcp:update-url', url),
+    getFileSize     : (filename: string) => electron.ipcRenderer.invoke('utils:get-file-size', filename),
 }
 
 // * Custom Callbacks for renderer

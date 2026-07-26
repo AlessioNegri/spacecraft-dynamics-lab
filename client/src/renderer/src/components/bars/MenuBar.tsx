@@ -9,6 +9,9 @@ import logo from "../../assets/SpacecraftDynamicsLabLogo.png"
 import Shortcut from "../Shortcut"
 
 import AboutDialog from "../dialogs/AboutDialog"
+import ReferencesDialog from "../dialogs/ReferencesDialog"
+import GitHubIssuesDialog from "../dialogs/GitHubIssuesDialog"
+import NewFeaturesDialog from "../dialogs/NewFeaturesDialog"
 import DisclaimerDialog from "../dialogs/DisclaimerDialog"
 
 import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representation/CartesianOrbitParametersDialog"
@@ -38,10 +41,13 @@ import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSync
 
 import OrbitParametersDialog from "../dialogs/tools/circular_restricted_three_body_problem/OrbitParametersDialog"
 import ZeroVelocityCurvesDialog from "../dialogs/tools/circular_restricted_three_body_problem/ZeroVelocityCurvesDialog"
-
+//noto:laptop-computer
 const DIALOGS =
 {
     aboutDialog: AboutDialog,
+    gitHubIssuesDialog: GitHubIssuesDialog,
+    referencesDialog: ReferencesDialog,
+    newFeaturesDialog: NewFeaturesDialog,
     disclaimerDialog: DisclaimerDialog,
 
     cartesianOrbitParametersDialog: CartesianOrbitParametersDialog,
@@ -132,7 +138,7 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
     const file: IMenuItem[] =
     [
         { label: "Sep-1", separator: true },
-        { label: "Exit", shortcut: "Ctrl+E", action: () => globalThis.window.api.closeApp() }
+        { label: "Exit", shortcut: "Ctrl+E", icon: "ci:exit", action: () => globalThis.window.api.closeApp() }
     ]
 
     const view: IMenuItem[] =
@@ -145,73 +151,84 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
     [
         {
             label: "Orbit Representation",
+            icon: "game-icons:moon-orbit",
             children:
             [
-                { label: "Cartesian → Orbit Parameters", action: () => setOpenDialog("cartesianOrbitParametersDialog") },
-                { label: "Cartesian → Keplerian", action: () => setOpenDialog("cartesianKeplerianDialog") },
-                { label: "Cartesian → Perifocal", action: () => setOpenDialog("cartesianPerifocalDialog") },
-                { label: "Keplerian → Cartesian", action: () => setOpenDialog("keplerianCartesianDialog") },
-                { label: "Ground Track Propagation", action: () => setOpenDialog("groundTrackPropagationDialog") }
+                { label: "Cartesian → Orbit Parameters", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianOrbitParametersDialog") },
+                { label: "Cartesian → Keplerian", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianKeplerianDialog") },
+                { label: "Cartesian → Perifocal", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianPerifocalDialog") },
+                { label: "Keplerian → Cartesian", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("keplerianCartesianDialog") },
+                { label: "Ground Track Propagation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("groundTrackPropagationDialog") }
             ]
         },
         {
             label: "Orbit Determination",
+            icon: "mdi:telescope",
             children:
             [
-                { label: "Gibbs Method", action: () => setOpenDialog("gibbsMethodDialog") },
-                { label: "Julian Day", action: () => setOpenDialog("julianDayDialog") },
-                { label: "Topocentric Frame", action: () => setOpenDialog("topocentricFrameDialog") },
-                { label: "Angle Range", action: () => setOpenDialog("angleRangeDialog") },
-                { label: "Gauss Method", action: () => setOpenDialog("gaussMethodDialog") }
+                { label: "Gibbs Method", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("gibbsMethodDialog") },
+                { label: "Julian Day", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("julianDayDialog") },
+                { label: "Topocentric Frame", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("topocentricFrameDialog") },
+                { label: "Angle Range", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("angleRangeDialog") },
+                { label: "Gauss Method", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("gaussMethodDialog") }
             ]
         },
         {
             label: "Orbital Maneuvers",
+            icon: "game-icons:rocket",
             children:
             [
-                { label: "Non-Impulsive Maneuvers", action: () => setOpenDialog("nonImpulsiveManeuversDialog") }
+                { label: "Non-Impulsive Maneuvers", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("nonImpulsiveManeuversDialog") }
             ]
         },
         {
             label: "Relative Motion",
+            icon: "mdi:proximity-sensor",
             children:
             [
-                { label: "LVLH Kinematics", action: () => setOpenDialog("lvlhKinematicsDialog") },
-                { label: "Geocentric Equatorial Kinematics", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") }
+                { label: "LVLH Kinematics", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("lvlhKinematicsDialog") },
+                { label: "Geocentric Equatorial Kinematics", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") }
             ]
         },
         {
             label: "Interplanetary Trajectory",
+            icon: "game-icons:orbital",
             children:
             [
-                { label: "Synodic Period", action: () => setOpenDialog("synodicPeriodDialog") },
-                { label: "Sphere of Influence", action: () => setOpenDialog("sphereOfInfluenceDialog") },
-                { label: "Transfer", action: () => setOpenDialog("transferDialog") }
+                { label: "Synodic Period", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("synodicPeriodDialog") },
+                { label: "Sphere of Influence", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("sphereOfInfluenceDialog") },
+                { label: "Transfer", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("transferDialog") }
             ]
         },
         {
             label: "Orbital Perturbations",
+            icon: "game-icons:perpendicular-rings",
             children:
             [
-                { label: "Nodal Regression", action: () => setOpenDialog("nodalRegressionDialog") },
-                { label: "Apsidal Rotation", action: () => setOpenDialog("apsidalRotationDialog") },
-                { label: "Sun-Synchronous Orbit", action: () => setOpenDialog("sunSynchronousDialog") }
+                { label: "Nodal Regression", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("nodalRegressionDialog") },
+                { label: "Apsidal Rotation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("apsidalRotationDialog") },
+                { label: "Sun-Synchronous Orbit", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("sunSynchronousDialog") }
             ]
         },
         {
             label: "Circular Restricted 3-Body Problem",
+            icon: "mingcute:three-circles-fill",
             children:
             [
-                { label: "Orbit Parameters", action: () => setOpenDialog("OrbitParametersDialog") },
-                { label: "Zero Velocity Curves", action: () => setOpenDialog("ZeroVelocityCurvesDialog") }
+                { label: "Orbit Parameters", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("OrbitParametersDialog") },
+                { label: "Zero Velocity Curves", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("ZeroVelocityCurvesDialog") }
             ]
         }
     ]
 
     const help: IMenuItem[] =
     [
-        { label: "About", shortcut: "Ctrl+A", action: () => setOpenDialog("aboutDialog") },
-        { label: "Disclaimer", action: () => setOpenDialog("disclaimerDialog") }
+        { label: "About", shortcut: "Ctrl+A", icon: "streamline-flex-color:information-circle-flat", action: () => setOpenDialog("aboutDialog") },
+        { label: "References", shortcut: "Ctrl+R", icon: "noto:books", action: () => setOpenDialog("referencesDialog") },
+        { label: "GitHub Issues", icon: "line-md:github", action: () => setOpenDialog("gitHubIssuesDialog") },
+        { label: "What's new", icon: "fxemoji:loudspeaker", action: () => setOpenDialog("newFeaturesDialog") },
+        { label: "Sep-1", separator: true },
+        { label: "Disclaimer", icon: "flat-color-icons:disclaimer", action: () => setOpenDialog("disclaimerDialog") }
     ]
 
     // --- RENDERING ---
@@ -336,7 +353,7 @@ function Menu(menu: Readonly<IMenu>): react.JSX.Element
                 
                 <Menubar.Content
                     align="start"
-                    className="min-w-80 border rounded shadow-lg p-1 z-2
+                    className="min-w-100 border rounded shadow-lg p-1 z-2
                                 bg-neutral-600 text-white border-neutral-950">
 
                 {
@@ -374,11 +391,18 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
                     className="px-2 py-1.5 text-base flex justify-between items-center cursor-pointer rounded
                         hover:bg-neutral-500 hover:text-white"
                 >
-                    <div className="w-4 flex justify-center"></div>
+                    <div className="w-8 flex justify-center">
+
+                        {
+                            props.item.icon &&
+                            <iconify.Icon icon={props.item.icon} width={24} className="text-orange-300" />
+                        }
+
+                    </div>
 
                     <span className="flex-1 ps-4">{props.item.label}</span>
 
-                    <iconify.Icon icon="mdi:chevron-right" width={16} className="text-orange-300"/>
+                    <iconify.Icon icon="line-md:chevron-small-triple-right" width={24} className="text-orange-300 w-10"/>
 
                 </Menubar.SubTrigger>
 
@@ -410,16 +434,21 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
             className="px-2 py-1.5 text-base flex justify-start items-center cursor-pointer rounded
                 hover:bg-neutral-500 hover:text-white">
 
-            <div className="w-4 flex justify-center">
+            <div className="w-10 flex justify-center">
             
             {
                 props.item.checkable && props.item.checked &&
-                <iconify.Icon icon={"mdi:check-outline"} width={16} className="text-orange-300" />
+                <iconify.Icon icon={"streamline-ultimate-color:check"} width={24} className="text-orange-300" />
+            }
+
+            {
+                props.item.icon &&
+                <iconify.Icon icon={props.item.icon} width={24} className="text-orange-300" />
             }
 
             </div>
 
-            <span className="flex-1 ps-4">{props.item.label}</span>
+            <span className="flex-1 px-4">{props.item.label}</span>
 
             {
                 props.item.shortcut &&

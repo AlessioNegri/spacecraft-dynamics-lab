@@ -40,12 +40,12 @@ export default function ApseLineRotation(props: Readonly<Props>): react.JSX.Elem
                 name="intersectionPoint"
                 label="Intersection Point"
                 type="select"
-                value={data.intersectionPoint}
+                value={String(data.intersectionPoint)}
                 onChange={handleChange}
                 options={
                     [
-                        { label: "First", value: 0 },
-                        { label: "Second", value: 1 }
+                        { label: "First", value: "0" },
+                        { label: "Second", value: "1" }
                     ]}
             />
             

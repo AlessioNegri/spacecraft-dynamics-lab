@@ -12,10 +12,6 @@ References:
     - Chapter 4: Time of Flight
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.time as time
 import astropy.units as u
 import numpy as np
@@ -26,8 +22,7 @@ import astro.bodies as bodies
 import astro.common as common
 
 class LagrangeCoefficients():
-    """Lagrange Coefficients
-    """
+    """Lagrange Coefficients"""
     
     # --- STATIC ---
     

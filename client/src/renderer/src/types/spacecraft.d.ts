@@ -51,8 +51,9 @@ interface ISpacecraftForm
 
 interface IGlbModel
 {
-    name: string,
-    scale: number,
-    minimumPixelSize: number,
+    name: string
+    description: string
+    scale: number
+    minimumPixelSize: number
     maximumScale: number
 }

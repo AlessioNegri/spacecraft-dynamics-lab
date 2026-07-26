@@ -11,52 +11,30 @@ References:
     - Chapter 8: Relative Motion and Orbital Rendezvous
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.time as time
 import astropy.units as u
 import numpy as np
 import scipy.integrate as ode
 import typing
 
-import astro.bodies as bd
-import astro.common as cm
+import astro.bodies as bodies
+import astro.common as common
 import astro.orbit_3d as o3d
 import astro.orbital_position as op
 import astro.lagrange_coefficients as lc
 
-class Result:
-    """Result of integration
-    """
-    
-    success: bool
-    time: u.Quantity
-    relative_position_x: u.Quantity
-    relative_position_y: u.Quantity
-    relative_position_z: u.Quantity
-    relative_velocity_x: u.Quantity
-    relative_velocity_y: u.Quantity
-    relative_velocity_z: u.Quantity
-    position_x: u.Quantity
-    position_y: u.Quantity
-    position_z: u.Quantity
-    velocity_x: u.Quantity
-    velocity_y: u.Quantity
-    velocity_z: u.Quantity
+from astro.models.results import ResultRM
+from astro.models.orbital_elements import OrbitalElements
 
 class RelativeMotion():
-    """Relative Motion
-    """
+    """Relative Motion"""
     
     def __init__(self):
-        """Constructor
-        """
+        """Constructor"""
         
         self.ready: bool = False
         
-        self.attractor: bd.Body = bd.get_body(bd.Attractor.EARTH)
+        self.attractor: bodies.Body = bodies.get_body(bodies.Attractor.EARTH)
         
         self.position: np.ndarray = np.zeros(3)
         
@@ -69,18 +47,18 @@ class RelativeMotion():
     # --- STATIC ---
     
     @staticmethod
-    def lvlh_kinematics(attractor: bd.Attractor,
-                        orbital_elements_target: o3d.OrbitalElements,
-                        orbital_elements_chaser: o3d.OrbitalElements) -> typing.List[u.Quantity]:
+    def lvlh_kinematics(attractor: bodies.Attractor,
+                        orbital_elements_target: OrbitalElements,
+                        orbital_elements_chaser: OrbitalElements) -> typing.List[u.Quantity]:
         """        
         Given the state vectors (`r_target`, `v_target`) of the **target spacecraft** and (`r_chaser`, `v_chaser`) of
         the **chaser spacecraft**, find the position, velocity, and acceleration of Chaser relative to Target along the
         **Local Vertical Local Horizontal** (*LVLH*) axes attached to the Target.
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements_target (o3d.OrbitalElements): Target orbital elements
-            orbital_elements_chaser (o3d.OrbitalElements): Chaser orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements_target (OrbitalElements): Target orbital elements
+            orbital_elements_chaser (OrbitalElements): Chaser orbital elements
             
         Returns:
             typing.List[u.Quantity]: [r_rel_lvlh, v_rel_lvlh, a_rel_lvlh, omega_lvlh]
@@ -92,15 +70,15 @@ class RelativeMotion():
         r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
                                                                 orbital_elements=orbital_elements_chaser)
         
-        cm.check_attractor(attractor)
+        common.check_attractor(attractor)
         
-        cm.check_position_vector(r_target)
-        cm.check_position_vector(r_chaser)
+        common.check_position_vector(r_target)
+        common.check_position_vector(r_chaser)
         
-        cm.check_velocity_vector(v_target)
-        cm.check_velocity_vector(v_chaser)
+        common.check_velocity_vector(v_target)
+        common.check_velocity_vector(v_chaser)
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
         r_target: np.ndarray = r_target.to_value(u.km)
         r_chaser: np.ndarray = r_chaser.to_value(u.km)
@@ -176,11 +154,11 @@ class RelativeMotion():
             typing.List[u.Quantity]: [r_chaser, v_chaser]
         """
         
-        cm.check_position_vector(position_target)
-        cm.check_position_vector(position_rel_lvlh)
+        common.check_position_vector(position_target)
+        common.check_position_vector(position_rel_lvlh)
         
-        cm.check_velocity_vector(velocity_target)
-        cm.check_velocity_vector(velocity_rel_lvlh)
+        common.check_velocity_vector(velocity_target)
+        common.check_velocity_vector(velocity_rel_lvlh)
         
         r_target: np.ndarray = position_target.to_value(u.km)
         r_rel_lvlh: np.ndarray = position_rel_lvlh.to_value(u.km)
@@ -222,18 +200,18 @@ class RelativeMotion():
         return [r_chaser * u.km, v_chaser * u.km / u.s]
     
     @staticmethod
-    def simulate_lvlh_kinematics(attractor: bd.Attractor,
-                                 orbital_elements_target: o3d.OrbitalElements,
-                                 orbital_elements_chaser: o3d.OrbitalElements,
+    def simulate_lvlh_kinematics(attractor: bodies.Attractor,
+                                 orbital_elements_target: OrbitalElements,
+                                 orbital_elements_chaser: OrbitalElements,
                                  target_period_multiplier: int = 60,
                                  points_number: int = 1000) -> list:
         """
         Simulate the motion of the Target w.r.t. the Chaser in the LVLH frame
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements_target (o3d.OrbitalElements): Target orbital elements
-            orbital_elements_chaser (o3d.OrbitalElements): Chaser orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements_target (OrbitalElements): Target orbital elements
+            orbital_elements_chaser (OrbitalElements): Chaser orbital elements
             target_period_multiplier (int, optional): Multiple of the Target period. Defaults to 60.
             points_number (int, optional): Number of points to simulate. Defaults to 1000.
         """
@@ -258,13 +236,13 @@ class RelativeMotion():
         r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
                                                                 orbital_elements=orbital_elements_chaser)
         
-        cm.check_attractor(attractor)
+        common.check_attractor(attractor)
         
-        cm.check_position_vector(r_target)
-        cm.check_position_vector(r_chaser)
+        common.check_position_vector(r_target)
+        common.check_position_vector(r_chaser)
         
-        cm.check_velocity_vector(v_target)
-        cm.check_velocity_vector(v_chaser)
+        common.check_velocity_vector(v_target)
+        common.check_velocity_vector(v_chaser)
         
         # >>> 2. Target period
         
@@ -402,9 +380,9 @@ class RelativeMotion():
             typing.List[u.Quantity]: [dr, dv]
         """
         
-        cm.check_position_vector(r=relative_position_0)
+        common.check_position_vector(position=relative_position_0)
         
-        cm.check_velocity_vector(v=relative_velocity_0)
+        common.check_velocity_vector(velocity=relative_velocity_0)
         
         dr_0: np.ndarray = relative_position_0.to_value(u.km)
         
@@ -419,9 +397,9 @@ class RelativeMotion():
         return [dr * u.km, dv * u.km / u.s]
     
     @staticmethod
-    def two_impulsive_rendezvous_maneuver(attractor: bd.Attractor,
-                                          orbital_elements_target: o3d.OrbitalElements,
-                                          orbital_elements_chaser: o3d.OrbitalElements,
+    def two_impulsive_rendezvous_maneuver(attractor: bodies.Attractor,
+                                          orbital_elements_target: OrbitalElements,
+                                          orbital_elements_chaser: OrbitalElements,
                                           maneuver_time: u.Quantity) -> typing.List[u.Quantity]:
         """
         Two-Impulse Rendezvous maneuver
@@ -430,9 +408,9 @@ class RelativeMotion():
         target is reached to nullify the relative velocity.
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements_target (o3d.OrbitalElements): Target orbital elements
-            oe_chaser (o3d.OrbitalElements): Chaser orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements_target (OrbitalElements): Target orbital elements
+            oe_chaser (OrbitalElements): Chaser orbital elements
             maneuver_time (u.Quantity): Maneuver time
 
         Returns:
@@ -489,7 +467,7 @@ class RelativeMotion():
     # --- PUBLIC ---
     
     def init(self,
-             attractor: bd.Attractor,
+             attractor: bodies.Attractor,
              position: u.Quantity,
              velocity: u.Quantity,
              relative_position: u.Quantity,
@@ -498,45 +476,45 @@ class RelativeMotion():
         Initialize the parameters for the propagation
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             r (u.Quantity): Position vector
             v (u.Quantity): Velocity vector
             dr (u.Quantity): Relative position vector
             dv (u.Quantity): Relative velocity vector
         """
         
-        cm.check_attractor(attractor)
+        common.check_attractor(attractor)
         
-        cm.check_position_vector(position.to_value(u.km))
+        common.check_position_vector(position.to_value(u.km))
         
-        cm.check_position_vector(relative_position.to_value(u.km))
+        common.check_position_vector(relative_position.to_value(u.km))
         
-        cm.check_velocity_vector(velocity.to_value(u.km / u.s))
+        common.check_velocity_vector(velocity.to_value(u.km / u.s))
         
-        cm.check_velocity_vector(relative_velocity.to_value(u.km / u.s))
+        common.check_velocity_vector(relative_velocity.to_value(u.km / u.s))
         
         self.ready              = True
-        self.attractor          = bd.BODIES[attractor]
+        self.attractor          = bodies.BODIES[attractor]
         self.position           = position.to(u.km).to_value()
         self.velocity           = velocity.to(u.km / u.s).to_value()
         self.relative_position  = relative_position.to(u.km).to_value()
         self.relative_velocity  = relative_velocity.to(u.km / u.s).to_value()
     
-    def propagate_for(self, delta: time.TimeDelta) -> Result:
+    def propagate_for(self, delta: time.TimeDelta) -> ResultRM:
         """Propagate the linearized relative motion in the LVLH frame for delta time
 
         Args:
             delta (time.TimeDelta): Delta time for propagation
         
         Returns:
-            Result: Integration result
+            ResultRM: Integration result
         """
         
         if not self.ready: raise ValueError("Relative Motion object is not ready")
         
-        cm.check_time_delta(delta)
+        common.check_time_delta(delta)
         
-        result: Result = Result()
+        result: ResultRM = ResultRM()
         
         solution: dict = ode.solve_ivp(fun=self._linearized_equations_relative_motion,
                                        t_span=[0, delta.to_value(u.s)],
@@ -572,27 +550,27 @@ class RelativeMotion():
         """
         Linearized equations of relative motion in the LVLH frame.
         
-        This model propagates the first–order (linearized) relative motion between a chaser spacecraft and a target
-        spacecraft following a Keplerian two‑body orbit.
+        This model propagates the first-order (linearized) relative motion between a chaser spacecraft and a target
+        spacecraft following a Keplerian two-body orbit.
         The state vector contains both the *relative* position/velocity (dx, dy, dz, dv_x, dv_y, dv_z) and the *target*
         inertial position/velocity (x, y, z, v_x, v_y, v_z).
-        The linearized dynamics are obtained by expanding the full nonlinear equations  around the target’s
+        The linearized dynamics are obtained by expanding the full nonlinear equations  around the target's
         instantaneous orbital state.
 
-        The target’s orbital quantities used in the linearization are:
+        The target's orbital quantities used in the linearization are:
             - R  : target radial distance
             - h  : target specific angular momentum magnitude
             - VR : target radial velocity
             - μ  : gravitational parameter of the attractor
 
-        The resulting system corresponds to the classical first‑order variational equations  for relative motion, valid
+        The resulting system corresponds to the classical first-order variational equations  for relative motion, valid
         for small separations and assuming a purely Keplerian (unperturbed) target trajectory.
 
         Notes
         -----
         - Valid for small relative distances compared to the orbital radius.
-        - Assumes a Keplerian central‑gravity field with no perturbations.
-        - The linearized terms include coupling through the target’s angular momentum,
+        - Assumes a Keplerian central-gravity field with no perturbations.
+        - The linearized terms include coupling through the target's angular momentum,
         radial velocity, and instantaneous orbital geometry.
         
         Args:

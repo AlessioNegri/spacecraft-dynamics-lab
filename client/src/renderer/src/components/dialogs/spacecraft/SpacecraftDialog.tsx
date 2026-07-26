@@ -1,15 +1,14 @@
 import * as react from "react"
 import * as Form from "@radix-ui/react-form"
-
-import type { OptionProps } from "@renderer/components/dialogs/FormSelect"
+import * as Themes from "@radix-ui/themes"
 
 import http from "@renderer/common/http"
 
 import DialogRUI from "@renderer/components/dialogs/DialogRUI"
-import FormInput from "@renderer/components/dialogs/FormInput"
-import FormSelect from "@renderer/components/dialogs/FormSelect"
 import GlbViewer from "@renderer/components/common/GlbViewer"
 import ErrorText from "@renderer/components/dialogs/ErrorText"
+
+import InputField from "@renderer/components/dialogs/InputField"
 
 const defaultSpacecraft: ISpacecraftForm =
 {
@@ -37,9 +36,26 @@ const defaultSpacecraft: ISpacecraftForm =
 const defaultModel: IGlbModel =
 {
     name: "",
+    description: "",
     scale: 1,
     minimumPixelSize: 1,
     maximumScale: 1
+}
+
+/**
+ * @description Retrieve the size of the GLB model
+ * 
+ * @param url GLB model URL
+ * @returns GLB model size
+ */
+async function getGlbFileSize(url: string): Promise<number>
+{
+    if (url !== "")
+    {
+        return globalThis.window.api.getFileSize(url)
+    }
+
+    return 0
 }
 
 interface Props
@@ -57,16 +73,16 @@ export default function SpacecraftDialog(props: Readonly<Props>): react.JSX.Elem
     // --- USE STATE ---
 
     const [form, setForm] = react.useState<ISpacecraftForm>(defaultSpacecraft)
-
-    const [errors, setErrors] = react.useState<Record<string, string>>({})
     
     const [preview, setPreview] = react.useState<string | null>(null)
 
     const [models, setModels] = react.useState<IGlbModel[]>([])
 
-    const [options, setOptions] = react.useState<OptionProps[]>([])
+    const [groups, setGroups] = react.useState<Array<{ caption: string; options: Array<{ label: string; value: string | number }> }>>([])
     
     const [selectedModel, setSelectedModel] = react.useState<IGlbModel>(defaultModel)
+
+    const [selectedModelSize, setSelectedModelSize] = react.useState<number>(0)
 
     const [axiosError, setAxiosError] = react.useState<string>("")
 
@@ -116,76 +132,94 @@ export default function SpacecraftDialog(props: Readonly<Props>): react.JSX.Elem
         {
             setModels(models)
 
-            const options: OptionProps[] = [ { name: "Choose a model", value: "" },
-                                                    ...models.map(m => ({ name: m.name, value: m.name }))]
+            // * Group models by first letter
 
-            setOptions(options)
+            const grouped: Record<string, Array<{ label: string; value: string }>> =
+            models.reduce((acc, model) =>
+            {
+                const letter: string = model.description[0].toUpperCase()
 
-            if (props.edit) setSelectedModel(models.find(m => m.name === props.item!.model) || defaultModel)
+                if (!acc[letter]) acc[letter] = []
+
+                acc[letter].push({ label: model.description, value: model.name })
+
+                return acc
+            }, {} as Record<string, Array<{ label: string; value: string }>>);
+
+            // * Convert to your Select groups format
+
+            const groups = Object.entries(grouped).map(([letter, items]) => (
+            {
+                caption: letter,
+                options: items
+            }))
+
+            setGroups(groups)
         })
     }, [])
 
+    react.useEffect(() =>
+    {
+        if (props.edit)
+        {
+            setSelectedModel(models.find(m => m.name === props.item!.model) || defaultModel)
+        }
+    }, [props.edit, models])
+
+    react.useEffect(() =>
+    {
+        if (!selectedModel) return
+
+        async function loadSize()
+        {
+            setSelectedModelSize(await getGlbFileSize(selectedModel.name))
+        }
+
+        loadSize()
+
+    }, [selectedModel])
+
     // --- FORM ---
 
-    const validAngle = (angle: number) => { return angle >= 0 && angle <= 360 }
-
-    const validate = () =>
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     {
-        const newErrors: Record<string, string> = {}
-
-        if (!form.name.trim()) newErrors.name = "Name is required"
-
-        if (Number(form.mass) <= 0)         newErrors.mass  = "Mass must be a positive number"
-        if (Number(form.orbit.sma) === 0)   newErrors.sma   = "Semi-Major Axis must be different from 0"
-        if (Number(form.orbit.ecc) < 0)     newErrors.ecc   = "Eccentricity must be a non negative number"
-        
-        if (!validAngle(form.orbit.inc))    newErrors.inc   = "Inclination must be in rage [0°, 360°]"
-        if (!validAngle(form.orbit.raan))   newErrors.raan  = "Right Ascension Ascending Node must be in rage [0°, 360°]"
-        if (!validAngle(form.orbit.aop))    newErrors.aop   = "Argument Periapsis must be in rage [0°, 360°]"
-        if (!validAngle(form.orbit.tan))    newErrors.tan   = "True Anomaly must be in rage [0°, 360°]"
-
-        if (Number(form.style.width) < 0)   newErrors.width = "Width must be a positive number"
-
-        setErrors(newErrors)
-
-        return Object.keys(newErrors).length === 0
-    }
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    {
-        const { name, value, files } = e.target
-
-        if (name === "image" && files)
+        if (e.target instanceof HTMLInputElement && e.target.type === "file")
         {
-            setForm({ ...form, image: files[0] })
+            const { name, files } = e.target
 
-            setPreview(URL.createObjectURL(files[0]))
+            if (name === "image" && files)
+            {
+                console.log(files)
+                setForm({ ...form, image: files[0] })
 
-            return
+                setPreview(URL.createObjectURL(files[0]))
+            }
         }
-
-        if (name in form.orbit)
+        else
         {
-            setForm({ ...form, orbit: { ...form.orbit, [name]: value } })
+            const { name, value } = e.target
 
-            return
+            if (name in form.orbit)
+            {
+                setForm({ ...form, orbit: { ...form.orbit, [name]: value } })
+
+                return
+            }
+
+            if (name in form.style)
+            {
+                setForm({ ...form, style: { ...form.style, [name]: value } })
+
+                return
+            }
+
+            setForm({ ...form, [name]: value })
         }
-
-        if (name in form.style)
-        {
-            setForm({ ...form, style: { ...form.style, [name]: value } })
-
-            return
-        }
-
-        setForm({ ...form, [name]: value })
     }
 
     const handleSubmit = async (e: React.FormEvent) =>
     {
         e.preventDefault()
-
-        if (!validate()) return
 
         const data = new FormData()
 
@@ -256,118 +290,136 @@ export default function SpacecraftDialog(props: Readonly<Props>): react.JSX.Elem
                 className="flex flex-col gap-2"
             >
 
-                <FormInput
+                <InputField
                     label="Name"
                     type="text"
                     name="name"
                     value={form.name}
-                    error={errors.name}
                     placeholder="e.g. Voyager 1"
-                    setValue={handleChange}
+                    showSides={false}
+                    onChange={handleChange}
                 />
 
-                <h3 className="text-lg font-semibold">Ballistic / Mass</h3>
+                <h3 className="text-lg font-semibold my-4">Ballistic / Mass</h3>
 
-                <FormInput
-                    label="Mass (kg)"
+                <InputField
+                    label="Mass"
                     type="number"
                     name="mass"
+                    symbol="m"
+                    unit="kg"
                     value={form.mass}
-                    error={errors.mass}
-                    placeholder="e.g. 825"
-                    setValue={handleChange}
+                    min={0}
+                    onChange={handleChange}
                 />
 
-                <h3 className="text-lg font-semibold">Orbit</h3>
+                <h3 className="text-lg font-semibold my-4">Orbit</h3>
 
                 <div className="grid grid-cols-2 gap-4">
 
-                    <FormInput
-                        label="Semimajor Axis (km)"
-                        type="number"
+                    <InputField
+                        label="Semimajor Axis"
+                        type="text"
                         name="sma"
-                        value={form.orbit.sma}
-                        error={errors.sma}
-                        setValue={handleChange}
+                        symbol="a"
+                        unit="km"
+                        value={String(form.orbit.sma)}
+                        pattern="^(?!0$).*"
+                        onChange={handleChange}
                     />
 
-                    <FormInput
+                    <InputField
                         label="Eccentricity"
                         type="number"
                         name="ecc"
+                        symbol="e"
                         value={form.orbit.ecc}
-                        error={errors.ecc}
-                        setValue={handleChange}
+                        min={0}
+                        onChange={handleChange}
                     />
 
-                    <FormInput
-                        label="Inclination (deg)"
+                    <InputField
+                        label="Inclination"
                         type="number"
                         name="inc"
+                        symbol="i"
+                        unit="deg"
                         value={form.orbit.inc}
-                        error={errors.inc}
-                        setValue={handleChange}
+                        min={0}
+                        max={180}
+                        onChange={handleChange}
                     />
 
-                    <FormInput
-                        label="Right Ascension of Ascending Node (deg)"
+                    <InputField
+                        label="Right Ascension of Ascending Node"
                         type="number"
                         name="raan"
+                        symbol="\Omega"
+                        unit="deg"
                         value={form.orbit.raan}
-                        error={errors.raan}
-                        setValue={handleChange}
+                        min={-360}
+                        max={360}
+                        onChange={handleChange}
                     />
 
-                    <FormInput
-                        label="Argument of Periapsis (deg)"
+                    <InputField
+                        label="Argument of Periapsis"
                         type="number"
                         name="aop"
+                        symbol="\omega"
+                        unit="deg"
                         value={form.orbit.aop}
-                        error={errors.aop}
-                        setValue={handleChange}
+                        min={-360}
+                        max={360}
+                        onChange={handleChange}
                     />
 
-                    <FormInput
+                    <InputField
                         label="True Anomaly (deg)"
                         type="number"
                         name="tan"
+                        symbol="\theta"
+                        unit="deg"
                         value={form.orbit.tan}
-                        error={errors.tan}
-                        setValue={handleChange}
+                        min={-360}
+                        max={360}
+                        onChange={handleChange}
                     />
 
                 </div>
 
-                <h3 className="text-lg font-semibold">Style</h3>
+                <h3 className="text-lg font-semibold my-4">Style</h3>
 
                 <div className="grid grid-cols-2 gap-4">
 
-                    <FormInput
-                        label="Line Width (px)"
+                    <InputField
+                        label="Line Width"
                         type="number"
                         name="width"
+                        unit="px"
                         value={form.style.width}
-                        error={errors.width}
-                        setValue={handleChange}
+                        min={1}
+                        onChange={handleChange}
                     />
 
-                    <FormInput
+                    <InputField
                         label="Line Color"
                         type="color"
                         name="color"
                         value={form.style.color}
-                        error={errors.color}
-                        setValue={handleChange}
+                        onChange={handleChange}
                     />
 
                 </div>
 
-                <FormInput
-                    label="Image"
+                <h3 className="text-lg font-semibold my-4">Media</h3>
+
+                <InputField
+                    label={`Image - ${((form.image?.size ?? 0) / 1024).toFixed(0)} KB`}
                     type="file"
                     name="image"
-                    value={form.image}
-                    setValue={handleChange}
+                    value={""}
+                    onChange={handleChange}
                 />
 
             {
@@ -381,21 +433,28 @@ export default function SpacecraftDialog(props: Readonly<Props>): react.JSX.Elem
                 )
             }
 
+            <div className="flex items-end gap-4">
 
-            <FormSelect
-                label="Model"
-                name="model"
-                value={selectedModel.name}
-                setValue={e => 
-                {
-                    const name: string = e.target.value
+                <InputField
+                    className="flex-1"
+                    name="model"
+                    label="Model"
+                    type="select"
+                    value={selectedModel.name}
+                    onSelectChange={(value: string) =>
+                    {
+                        const model: IGlbModel | undefined = models.find(m => m.name === value)
+                        
+                        setSelectedModel(model ?? defaultModel)
+                    }}
+                    groups={groups}
+                />
 
-                    const model: IGlbModel | undefined = models.find(m => m.name === name)
+                <Themes.Badge color="grass" size="3" style={{ fontFamily: "Oxanium" }}>
+                    {(selectedModelSize / 1024).toFixed(2) + " KB"}
+                </Themes.Badge>
 
-                    setSelectedModel(model ?? defaultModel)
-                }}
-                options={options}
-            />
+            </div>
 
             <div className="flex w-full h-64">
                 

@@ -126,5 +126,6 @@ function Popup(props: Readonly<PopupProps>): react.JSX.Element {
 
             </popover.Portal>
             
-        </popover.Root>)
+        </popover.Root>
+    )
 }

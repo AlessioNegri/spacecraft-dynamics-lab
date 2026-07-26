@@ -11,40 +11,28 @@ References:
     - Chapter 3: Orbit Determination
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.time as time
 import astropy.units as u
-import enum
-import erfa
 import numpy as np
-import scipy.optimize as opt
+import scipy.optimize as optimize
 import typing
-import warnings
 
-import astro.bodies as bd
-import astro.common as cm
+import astro.bodies as bodies
+import astro.common as common
 import astro.orbit_3d as o3d
 import astro.lagrange_coefficients as lc
 
-class OrbitDirection(enum.IntEnum):
-    """Orbit direction type"""
-    
-    PROGRADE    = 0
-    RETROGRADE  = 1
+from astro.enums import OrbitDirection
 
 class OrbitDetermination():
-    """Orbit Determination
-    """
+    """Orbit Determination"""
     
     J2000: int = 2_451_545
     
     # --- STATIC ---
     
     @staticmethod
-    def gibbs_method(attractor: bd.Attractor,
+    def gibbs_method(attractor: bodies.Attractor,
                      position_1 : u.Quantity,
                      position_2 : u.Quantity,
                      position_3 : u.Quantity) -> o3d.OrbitalElements:
@@ -54,7 +42,7 @@ class OrbitDetermination():
         The three vectors must lie in the same plane.
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             position_1 (u.Quantity): Position vector 1
             position_2 (u.Quantity): Position vector 2
             position_3 (u.Quantity): Position vector 3
@@ -67,12 +55,12 @@ class OrbitDetermination():
         r_2: np.ndarray = position_2.to_value(u.km)
         r_3: np.ndarray = position_3.to_value(u.km)
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        cm.check_attractor(attractor)
-        cm.check_position_vector(r_1)
-        cm.check_position_vector(r_2)
-        cm.check_position_vector(r_3)
+        common.check_attractor(attractor)
+        common.check_position_vector(r_1)
+        common.check_position_vector(r_2)
+        common.check_position_vector(r_3)
         
         # >>> 1. Norm
         
@@ -102,17 +90,17 @@ class OrbitDetermination():
         
         N: np.ndarray = r_1_m * C_23 + r_2_m * C_31 + r_3_m * C_12
         
-        N_m: float = np.linalg.norm(N)
+        n_m: float = np.linalg.norm(N) # ? N_m
         
         D: np.ndarray = C_12 + C_23 + C_31
         
-        D_m: float = np.linalg.norm(D)
+        d_m: float = np.linalg.norm(D) # ? D_m
         
         S: np.ndarray = r_1 * (r_2_m - r_3_m) + r_2 * (r_3_m - r_1_m) + r_3 * (r_1_m - r_2_m)
         
         # >>> 5. Calculate velocity at 2
         
-        v_2: np.ndarray = np.sqrt(mu / (N_m * D_m)) * (np.cross(D, r_2) / r_2_m + S)
+        v_2: np.ndarray = np.sqrt(mu / (n_m * d_m)) * (np.cross(D, r_2) / r_2_m + S)
         
         # >>> 6. Compute the orbital elements
         
@@ -123,7 +111,7 @@ class OrbitDetermination():
         return oe
     
     @staticmethod
-    def lambert(attractor: bd.Attractor,
+    def lambert(attractor: bodies.Attractor,
                 departure_position: u.Quantity,
                 arrival_position: u.Quantity,
                 delta_time: time.TimeDelta,
@@ -140,7 +128,7 @@ class OrbitDetermination():
         method.
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             departure_position (u.Quantity): Position vector at departure (km)
             arrival_position (u.Quantity): Position vector at arrival (km)
             delta_time (time.TimeDelta): Time of flight between `departure_position` and `arrival_position` (s)
@@ -156,12 +144,12 @@ class OrbitDetermination():
         r_1: np.ndarray = departure_position.to_value(u.km)
         r_2: np.ndarray = arrival_position.to_value(u.km)
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        cm.check_attractor(attractor)
-        cm.check_position_vector(r_1)
-        cm.check_position_vector(r_2)
-        cm.check_time_delta(delta_time)
+        common.check_attractor(attractor)
+        common.check_position_vector(r_1)
+        common.check_position_vector(r_2)
+        common.check_time_delta(delta_time)
         
         dt: float = delta_time.to_value(u.s)
         
@@ -199,12 +187,6 @@ class OrbitDetermination():
             z_0 = z_0 + 0.1
         
         z: float = 0.0
-        
-        # with warnings.catch_warnings():
-            
-            # warnings.filterwarnings("error", category=RuntimeWarning)
-            # warnings.simplefilter("ignore", category=RuntimeWarning)
-            # warnings.simplefilter("ignore", category=erfa.ErfaWarning)
             
         failed_result: np.ndarray = [np.ones(r_1.shape) * 100.0 * u.km / u.s,
                                      np.ones(r_2.shape) * 100.0 * u.km / u.s,
@@ -213,14 +195,10 @@ class OrbitDetermination():
 
         try:
             
-            z = opt.newton(func=OrbitDetermination._lambert_equation,
-                           x0=z_0,
-                           fprime=OrbitDetermination._lambert_equation_first_derivative,
-                           args=(mu, r_1_m, r_2_m, A, dt))
-        
-        # except Warning:
-            
-        #     return failed_result
+            z = optimize.newton(func=OrbitDetermination._lambert_equation,
+                                x0=z_0,
+                                fprime=OrbitDetermination._lambert_equation_first_derivative,
+                                args=(mu, r_1_m, r_2_m, A, dt))
         
         except Exception:
             
@@ -228,10 +206,10 @@ class OrbitDetermination():
         
         # >>> 5. Parameter y
         
-        S_z: float = lc.LagrangeCoefficients.S(z)
-        C_z: float = lc.LagrangeCoefficients.C(z)
+        s_z: float = lc.LagrangeCoefficients.S(z)
+        c_z: float = lc.LagrangeCoefficients.C(z)
         
-        y: float = r_1_m + r_2_m + A * (z * S_z - 1) / np.sqrt(C_z)
+        y: float = r_1_m + r_2_m + A * (z * s_z - 1) / np.sqrt(c_z)
         
         # >>> 6. Lagrange functions
         
@@ -271,7 +249,7 @@ class OrbitDetermination():
             float: Julian day number [numer of days]
         """
         
-        cm.check_time(time_=timestamp)
+        common.check_time(time_=timestamp)
         
         year: int = timestamp.ymdhms.year
         month: int = timestamp.ymdhms.month
@@ -321,7 +299,7 @@ class OrbitDetermination():
     @staticmethod
     def julian_day_2_timestamp(julian_day: float) -> time.Time:
         """
-        Convert the Julian day in timestamp (Fliegel–Van Flandern algorithm)
+        Convert the Julian day in timestamp (Fliegel-Van Flandern algorithm)
 
         Args:
             julian_day (float): Julian Day
@@ -408,7 +386,7 @@ class OrbitDetermination():
         return julian_day - 2_400_000.5
     
     @staticmethod
-    def local_sidereal_time(timestamp: time.Time, longitude : u.Quantity) -> u.Quantity:
+    def local_sidereal_time(timestamp: time.Time, longitude: u.Quantity) -> u.Quantity:
         """
         Calculate the local sidereal time from given timestamp and longitude
 
@@ -420,8 +398,8 @@ class OrbitDetermination():
             u.Quantity: Local sidereal time [deg]
         """
         
-        cm.check_time(time_=timestamp)
-        cm.check_angle(longitude.to_value(u.deg))
+        common.check_time(time_=timestamp)
+        common.check_angle(longitude.to_value(u.deg))
         
         year: int = timestamp.ymdhms.year
         month: int = timestamp.ymdhms.month
@@ -436,44 +414,42 @@ class OrbitDetermination():
         
         UT: float = hour + minute / 60 + second / 3600 # ? Univeral Time
         
-        J_2000: int = 2_451_545
-        
         # >>> 1. Julian day at 0 h UT
         
         J0: float = 367 * year - int(7/4 * (year + int((month + 9) / 12 ))) + int(275/9 * month) + day + 1_721_013.5
         
         # >>> 2. Time between J0 and J2000
         
-        T0: float = (J0 - J_2000) / 36_525
+        T0: float = (J0 - OrbitDetermination.J2000) / 36_525
         
         # >>> 3. Greenwich sideral time at 0 h UT [deg]
         
-        theta_G0: float = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 2.583e-8 * T0**3
+        theta_g0: float = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 2.583e-8 * T0**3 # ? theta_G0
         
-        theta_G0 = cm.wrap_angle(theta_G0)
+        theta_g0 = common.wrap_angle(theta_g0)
         
         # >>> 4. Greenwich sideral time [deg]
         
-        theta_G: float = theta_G0 + 360.98564724 * UT / 24
+        theta_g: float = theta_g0 + 360.98564724 * UT / 24 # ? theta_G
         
         # >>> 5. Local sidereal time
         
-        theta: float = theta_G + longitude.to_value(u.deg)
+        theta: float = theta_g + longitude.to_value(u.deg)
         
-        theta = cm.wrap_angle(theta)
+        theta = common.wrap_angle(theta)
         
         return theta * u.deg
     
     @staticmethod
-    def geocentric_equatorial_position_vector(attractor: bd.Attractor,
-                                              local_sidereal_time : u.Quantity,
-                                              latitude : u.Quantity,
-                                              site_altitude : u.Quantity = 0 * u.km) -> u.Quantity:
+    def geocentric_equatorial_position_vector(attractor: bodies.Attractor,
+                                              local_sidereal_time: u.Quantity,
+                                              latitude: u.Quantity,
+                                              site_altitude: u.Quantity = 0 * u.km) -> u.Quantity:
         """
         Geocentric Equatorial Frame position vector of the observer
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             local_sidereal_time (u.Quantity): Local sidereal time (theta)
             latitude (u.Quantity): Latitude (phi)
             site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0 km.
@@ -482,9 +458,9 @@ class OrbitDetermination():
             u.Quantity: Position vector of the site
         """
         
-        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        f: float = bd.BODIES[attractor].f.to_value(u.one) if bd.BODIES[attractor].f != None else 0
+        f: float = bodies.BODIES[attractor].f.to_value(u.one) if bodies.BODIES[attractor].f != None else 0
         
         theta: float = local_sidereal_time.to_value(u.rad)
         
@@ -492,9 +468,9 @@ class OrbitDetermination():
         
         H: float = site_altitude.to_value(u.km)
         
-        cm.check_attractor(attractor)
-        cm.check_angle(theta)
-        cm.check_angle(phi)
+        common.check_attractor(attractor)
+        common.check_angle(theta)
+        common.check_angle(phi)
         
         if H < 0: raise ValueError("'H' must be >= 0")
         
@@ -507,16 +483,16 @@ class OrbitDetermination():
         return R
     
     @staticmethod
-    def topocentric_equatorial_position_vector(attractor: bd.Attractor,
-                                               position : u.Quantity,
-                                               local_sidereal_time : u.Quantity,
-                                               latitude : u.Quantity,
-                                               site_altitude : u.Quantity = 0 * u.km) -> u.Quantity:
+    def topocentric_equatorial_position_vector(attractor: bodies.Attractor,
+                                               position: u.Quantity,
+                                               local_sidereal_time: u.Quantity,
+                                               latitude: u.Quantity,
+                                               site_altitude: u.Quantity = 0 * u.km) -> u.Quantity:
         """
         Geocentric Equatorial Frame --> Topocentric Equatorial Frame
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             position (u.Quantity): Geocentric equatorial position vector of the target
             local_sidereal_time (u.Quantity): Local sidereal time (theta)
             latitude (u.Quantity): Latitude (phi)
@@ -528,7 +504,7 @@ class OrbitDetermination():
         
         r: np.ndarray = position.to_value(u.km)
         
-        cm.check_position_vector(r)
+        common.check_position_vector(r)
         
         # >>> 1. Geocentric position vector of the site
         
@@ -544,16 +520,16 @@ class OrbitDetermination():
         return rho
     
     @staticmethod
-    def topocentric_horizon_position_vector(attractor: bd.Attractor,
-                                            position : u.Quantity,
-                                            local_sidereal_time : u.Quantity,
-                                            latitude : u.Quantity,
-                                            site_altitude : u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
+    def topocentric_horizon_position_vector(attractor: bodies.Attractor,
+                                            position: u.Quantity,
+                                            local_sidereal_time: u.Quantity,
+                                            latitude: u.Quantity,
+                                            site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
         """
         Geocentric Equatorial Frame --> Topocentric Horizon Frame
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             position (u.Quantity): Geocentric equatorial position vector of the target
             local_sidereal_time (u.Quantity): Local sidereal time (theta)
             latitude (u.Quantity): Latitude (phi)
@@ -579,14 +555,14 @@ class OrbitDetermination():
         
         # * Matrix of transformation Q_Xx
         
-        dcm_GE_TH: np.ndarray = np.array(
+        dcm_ge_th: np.ndarray = np.array( # ? dcm_GE_TH
             [
                 [ -np.sin(theta)               , np.cos(theta)                , 0           ],
                 [ -np.sin(phi) * np.cos(theta) , -np.sin(phi) * np.sin(theta) , np.cos(phi) ],
                 [ np.cos(phi) * np.cos(theta)  , np.cos(phi) * np.sin(theta)  , np.sin(phi) ]
             ])
         
-        rho: np.ndarray = np.matmul(dcm_GE_TH, rho.to_value(u.km))
+        rho: np.ndarray = np.matmul(dcm_ge_th, rho.to_value(u.km))
         
         # >>> 3. Azimuth and Elevation
         
@@ -599,15 +575,15 @@ class OrbitDetermination():
         return [rho * u.km, (A * u.rad).to(u.deg), (a * u.rad).to(u.deg)]
     
     @staticmethod
-    def topocentric_equatorial_right_ascension_declination(attractor: bd.Attractor,
-                                                           local_sidereal_time : u.Quantity,
-                                                           latitude : u.Quantity,
-                                                           azimuth : u.Quantity,
-                                                           elevation : u.Quantity) -> typing.List[u.Quantity]:
+    def topocentric_equatorial_right_ascension_declination(attractor: bodies.Attractor,
+                                                           local_sidereal_time: u.Quantity,
+                                                           latitude: u.Quantity,
+                                                           azimuth: u.Quantity,
+                                                           elevation: u.Quantity) -> typing.List[u.Quantity]:
         """Topocentric Horizone Frame --> Topocentric Equatorial Frame
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             local_sidereal_time (u.Quantity): Local sidereal time (theta)
             latitude (u.Quantity): Latitude (phi)
             azimuth (u.Quantity): Azimuth (A, beta)
@@ -625,17 +601,17 @@ class OrbitDetermination():
         
         a: float = elevation.to_value(u.rad)
         
-        cm.check_attractor(attractor)
-        cm.check_angle(theta)
-        cm.check_angle(phi)
-        cm.check_angle(A)
-        cm.check_angle(a)
+        common.check_attractor(attractor)
+        common.check_angle(theta)
+        common.check_angle(phi)
+        common.check_angle(A)
+        common.check_angle(a)
         
         # >>> 1. Topocentric horizon position vector
         
         # * Matrix of transformation Q_xX
         
-        dcm_TH_GE: np.ndarray = np.array(
+        dcm_th_ge: np.ndarray = np.array( # ? dcm_TH_GE
             [
                 [ -np.sin(theta) , -np.sin(phi) * np.cos(theta) , np.cos(phi) * np.cos(theta) ],
                 [ np.cos(theta)  , -np.sin(phi) * np.sin(theta) , np.cos(phi) * np.sin(theta) ],
@@ -646,7 +622,7 @@ class OrbitDetermination():
         
         # >>> 2. Topocentric equatorial position vector
         
-        rho: np.ndarray = np.matmul(dcm_TH_GE, rho_h)
+        rho: np.ndarray = np.matmul(dcm_th_ge, rho_h)
         
         # >>> 3. Right Ascension and Declination
         
@@ -655,7 +631,7 @@ class OrbitDetermination():
         return [rho * u.one, alpha, delta]
     
     @staticmethod
-    def predict_from_angle_range(attractor: bd.Attractor,
+    def predict_from_angle_range(attractor: bodies.Attractor,
                                  slant_range: u.Quantity,
                                  azimuth: u.Quantity,
                                  elevation: u.Quantity,
@@ -669,7 +645,7 @@ class OrbitDetermination():
         Predict the geocentric position and velocity vectors from angle and range measurements
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             slant_range (u.Quantity): Slant range
             azimuth (u.Quantity): Azimuth (A, beta)
             elevation (u.Quantity): Elevation (a, sigma)
@@ -703,16 +679,16 @@ class OrbitDetermination():
         
         da_dt: float = elevation_rate.to_value(u.rad / u.s)
         
-        omega: float = bd.BODIES[attractor].omega.to_value(u.rad / u.s)
+        omega: float = bodies.BODIES[attractor].omega.to_value(u.rad / u.s)
         
         theta: float = local_sidereal_time.to_value(u.rad)
         
         phi: float = latitude.to_value(u.rad)
         
-        cm.check_angle(np.rad2deg(theta))
-        cm.check_angle(np.rad2deg(phi))
-        cm.check_angle(np.rad2deg(A))
-        cm.check_angle(np.rad2deg(a))
+        common.check_angle(np.rad2deg(theta))
+        common.check_angle(np.rad2deg(phi))
+        common.check_angle(np.rad2deg(A))
+        common.check_angle(np.rad2deg(a))
         
         # >>> 2. Topocentric declination
         
@@ -769,18 +745,18 @@ class OrbitDetermination():
         return [r * u.km, v * u.km / u.s]
     
     @staticmethod
-    def predict_from_gauss_method(attractor: bd.Attractor,
-                                  latitude : u.Quantity,
-                                  local_sidereal_time_list : u.Quantity,
-                                  right_ascension_list : u.Quantity,
-                                  declination_list : u.Quantity,
-                                  observation_time_list : u.Quantity,
-                                  site_altitude : u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
+    def predict_from_gauss_method(attractor: bodies.Attractor,
+                                  latitude: u.Quantity,
+                                  local_sidereal_time_list: u.Quantity,
+                                  right_ascension_list: u.Quantity,
+                                  declination_list: u.Quantity,
+                                  observation_time_list: u.Quantity,
+                                  site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
         """
         Predict position and velocity with the Gauss method
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             latitude (u.Quantity): Latitude (phi)
             local_sidereal_time_list (u.Quantity): List of 3 local sidereal times (theta)
             right_ascension_list (u.Quantity): List of 3 right ascensions (alpha)
@@ -800,9 +776,9 @@ class OrbitDetermination():
         
         if observation_time_list.shape != (3,): raise ValueError("'observation_time_list' must have shape = (3,)")
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        cm.check_attractor(attractor)
+        common.check_attractor(attractor)
         
         alpha: np.ndarray = right_ascension_list.to_value(u.rad)
         
@@ -881,7 +857,7 @@ class OrbitDetermination():
         
         dfdt: callable = lambda x: 8 * x**7 + 6 * a * x**5 + 3 * b * x**2
         
-        r_2_m: float = opt.newton(f, x0=10000, fprime=dfdt, maxiter=100, tol=1e-8)
+        r_2_m: float = optimize.newton(f, x0=10000, fprime=dfdt, maxiter=100, tol=1e-8)
         
         # >>> 9. Slant ranges
         
@@ -917,18 +893,18 @@ class OrbitDetermination():
         return [r_2 * u.km, v_2 * u.km / u.s]
     
     @staticmethod
-    def predict_from_gauss_method_extended(attractor: bd.Attractor,
-                                           latitude : u.Quantity,
-                                           local_sidereal_time_list : u.Quantity,
-                                           right_ascension_list : u.Quantity,
-                                           declination_list : u.Quantity,
-                                           observation_time_list : u.Quantity,
-                                           site_altitude : u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
+    def predict_from_gauss_method_extended(attractor: bodies.Attractor,
+                                           latitude: u.Quantity,
+                                           local_sidereal_time_list: u.Quantity,
+                                           right_ascension_list: u.Quantity,
+                                           declination_list: u.Quantity,
+                                           observation_time_list: u.Quantity,
+                                           site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
         """
         Predict position and velocity with the extended Gauss method
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             latitude (u.Quantity): Latitude (phi)
             local_sidereal_time_list (u.Quantity): List of 3 local sidereal times (theta)
             right_ascension_list (u.Quantity): List of 3 right ascensions (alpha)
@@ -989,7 +965,7 @@ class OrbitDetermination():
             ]
         )
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
         f_1_prev: float = 0
         f_3_prev: float = 0
@@ -1123,12 +1099,12 @@ class OrbitDetermination():
             float: Result
         """
         
-        S_z: float = lc.LagrangeCoefficients.S(z)
-        C_z: float = lc.LagrangeCoefficients.C(z)
+        s_z: float = lc.LagrangeCoefficients.S(z)
+        c_z: float = lc.LagrangeCoefficients.C(z)
         
-        y: float = max(r_1 + r_2 + A * (z * S_z - 1) / np.sqrt(C_z), 0)
+        y: float = max(r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z), 0)
         
-        return (y / C_z)**(3/2) * S_z + A * np.sqrt(y) - np.sqrt(mu) * dt
+        return (y / c_z)**(3/2) * s_z + A * np.sqrt(y) - np.sqrt(mu) * dt
     
     @staticmethod
     def _lambert_equation_first_derivative(z : float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
@@ -1146,14 +1122,14 @@ class OrbitDetermination():
             float: Result
         """
         
-        S_0: float = lc.LagrangeCoefficients.S(0)
-        C_0: float = lc.LagrangeCoefficients.C(0)
-        S_z: float = lc.LagrangeCoefficients.S(z)
-        C_z: float = lc.LagrangeCoefficients.C(z)
+        s_0: float = lc.LagrangeCoefficients.S(0)
+        c_0: float = lc.LagrangeCoefficients.C(0)
+        s_z: float = lc.LagrangeCoefficients.S(z)
+        c_z: float = lc.LagrangeCoefficients.C(z)
         
-        y_0: float = r_1 + r_2 + A * (0 * S_0 - 1) / np.sqrt(C_0)
+        y_0: float = r_1 + r_2 + A * (0 * s_0 - 1) / np.sqrt(c_0)
         
-        y: float = r_1 + r_2 + A * (z * S_z - 1) / np.sqrt(C_z)
+        y: float = r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z)
         
         if z == 0:
             
@@ -1161,5 +1137,5 @@ class OrbitDetermination():
         
         else:
             
-            return (y / C_z)**(3/2) * (1 / (2 * z) * (C_z - 3/2 * S_z / C_z) + 3/4 * S_z**2 / C_z) +\
-                A / 8 * (3 * S_z / C_z * np.sqrt(y) + A * np.sqrt(C_z / y))
+            return (y / c_z)**(3/2) * (1 / (2 * z) * (c_z - 3/2 * s_z / c_z) + 3/4 * s_z**2 / c_z) +\
+                A / 8 * (3 * s_z / c_z * np.sqrt(y) + A * np.sqrt(c_z / y))

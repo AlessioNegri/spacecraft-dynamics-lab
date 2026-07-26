@@ -47,6 +47,7 @@ declare global
             warning: (message: string) => void
             error: (message: string) => void
             updateTcpUrl: (url: string) => void
+            getFileSize: (filename: string) => number
         },
         callback:
         {

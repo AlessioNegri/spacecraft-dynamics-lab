@@ -11,50 +11,33 @@ References:
     - Chapter 5: Non-Keplerian Motion
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
-import astropy.time as t
+import astropy.time as time
 import astropy.units as u
 import numpy as np
 import scipy.integrate as ode
 import typing
 
-import astro.physical_constants as pc
-import astro.bodies as bd
-import astro.common as cm
+import astro.physical_constants as physical_constants
+import astro.bodies as bodies
+import astro.common as common
 import astro.lagrange_coefficients as lc
 import astro.orbit_3d as o3d
 import astro.orbit_determination as od
 
-class Result:
-    """Result of integration
-    """
-    
-    success: bool
-    time: u.Quantity
-    position_x: u.Quantity
-    position_y: u.Quantity
-    position_z: u.Quantity
-    velocity_x: u.Quantity
-    velocity_y: u.Quantity
-    velocity_z: u.Quantity
-    orbital_elements: typing.List[o3d.OrbitalElements]
+from astro.models.results import ResultOP
+from astro.models.orbital_elements import OrbitalElements
 
 class OrbitalPerturbations():
-    """Orbital Perturbations
-    """
+    """Orbital Perturbations"""
     
     def __init__(self):
-        """Constructor
-        """
+        """Constructor"""
         
         self.not_ready_message: str = "Orbital Perturbations object is not ready"
         
         self.ready: bool = False
         
-        self.attractor: bd.Attractor = bd.Attractor.EARTH
+        self.attractor: bodies.Attractor = bodies.Attractor.EARTH
         
         self.julian_day: float = od.OrbitDetermination.J2000
         
@@ -147,14 +130,14 @@ class OrbitalPerturbations():
         return rho_z
     
     @staticmethod
-    def sun_position(timestamp: t.Time) -> typing.List[u.Quantity]:
+    def sun_position(timestamp: time.Time) -> typing.List[u.Quantity]:
         """        
         Given the year, month, day, and universal time, calculate the obliquity of the ecliptic ε, ecliptic longitude of
         the Sun λ, and the geocentric position vector of the Sun r_sun with respect to the Earth based on the
         Astronomical Almanac
 
         Args:
-            timestamp (t.Time): UTC timestamp
+            timestamp (time.Time): UTC timestamp
 
         Returns:
             typing.List[u.Quantity]: [Sun position vector in GEF, apparent ecliptic longitude, obliquity]
@@ -170,19 +153,19 @@ class OrbitalPerturbations():
         
         # >>> 3. Mean anonaly of the Sun (deg)
         
-        M: float = cm.wrap_angle(357.529 + 0.98560023 * n)
+        M: float = common.wrap_angle(357.529 + 0.98560023 * n)
         
         # >>> 4. Mean longitude of the Sun (deg)
         
-        L: float = cm.wrap_angle(280.459 + 0.98564736 * n)
+        L: float = common.wrap_angle(280.459 + 0.98564736 * n)
         
         # >>> 5. Apparent Solar Ecliptic Longitude
         
-        lambda_: float = cm.wrap_angle(L + 1.915 * np.sin(np.deg2rad(M)) + 0.0200 * np.sin(2 * np.deg2rad(M)))
+        lambda_: float = common.wrap_angle(L + 1.915 * np.sin(np.deg2rad(M)) + 0.0200 * np.sin(2 * np.deg2rad(M)))
         
         # >>> 6. Obliquity
         
-        epsilon: float = cm.wrap_angle(23.439 - 3.56e-7 * n)
+        epsilon: float = common.wrap_angle(23.439 - 3.56e-7 * n)
         
         # >>> 7. Earth-Sun unit direction vector
         
@@ -218,11 +201,11 @@ class OrbitalPerturbations():
         
         r_sun: np.ndarray = sun_position.to_value(u.km)
         
-        cm.check_position_vector(r_sc)
+        common.check_position_vector(r_sc)
         
-        cm.check_position_vector(r_sun)
+        common.check_position_vector(r_sun)
         
-        R_E: float = bd.BODIES[bd.Attractor.EARTH].R_E.to_value(u.km) # ? Earth radius
+        R_E: float = bodies.BODIES[bodies.Attractor.EARTH].R_E.to_value(u.km) # ? Earth radius
         
         # >>> 1. Magnitudes
         
@@ -245,13 +228,13 @@ class OrbitalPerturbations():
         return 0 if theta_1 + theta_2 <= theta else 1
     
     @staticmethod
-    def moon_position(timestamp: t.Time) -> u.Quantity:
+    def moon_position(timestamp: time.Time) -> u.Quantity:
         """
         Given the year, month, day, and universal time, calculate the geocentric position vector of the Moon with
         respect to the Earth based on the Astronomical Almanac
 
         Args:
-            timestamp (t.Time): UTC timestamp
+            timestamp (time.Time): UTC timestamp
 
         Returns:
             u.Quantity: Moon position vector in GEF
@@ -292,23 +275,23 @@ class OrbitalPerturbations():
         
         # >>> 3. Obliquity
         
-        epsilon: float = cm.wrap_angle(23.439 - 0.0130042 * T_0)
+        epsilon: float = common.wrap_angle(23.439 - 0.0130042 * T_0)
         
         # >>> 4. Lunar ecliptic longitude
         
-        lambda_: float = cm.wrap_angle(b_0 + c_0 * T_0 + sum([a[i] * np.sin(np.deg2rad(b[i] + c[i] * T_0)) for i in range(0, 6)]))
+        lambda_: float = common.wrap_angle(b_0 + c_0 * T_0 + sum([a[i] * np.sin(np.deg2rad(b[i] + c[i] * T_0)) for i in range(0, 6)]))
         
         # >>> 5. Lunar ecliptic latitude
         
-        delta: float = cm.wrap_angle(sum([d[i] * np.sin(np.deg2rad(e[i] + f[i] * T_0)) for i in range(0, 4)]))
+        delta: float = common.wrap_angle(sum([d[i] * np.sin(np.deg2rad(e[i] + f[i] * T_0)) for i in range(0, 4)]))
         
         # >>> 6. Lunar horizontal parallax
         
-        HP: float = cm.wrap_angle(g_0 + sum([g[i] * np.cos(np.deg2rad(h[i] + k[i] * T_0)) for i in range(0, 4)]), high=180)
+        HP: float = common.wrap_angle(g_0 + sum([g[i] * np.cos(np.deg2rad(h[i] + k[i] * T_0)) for i in range(0, 4)]), high=180)
         
         # >>> 7. Earth-Moon distance
         
-        r_earth_moon: float = bd.BODIES[bd.Attractor.EARTH].R_E.to_value(u.km) / np.sin(np.deg2rad(HP))
+        r_earth_moon: float = bodies.BODIES[bodies.Attractor.EARTH].R_E.to_value(u.km) / np.sin(np.deg2rad(HP))
         
         # >>> 8. Earth-Moon unit direction vector
         
@@ -330,8 +313,8 @@ class OrbitalPerturbations():
         return r_moon
     
     @staticmethod
-    def nodal_regression_rate(attractor: bd.Attractor,
-                              orbital_elements: o3d.OrbitalElements) -> typing.List[u.Quantity]:
+    def nodal_regression_rate(attractor: bodies.Attractor,
+                              orbital_elements: OrbitalElements) -> typing.List[u.Quantity]:
         """
         Calculate the nodal regression rate (right ascension of the ascending node) due to:
         - J2 perturbation
@@ -339,27 +322,22 @@ class OrbitalPerturbations():
         - Solar gravity
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements (o3d.OrbitalElements): Orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements (OrbitalElements): Orbital elements
 
         Returns:
             typing.List[u.Quantity]: Nodal regression rates [deg / day]
         """
         
-        cm.check_keplerian_parameters(orbital_elements.semimajor_axis.to_value(u.km),
-                                      orbital_elements.eccentricity.to_value(),
-                                      orbital_elements.inclination.to_value(u.deg),
-                                      orbital_elements.right_ascension_of_ascending_node.to_value(u.deg),
-                                      orbital_elements.argument_of_periapsis.to_value(u.deg),
-                                      orbital_elements.true_anomaly.to_value(u.deg))
+        common.check_orbital_elements(orbital_elements)
         
         # >>> Parameters
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[attractor].J2.to_value(u.one)
         
         a: float = orbital_elements.semimajor_axis.to_value(u.km)
         
@@ -373,7 +351,7 @@ class OrbitalPerturbations():
         
         # >>> Nodal regression rate - gravitational perturbation
         
-        if bd.BODIES[attractor].J2 is None:
+        if bodies.BODIES[attractor].J2 is None:
             
             dOmega_dt_g: float = 0.0 * u.rad / u.s
         
@@ -394,36 +372,31 @@ class OrbitalPerturbations():
         return [dOmega_dt_g.to(u.deg / u.day), dOmega_dt_l, dOmega_dt_s]
     
     @staticmethod
-    def sun_synchronous_inclination(attractor: bd.Attractor,
-                                    orbital_elements: o3d.OrbitalElements,
+    def sun_synchronous_inclination(attractor: bodies.Attractor,
+                                    orbital_elements: OrbitalElements,
                                     nodal_regression_rate: u.Quantity) -> u.Quantity:
         """
         Calculate the sun-synchronous inclination for a given semimajor axis and eccentricity
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements (o3d.OrbitalElements): Orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements (OrbitalElements): Orbital elements
             nodal_regression_rate (u.Quantity): Nodal regression rate
         Returns:
             u.Quantity: Sun-synchronous inclination [deg]
         """
         
-        cm.check_keplerian_parameters(orbital_elements.semimajor_axis.to_value(u.km),
-                                      orbital_elements.eccentricity.to_value(),
-                                      orbital_elements.inclination.to_value(u.deg),
-                                      orbital_elements.right_ascension_of_ascending_node.to_value(u.deg),
-                                      orbital_elements.argument_of_periapsis.to_value(u.deg),
-                                      orbital_elements.true_anomaly.to_value(u.deg))
+        common.check_orbital_elements(orbital_elements)
         
-        if bd.BODIES[attractor].J2 is None: return 0.0 * u.deg
+        if bodies.BODIES[attractor].J2 is None: return 0.0 * u.deg
         
         # >>> Parameters
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[attractor].J2.to_value(u.one)
         
         a: float = orbital_elements.semimajor_axis.to_value(u.km)
         
@@ -438,8 +411,8 @@ class OrbitalPerturbations():
         return u.Quantity(inc, unit=u.rad).to(u.deg)
     
     @staticmethod
-    def apsidal_rotation_rate(attractor: bd.Attractor,
-                              orbital_elements: o3d.OrbitalElements) -> typing.List[u.Quantity]:
+    def apsidal_rotation_rate(attractor: bodies.Attractor,
+                              orbital_elements: OrbitalElements) -> typing.List[u.Quantity]:
         """
         Calculate the apsidal rotation rate (argument of periapsis) due to:
         - J2 perturbation
@@ -447,27 +420,22 @@ class OrbitalPerturbations():
         - Solar gravity
 
         Args:
-            attractor (bd.Attractor): Main attractor
-            orbital_elements (o3d.OrbitalElements): Orbital elements
+            attractor (bodies.Attractor): Main attractor
+            orbital_elements (OrbitalElements): Orbital elements
 
         Returns:
             typing.List[u.Quantity]: Apsidal rotation rates [deg / day]
         """
         
-        cm.check_keplerian_parameters(orbital_elements.semimajor_axis.to_value(u.km),
-                                      orbital_elements.eccentricity.to_value(),
-                                      orbital_elements.inclination.to_value(u.deg),
-                                      orbital_elements.right_ascension_of_ascending_node.to_value(u.deg),
-                                      orbital_elements.argument_of_periapsis.to_value(u.deg),
-                                      orbital_elements.true_anomaly.to_value(u.deg))
+        common.check_orbital_elements(orbital_elements)
         
         # >>> Parameters
         
-        mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        R_E: float = bd.BODIES[attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[attractor].J2.to_value(u.one)
         
         a: float = orbital_elements.semimajor_axis.to_value(u.km)
         
@@ -481,7 +449,7 @@ class OrbitalPerturbations():
         
         # >>> Apsidal rotation rate - gravitational perturbation
         
-        if bd.BODIES[attractor].J2 is None:
+        if bodies.BODIES[attractor].J2 is None:
             
              domega_dt_g: u.Quantity = 0.0 * u.rad / u.s
         
@@ -504,7 +472,7 @@ class OrbitalPerturbations():
     # --- PUBLIC ---
     
     def init(self,
-             attractor: bd.Attractor,
+             attractor: bodies.Attractor,
              position: u.Quantity,
              velocity: u.Quantity,
              julian_day: float = 0,
@@ -514,7 +482,7 @@ class OrbitalPerturbations():
         Initialize the parameters for the propagation
 
         Args:
-            attractor (bd.Attractor): Main attractor
+            attractor (bodies.Attractor): Main attractor
             position (u.Quantity): Position vector
             velocity (u.Quantity): Velocity vector
             julian_day (float): Julian Day
@@ -522,11 +490,11 @@ class OrbitalPerturbations():
             ballistic_coefficient (u.Quantity, optional): Ballistic coefficient for Solar Radiation Pressure. Defaults to 0 * u.m**2 / u.kg.
         """
         
-        cm.check_attractor(attractor)
+        common.check_attractor(attractor)
         
-        cm.check_position_vector(position.to_value(u.km))
+        common.check_position_vector(position.to_value(u.km))
         
-        cm.check_velocity_vector(velocity.to_value(u.km / u.s))
+        common.check_velocity_vector(velocity.to_value(u.km / u.s))
         
         self.ready = True
         
@@ -569,7 +537,7 @@ class OrbitalPerturbations():
         
         self.use_solar_gravity = solar_gravity
     
-    def propagate_cowell_for(self, delta: t.TimeDelta) -> Result:
+    def propagate_cowell_for(self, delta: time.TimeDelta) -> ResultOP:
         """
         Propagate the relative motion with perturbations using Cowell's method
 
@@ -577,14 +545,14 @@ class OrbitalPerturbations():
             delta (time.TimeDelta): Delta time for propagation
         
         Returns:
-            Result: Integration result
+            ResultOP: Integration result
         """
         
         if not self.ready: raise ValueError(self.not_ready_message)
         
-        cm.check_time_delta(delta)
+        common.check_time_delta(delta)
         
-        result: Result = Result()
+        result: ResultOP = ResultOP()
         
         solution: dict = ode.solve_ivp(fun=self._cowell_equations_relative_motion,
                                        t_span=[0, delta.to_value(u.s)],
@@ -605,7 +573,7 @@ class OrbitalPerturbations():
         
         return result
     
-    def propagate_encke_for(self, delta: t.TimeDelta, step: t.TimeDelta) -> Result:
+    def propagate_encke_for(self, delta: time.TimeDelta, step: time.TimeDelta) -> ResultOP:
         """
         Propagate the relative motion with perturbations using Encke's method
 
@@ -614,14 +582,14 @@ class OrbitalPerturbations():
             step (time.TimeDelta): Time step between 0 and delta
         
         Returns:
-            Result: Integration result
+            ResultOP: Integration result
         """
         
         if not self.ready: raise ValueError(self.not_ready_message)
         
-        cm.check_time_delta(delta)
+        common.check_time_delta(delta)
         
-        cm.check_time_delta(step)
+        common.check_time_delta(step)
         
         if step >= delta: raise ValueError("'step' must be smaller than 'delta'")
         
@@ -635,9 +603,9 @@ class OrbitalPerturbations():
         
         dv_0: np.ndarray = np.zeros(shape=(3))
         
-        oe_0: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                       position=r_0 * u.km,
-                                                                       velocity=v_0 * u.km / u.s)
+        oe_0: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                   position=r_0 * u.km,
+                                                                   velocity=v_0 * u.km / u.s)
         
         max_step: float = oe_0.calc_orbital_period(attractor=self.attractor).to_value(u.s) / 100.0
         
@@ -652,7 +620,7 @@ class OrbitalPerturbations():
         
         state_vector: typing.List[np.ndarray] = [np.concat([r_0, v_0])]
         
-        orbital_elements: typing.List[o3d.OrbitalElements] = [oe_0]
+        orbital_elements: typing.List[OrbitalElements] = [oe_0]
         
         #>>> 3. Cycle over the time array
         
@@ -685,13 +653,13 @@ class OrbitalPerturbations():
             
             # >>> c. Calculates osculating orbital elements
             
-            oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                         position=r_0 * u.km,
-                                                                         velocity=v_0 * u.km / u.s)
+            oe: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                     position=r_0 * u.km,
+                                                                     velocity=v_0 * u.km / u.s)
             
             orbital_elements.append(oe)
         
-        result: Result = Result()
+        result: ResultOP = ResultOP()
         
         result.success = solution['success']
         result.time = times * u.s
@@ -705,7 +673,7 @@ class OrbitalPerturbations():
         
         return result
     
-    def propagate_gauss_for(self, delta: t.TimeDelta) -> Result:
+    def propagate_gauss_for(self, delta: time.TimeDelta) -> ResultOP:
         """
         Propagate the relative motion with perturbations using Gauss variational equations
 
@@ -713,16 +681,16 @@ class OrbitalPerturbations():
             delta (time.TimeDelta): Delta time for propagation
         
         Returns:
-            Result: Integration result
+            ResultOP: Integration result
         """
         
         if not self.ready: raise ValueError(self.not_ready_message)
         
-        cm.check_time_delta(delta)
+        common.check_time_delta(delta)
         
-        oe_0: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                       position=self.position * u.km,
-                                                                       velocity=self.velocity * u.km / u.s)
+        oe_0: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
+                                                                   position=self.position * u.km,
+                                                                   velocity=self.velocity * u.km / u.s)
         
         solution: dict = ode.solve_ivp(fun=self._gauss_variational_eom,
                                        t_span=[0, delta.to_value(u.s)],
@@ -737,7 +705,7 @@ class OrbitalPerturbations():
                                        rtol=1e-8,
                                        atol=1e-8)
         
-        result: Result = Result()
+        result: ResultOP = ResultOP()
         
         result.success = solution['success']
         result.time = solution['t'] * u.s
@@ -747,13 +715,13 @@ class OrbitalPerturbations():
             
             solution_idx: np.ndarray = solution['y'][:, idx]
             
-            oe_idx: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=solution_idx[0] * u.km**2 / u.s,
-                                                              semimajor_axis=0.0 * u.km,
-                                                              eccentricity=solution_idx[1] * u.dimensionless_unscaled,
-                                                              inclination=(solution_idx[4] * u.rad).to(u.deg),
-                                                              right_ascension_of_ascending_node=(solution_idx[3] * u.rad).to(u.deg),
-                                                              argument_of_periapsis=(solution_idx[5] * u.rad).to(u.deg),
-                                                              true_anomaly=(solution_idx[2] * u.rad).to(u.deg))
+            oe_idx: OrbitalElements = OrbitalElements(specific_angular_momentum=solution_idx[0] * u.km**2 / u.s,
+                                                      semimajor_axis=0.0 * u.km,
+                                                      eccentricity=solution_idx[1] * u.dimensionless_unscaled,
+                                                      inclination=(solution_idx[4] * u.rad).to(u.deg),
+                                                      right_ascension_of_ascending_node=(solution_idx[3] * u.rad).to(u.deg),
+                                                      argument_of_periapsis=(solution_idx[5] * u.rad).to(u.deg),
+                                                      true_anomaly=(solution_idx[2] * u.rad).to(u.deg))
             
             oe_idx.calc_semimajor_axis(attractor=self.attractor)
             
@@ -778,7 +746,7 @@ class OrbitalPerturbations():
 
             r = sqrt(x² + y² + z²)
 
-        The unperturbed (two‑body) accelerations are:
+        The unperturbed (two-body) accelerations are:
 
             dx/dt   = v_x
             dy/dt   = v_y
@@ -792,18 +760,18 @@ class OrbitalPerturbations():
 
         **1. Atmospheric drag**
 
-            v_rel = v_sc − v_atm
+            v_rel = v_sc - v_atm
             
             a_drag = -½ ρ ||v_rel|| B v_rel
 
             where:
-                ρ   = atmospheric density at altitude (r − R_E)
+                ρ   = atmospheric density at altitude (r - R_E)
                 B   = ballistic coefficient
                 v_atm = ω × r_sc (rigidly rotating atmosphere)
 
         **2. J₂ gravitational perturbation**
 
-            a_J2 = (3/2) J₂ μ R_E² / r⁴ · [ x/r (5 z²/r² − 1), y/r (5 z²/r² − 1), z/r (5 z²/r² − 3) ]
+            a_J2 = (3/2) J₂ μ R_E² / r⁴ · [ x/r (5 z²/r² - 1), y/r (5 z²/r² - 1), z/r (5 z²/r² - 3) ]
 
         The total perturbing acceleration is:
 
@@ -833,13 +801,13 @@ class OrbitalPerturbations():
         
         r: float = np.sqrt(x**2 + y**2 + z**2)
         
-        mu: float = bd.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
         
-        omega: float = bd.BODIES[self.attractor].omega.to_value(u.rad / u.s)
+        omega: float = bodies.BODIES[self.attractor].omega.to_value(u.rad / u.s)
         
-        R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[self.attractor].J2.to_value(u.one)
         
         # >>> Perturbations
         
@@ -898,7 +866,7 @@ class OrbitalPerturbations():
         Equations of relative motion with perturbations using Encke's method
         
         Encke's formulation integrates the deviation between the true perturbed trajectory and a reference *osculating*
-        two‑body orbit. The state vector is:
+        two-body orbit. The state vector is:
 
             X = [dx, dy, dz, dv_x, dv_y, dv_z]
 
@@ -920,37 +888,37 @@ class OrbitalPerturbations():
 
             r = ||r_sc||
 
-        The unperturbed two‑body acceleration is evaluated at the *osculating* radius:
+        The unperturbed two-body acceleration is evaluated at the *osculating* radius:
 
             a_2body = - μ * r_osc / ||r_osc||³
 
         Encke's method introduces a correction term to avoid subtracting nearly equal numbers when computing the
         perturbed acceleration. Define:
 
-            q = ( dr · (2 r_sc − dr) ) / r²
+            q = ( dr · (2 r_sc - dr) ) / r²
 
-            F(q) = (q² − 3q + 3) / (1 + (1 − q)^(3/2)) * q
+            F(q) = (q² - 3q + 3) / (1 + (1 - q)^(3/2)) * q
 
         The corrected gravitational term becomes:
 
-            a_encke = - μ / ||r_osc||³ * ( dr − F(q) * r_sc )
+            a_encke = - μ / ||r_osc||³ * ( dr - F(q) * r_sc )
 
         Optional perturbations may be added:
 
         **1. Atmospheric drag**
 
-            v_rel = v_sc − (ω × r_sc)
+            v_rel = v_sc - (ω × r_sc)
             
             a_drag = -½ ρ ||v_rel|| B v_rel
 
             where:
-                ρ   = atmospheric density at altitude (r − R_E)
+                ρ   = atmospheric density at altitude (r - R_E)
                 B   = ballistic coefficient
                 v_atm = ω × r_sc (rigidly rotating atmosphere)
 
         **2. J₂ gravitational perturbation**
 
-            a_J2 = (3/2) J₂ μ R_E² / r⁴ · [ x/r (5 z²/r² − 1), y/r (5 z²/r² − 1), z/r (5 z²/r² − 3) ]
+            a_J2 = (3/2) J₂ μ R_E² / r⁴ · [ x/r (5 z²/r² - 1), y/r (5 z²/r² - 1), z/r (5 z²/r² - 3) ]
 
         The total perturbing acceleration is:
 
@@ -976,13 +944,13 @@ class OrbitalPerturbations():
         
         dr, dv = X[:3], X[3:]
         
-        mu: float = bd.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
         
-        omega: float = bd.BODIES[self.attractor].omega.to_value(u.rad / u.s)
+        omega: float = bodies.BODIES[self.attractor].omega.to_value(u.rad / u.s)
         
-        R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[self.attractor].J2.to_value(u.one)
         
         # >>> Osculating state on the perturbed orbit
         
@@ -1078,10 +1046,10 @@ class OrbitalPerturbations():
 
             dh/dt       = r * S
             de/dt       = (h/μ) sinθ R + (1/(μh)) [(h² + μr) cosθ + μer] S
-            dθ/dt       = h/r² + (1/(eh)) [ (h²/μ) cosθ R − (r + h²/μ) sinθ S ]
+            dθ/dt       = h/r² + (1/(eh)) [ (h²/μ) cosθ R - (r + h²/μ) sinθ S ]
             dΩ/dt       = r/(h sin i) sin(ω + θ) W
             di/dt       = r/h cos(ω + θ) W
-            dω/dt       = − (1/(eh)) [ (h²/μ) cosθ R − (r + h²/μ) sinθ S ] − r/(h tan i) sin(ω + θ) W
+            dω/dt       = - (1/(eh)) [ (h²/μ) cosθ R - (r + h²/μ) sinθ S ] - r/(h tan i) sin(ω + θ) W
 
         where (R, S, W) are the perturbing accelerations projected onto the RSW frame.
 
@@ -1089,13 +1057,13 @@ class OrbitalPerturbations():
 
         **1. Atmospheric drag**
         
-            v_rel = v_sc − (ω × r_sc)
+            v_rel = v_sc - (ω × r_sc)
             
-            a_drag projected into (R, S, W) using the flight‑path angle γ.
+            a_drag projected into (R, S, W) using the flight-path angle γ.
 
         **2. J₂ gravitational perturbation**
         
-            a_J2 = −(3/2) J₂ μ R_E² / r⁴ · f(Ω, i, ω + θ)
+            a_J2 = - (3/2) J₂ μ R_E² / r⁴ · f(Ω, i, ω + θ)
 
             projected analytically into (R, S, W).
 
@@ -1105,9 +1073,9 @@ class OrbitalPerturbations():
             
             projected into RSW using the DCM from inertial to RSW.
 
-        **4. Third‑body gravity (Moon, Sun)**
+        **4. Third-body gravity (Moon, Sun)**
         
-            a_3B = μ_3B ( r_3B_sc/||r_3B_sc||³ − r_3B/||r_3B||³ )
+            a_3B = μ_3B ( r_3B_sc/||r_3B_sc||³ - r_3B/||r_3B||³ )
             
             projected into RSW using (r̂, ŝ, ŵ).
 
@@ -1137,26 +1105,26 @@ class OrbitalPerturbations():
         if not np.isfinite(inc): inc = 0.0
         if not np.isfinite(argp): argp = 0.0
         
-        ta = cm.wrap_angle(angle=ta, low=0, high=2 * np.pi)
-        raan = cm.wrap_angle(angle=raan, low=0, high=2 * np.pi)
-        inc = cm.wrap_angle(angle=inc, low=-0.5 * np.pi, high=0.5 * np.pi)
-        argp = cm.wrap_angle(angle=argp, low=0, high=2 * np.pi)
+        ta = common.wrap_angle(angle=ta, low=0, high=2 * np.pi)
+        raan = common.wrap_angle(angle=raan, low=0, high=2 * np.pi)
+        inc = common.wrap_angle(angle=inc, low=-0.5 * np.pi, high=0.5 * np.pi)
+        argp = common.wrap_angle(angle=argp, low=0, high=2 * np.pi)
         
-        oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=h * u.km ** 2 / u.s,
-                                                      semimajor_axis=0.0 * u.km,
-                                                      eccentricity=ecc * u.dimensionless_unscaled,
-                                                      inclination=inc * u.rad,
-                                                      right_ascension_of_ascending_node=raan * u.rad,
-                                                      argument_of_periapsis=argp * u.rad,
-                                                      true_anomaly=ta * u.rad)
+        oe: OrbitalElements = OrbitalElements(specific_angular_momentum=h * u.km ** 2 / u.s,
+                                              semimajor_axis=0.0 * u.km,
+                                              eccentricity=ecc * u.dimensionless_unscaled,
+                                              inclination=inc * u.rad,
+                                              right_ascension_of_ascending_node=raan * u.rad,
+                                              argument_of_periapsis=argp * u.rad,
+                                              true_anomaly=ta * u.rad)
         
-        mu: float = bd.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
+        mu: float = bodies.BODIES[self.attractor].mu.to_value(u.km**3 / u.s**2)
         
-        omega: float = bd.BODIES[self.attractor].omega.to_value(u.rad / u.s)
+        omega: float = bodies.BODIES[self.attractor].omega.to_value(u.rad / u.s)
         
-        R_E: float = bd.BODIES[self.attractor].R_E.to_value(u.km)
+        R_E: float = bodies.BODIES[self.attractor].R_E.to_value(u.km)
         
-        J_2: float = bd.BODIES[self.attractor].J2.to_value(u.one)
+        J_2: float = bodies.BODIES[self.attractor].J2.to_value(u.one)
         
         r: float = h**2 / (mu * (1 + ecc * np.cos(ta)))
         
@@ -1202,15 +1170,15 @@ class OrbitalPerturbations():
             
             # * Solar Radiation Pressure
             
-            timestamp_0: t.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_sun, lambda_, epsilon = self.sun_position(timestamp=timestamp_0 + t / 86400)
             
-            c: u.Quantity = pc.speed_of_light
+            c: u.Quantity = physical_constants.speed_of_light
             
-            S_0: u.Quantity = pc.radiated_power_intensity_photosphere
+            S_0: u.Quantity = physical_constants.radiated_power_intensity_photosphere
             
-            R_0: u.Quantity = pc.photosphere_radius.to(u.m)
+            R_0: u.Quantity = physical_constants.photosphere_radius.to(u.m)
             
             S: u.Quantity = S_0 * (R_0 / np.linalg.norm(r_sun.to(u.m)))**2
             
@@ -1251,13 +1219,13 @@ class OrbitalPerturbations():
             
             # * Lunar gravity
             
-            timestamp_0: t.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_moon: u.Quantity = self.moon_position(timestamp=timestamp_0 + t / 86400)
             
             r_moon_sc: u.Quantity = r_moon - r_sc
             
-            mu_moon: u.Quantity = bd.BODIES[bd.Attractor.MOON].mu
+            mu_moon: u.Quantity = bodies.BODIES[bodies.Attractor.MOON].mu
             
             p_moon: u.Quantity = mu_moon * (r_moon_sc / np.linalg.norm(r_moon_sc)**3 - r_moon / np.linalg.norm(r_moon)**3)
             
@@ -1273,13 +1241,13 @@ class OrbitalPerturbations():
             
             # * Solar gravity
             
-            timestamp_0: t.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_sun, lambda_, epsilon = self.sun_position(timestamp=timestamp_0 + t / 86400)
             
             r_sun_sc: u.Quantity = r_sun - r_sc
             
-            mu_sun: u.Quantity = bd.BODIES[bd.Attractor.SUN].mu
+            mu_sun: u.Quantity = bodies.BODIES[bodies.Attractor.SUN].mu
             
             p_sun: u.Quantity = mu_sun * (r_sun_sc / np.linalg.norm(r_sun_sc)**3 - r_sun / np.linalg.norm(r_sun)**3)
             

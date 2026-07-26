@@ -82,7 +82,7 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
                          relative_position=r_rel_lvlh,
                          relative_velocity=v_rel_lvlh)
     
-    linearized_result: rm.Result = relavive_motion.propagate_for(delta=time.TimeDelta(data.integrationTime * u.hour))
+    linearized_result: rm.ResultRM = relavive_motion.propagate_for(delta=time.TimeDelta(data.integrationTime * u.hour))
     
     linearized_solution: typing.List[schema.Vector3D] = []
     

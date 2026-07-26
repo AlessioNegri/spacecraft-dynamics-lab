@@ -26,6 +26,7 @@ interface Props
     unit?: string
     type?: react.HTMLInputTypeAttribute | "select"
     value: number | string
+    file?: File
     min?: number
     max?: number
     step?: number
@@ -34,8 +35,12 @@ interface Props
     options?: Array<{ label: string; value: string | number }>
     groups?: Array<{ caption: string; options: Array<{ label: string; value: string | number }> }>
     onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
+    onSelectChange?: (value: string) => void
     className?: string
     tooltip?: boolean
+    placeholder?: string
+    showSides?: boolean
+    optional?: boolean
 }
 
 /** @function InputField */
@@ -44,6 +49,10 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
     // --- USE STATE ---
 
     const [icon, setIcon] = react.useState<string | null>(null)
+
+    // --- USE REF ---
+
+    const inputRef = react.useRef<HTMLInputElement>(null)
 
     // --- USE EFFECT ---
 
@@ -89,14 +98,22 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                     required
                     disabled={props.disabled}
                     name={props.name}
-                    value={String(props.value)}
+                    value={typeof props.value === "string" ? String(props.value) : ""}
                     onValueChange={(value: string) =>
-                        props.onChange?.({ target: { name: props.name, value } } as any) }
+                    {
+                        props.onChange?.({ target: { name: props.name, value } } as any)
+
+                        props.onSelectChange?.(value)
+                    }}
                 >
 
                     <Themes.Select.Trigger variant="soft" style={{ fontFamily: "Oxanium" }} />
 
-                    <Themes.Select.Content>
+                    <Themes.Select.Content
+                        position="popper"
+                        className="p-2"
+                        style={{ maxHeight: "300px", overflowY: "auto" }}
+                    >
 
                         {
                             props.options?.map(option =>
@@ -220,6 +237,112 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
             </Themes.Text>
         )
     }
+    else if (props.type === "color")
+    {
+        fieldContent = (
+            <Themes.Flex direction={"column"} gap={"2"}>
+
+                {
+                    props.label &&
+
+                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
+
+                        {props.label}
+
+                        {icon && <img src={icon} alt="icon" width={20} />}
+
+                    </Themes.Text>
+                }
+
+                <div
+                    className={utility.cn(
+                        "rounded bg-transparent h-8 mx-0.5",
+                        props.disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                >
+
+                    <button
+                        onClick={(e) => { e.preventDefault(); inputRef.current?.click() }}
+                        className="w-full h-7.5 rounded cursor-pointer border
+                                    border-gray-700 text-black font-bold uppercase
+                                    transition-transform duration-75
+                                    active:scale-[0.97]"
+                        style={{ backgroundColor: String(props.value) }}>
+
+                        {props.value}
+
+                    </button>
+
+                    <Form.Control asChild>
+
+                        <input
+                            ref={inputRef}
+                            style={{ fontFamily: "Oxanium" }}
+                            required
+                            disabled={props.disabled}
+                            name={props.name}
+                            type="color"
+                            value={props.value}
+                            onChange={props.onChange}
+                            className="w-full h-full opacity-0 bg-transparent outline-none text-orange-200"
+                        />
+
+                    </Form.Control>
+
+                </div>
+
+            </Themes.Flex>
+        )
+    }
+    else if (props.type === "file")
+    {
+        fieldContent = (
+            <Themes.Flex direction={"column"} gap={"2"}>
+
+                {
+                    props.label &&
+
+                    <Themes.Text className="flex justify-between text-sm text-neutral-300">
+
+                        {props.label}
+
+                        {icon && <img src={icon} alt="icon" width={20} />}
+
+                    </Themes.Text>
+                }
+
+                <div
+                    className={utility.cn(
+                        "rounded bg-transparent h-8 mx-0.5",
+                        props.disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                >
+
+                    <Form.Control asChild>
+
+                        <input
+                            ref={inputRef}
+                            style={{ fontFamily: "Oxanium", ['--file-text' as any]: "Select file" }}
+                            disabled={props.disabled}
+                            name={props.name}
+                            type="file"
+                            onChange={props.onChange}
+                            className="w-full h-full bg-transparent outline-none text-orange-200
+                            file:bg-orange-900 file:text-orange-200 file:border-none
+                            file:px-3 file:py-1 file:rounded-l
+                            file:cursor-pointer
+                            file:uppercase file:font-bold
+                            file:transition-transform file:duration-75
+                            file:active:scale-[0.97]"
+                        />
+
+                    </Form.Control>
+
+                </div>
+
+            </Themes.Flex>
+        )
+    }
     else
     {
         fieldContent = (
@@ -250,6 +373,7 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                     {/* LEFT SLOT (symbol) */}
 
                     {
+                        props.showSides !== false && (
                         props.tooltip
                         
                         ?
@@ -267,6 +391,7 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                         <div className="bg-orange-900 px-2 h-8 flex items-center text-sm">
                             <katex.InlineMath math={String.raw`\mathbf{${props.symbol ?? ''}}`} />
                         </div>
+                        )
                     }
 
                     {/* INPUT */}
@@ -278,7 +403,7 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
                             disabled={props.disabled}
                             name={props.name}
                             type={props.type ?? "text"}
-                            placeholder="Insert value..."
+                            placeholder={props.placeholder ?? "Insert value..."}
                             value={props.value}
                             onChange={props.onChange}
                             min={props.min}
@@ -291,9 +416,12 @@ export default function InputField(props: Readonly<Props>): react.JSX.Element
 
                     {/* RIGHT SLOT (unit) */}
 
-                    <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
-                        <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
-                    </div>
+                    {
+                        props.showSides !== false &&
+                        <div className="bg-orange-900 px-2 h-8 flex items-center text-xs">
+                            <katex.InlineMath math={String.raw`\mathbf{${props.unit ?? ''}}`} />
+                        </div>
+                    }
 
                 </div>
 

@@ -6,6 +6,7 @@ interface IMenuItem
     shortcut?: string
     separator?: boolean
     children?: IMenuItem[]
+    icon?: string
     action?: () => void
 }
 

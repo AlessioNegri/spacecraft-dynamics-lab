@@ -11,7 +11,7 @@ def test_orbit_parameters_1():
     
     body_2: bd.Attractor = bd.Attractor.MOON
 
-    op: cr3bp.OrbitParameters = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    op: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
     
     assert np.isclose(op.dimensionless_mass_ratio_2.to_value(u.one), 0.01215, atol=1e-4)
     assert np.isclose(op.lagrangian_equilibrium_point_1[0].to_value(u.km), 32_1760, atol=1e0)
@@ -25,7 +25,7 @@ def test_orbit_parameters_2():
     
     body_2: bd.Attractor = bd.Attractor.EARTH
 
-    op: cr3bp.OrbitParameters = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    op: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
     
     assert np.isclose(op.lagrangian_equilibrium_point_1[0].to_value(u.km), 148_110_000, atol=1e5)
     assert np.isclose(op.lagrangian_equilibrium_point_2[0].to_value(u.km), 151_100_000, atol=1e5)

@@ -4,6 +4,8 @@ import numpy as np
 
 import astro.bodies as bodies
 
+from astro.models.orbital_elements import OrbitalElements
+
 def check_attractor(attractor: bodies.Attractor) -> None:
     """Check the validity of the attractor
 
@@ -15,39 +17,51 @@ def check_attractor(attractor: bodies.Attractor) -> None:
         ValueError: Wrong name
     """
     
-    if not isinstance(attractor, bodies.Attractor): raise TypeError("'attractor' must be of type 'astro.bodies.Attractor'")
+    if not isinstance(attractor, bodies.Attractor):
         
-    if attractor not in bodies.BODIES: raise ValueError(f"'attractor' must be one of {list(bodies.BODIES.keys())}")
+        raise TypeError("'attractor' must be of type 'astro.bodies.Attractor'")
+        
+    if attractor not in bodies.BODIES:
+        
+        raise ValueError(f"'attractor' must be one of {list(bodies.BODIES.keys())}")
 
-def check_position_vector(r: np.ndarray) -> None:
+def check_position_vector(position: np.ndarray) -> None:
     """Check the validity of the position vector
 
     Args:
-        r (np.ndarray): Position vector
+        position (np.ndarray): Position vector
 
     Raises:
         TypeError: Wrong type
         ValueError: Wrong size
     """
     
-    if not isinstance(r, np.ndarray): raise TypeError("'r' must be of type 'numpy.ndarray'")
+    if not isinstance(position, np.ndarray):
         
-    if r.shape != (3,): raise ValueError("'r' must have shape = (3,)")
+        raise TypeError("'position' must be of type 'numpy.ndarray'")
+        
+    if position.shape != (3,):
+        
+        raise ValueError("'position' must have shape = (3,)")
     
-def check_velocity_vector(v: np.ndarray) -> None:
+def check_velocity_vector(velocity: np.ndarray) -> None:
     """Check the validity of the velocity vector
 
     Args:
-        v (np.ndarray): Velocity vector
+        velocity (np.ndarray): Velocity vector
 
     Raises:
         TypeError: Wrong type
         ValueError: Wrong size
     """
     
-    if not isinstance(v, np.ndarray): raise TypeError("'v' must be of type 'numpy.ndarray'")
+    if not isinstance(velocity, np.ndarray):
         
-    if v.shape != (3,): raise ValueError("'v' must have shape = (3,)")
+        raise TypeError("'velocity' must be of type 'numpy.ndarray'")
+        
+    if velocity.shape != (3,):
+        
+        raise ValueError("'velocity' must have shape = (3,)")
     
 def check_time(time_: time.Time) -> None:
     """Check the validity of the time
@@ -59,7 +73,9 @@ def check_time(time_: time.Time) -> None:
         TypeError: Wrong type
     """
     
-    if not isinstance(time_, time.Time): raise TypeError("'time_' must be of type 'astropy.time.Time'")
+    if not isinstance(time_, time.Time):
+        
+        raise TypeError("'time_' must be of type 'astropy.time.Time'")
     
 def check_time_delta(delta: time.TimeDelta) -> None:
     """Check the validity of the delta time
@@ -71,7 +87,9 @@ def check_time_delta(delta: time.TimeDelta) -> None:
         TypeError: Wrong type
     """
     
-    if not isinstance(delta, time.TimeDelta): raise TypeError("'delta' must be of type 'astropy.time.TimeDelta'")
+    if not isinstance(delta, time.TimeDelta):
+        
+        raise TypeError("'delta' must be of type 'astropy.time.TimeDelta'")
     
 def check_keplerian_parameters(a: float | int,
                                ecc: float | int,
@@ -119,21 +137,45 @@ def check_keplerian_parameters(a: float | int,
     if not (-180 <= argp <= 360): raise ValueError("'argp' must be in [-180, 360] deg")
     
     if not (-180 <= nu <= 360): raise ValueError("'nu' must be in [-180, 360] deg")
+
+def check_orbital_elements(orbital_elements: OrbitalElements) -> None:
+    """Check the validity of the classical orbital elements
+
+    Args:
+        orbital_elements (OrbitalElements): Orbital elements
+    """
     
-def check_angle(angle: float | int) -> None:
+    check_keplerian_parameters(orbital_elements.semimajor_axis.to_value(u.km),
+                               orbital_elements.eccentricity.to_value(),
+                               orbital_elements.inclination.to_value(u.deg),
+                               orbital_elements.right_ascension_of_ascending_node.to_value(u.deg),
+                               orbital_elements.argument_of_periapsis.to_value(u.deg),
+                               orbital_elements.true_anomaly.to_value(u.deg))
+    
+def check_angle(angle: float | int | u.Quantity) -> None:
     """Check the validity of the angle
 
     Args:
-        angle (float | int): Angle [deg]
+        angle (float | int | u.Quantity): Angle [deg]
 
     Raises:
         TypeError: Wrong type
         ValueError: Wrong value
     """
     
-    if not isinstance(angle, (float, int)): raise TypeError("'angle' must be of type 'float' or 'int'")
+    if not isinstance(angle, (float, int, u.Quantity)):
+        
+        raise TypeError("'angle' must be of type 'float', 'int', or 'astropy.units.Quantity'")
     
-    if not (-360 <= angle <= 360): raise ValueError("'angle' must be in [-360, +360] deg")
+    angle_ = angle
+    
+    if isinstance(angle, u.Quantity):
+        
+        angle_ = angle.to_value(u.deg)
+    
+    if not (-360 <= angle_ <= 360):
+        
+        raise ValueError("'angle' must be in [-360, +360] deg")
 
 def wrap_angle(angle: float | int | u.Quantity, low: float | int = 0, high: float | int = 360) -> float | u.Quantity:
     """Wrap the angle in the range [low, high) deg
@@ -147,7 +189,9 @@ def wrap_angle(angle: float | int | u.Quantity, low: float | int = 0, high: floa
         float | u.Quantity: Wrapped angle [deg]
     """
     
-    if not isinstance(angle, (float, int, u.Quantity)): raise TypeError("'angle' must be of type 'float', 'int', or 'astropy.units.Quantity'")
+    if not isinstance(angle, (float, int, u.Quantity)):
+        
+        raise TypeError("'angle' must be of type 'float', 'int', or 'astropy.units.Quantity'")
     
     if isinstance(angle, u.Quantity):
         

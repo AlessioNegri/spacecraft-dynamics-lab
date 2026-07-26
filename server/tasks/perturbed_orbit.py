@@ -174,7 +174,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
                                    lunar_gravity=payload.lunarGravity,
                                    solar_gravity=payload.solarGravity)
         
-        result: op.Result = orbit.propagate_gauss_for(delta=delta)
+        result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
         
         for i, oe_i in enumerate(result.orbital_elements):
             

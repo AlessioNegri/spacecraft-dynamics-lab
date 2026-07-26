@@ -3,10 +3,12 @@ import * as iconify from "@iconify/react"
 import * as katex from "react-katex"
 import * as Themes from "@radix-ui/themes"
 
+import "@google/model-viewer"
+
 import http from "@renderer/common/http"
 import utility from "@renderer/common/utility"
 
-import GlbViewer from "@renderer/components/common/GlbViewer"
+// import GlbViewer from "@renderer/components/common/GlbViewer"
 import SpacecraftDialog from "@renderer/components/dialogs/spacecraft/SpacecraftDialog"
 import DeleteSpacecraftDialog from "@renderer/components/dialogs/spacecraft/DeleteSpacecraftDialog"
 
@@ -67,8 +69,8 @@ export default function SpacecraftPage(): react.JSX.Element
             
             {/* List */}
             
-            <div className="w-90 bg-orange-300/5 text-white overflow-y-auto border-r border-neutral-700 p-2
-                            overflow-auto custom-scrollbar">
+            <div className="w-1/6 bg-orange-300/5 text-white overflow-y-auto border-r border-neutral-700 p-2
+                            custom-scrollbar">
 
                 <h1 className="text-center border-neutral-400 border-b-2 mb-2 pb-2 uppercase font-bold">
                     Spacecraft List
@@ -96,7 +98,7 @@ export default function SpacecraftPage(): react.JSX.Element
 
             {/* Details */}
 
-            <div className="flex-1 p-6 overflow-auto custom-scrollbar flex justify-center mt-15 mb-4">
+            <div className="w-5/6 p-6 overflow-y-auto overflow-x-auto custom-scrollbar mt-15 mb-4">
 
             {
                 selected
@@ -110,7 +112,7 @@ export default function SpacecraftPage(): react.JSX.Element
 
             {/* Actions */}
 
-            <div className="absolute top-2 right-4 flex gap-2">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-2">
 
                 <Themes.Button
                     color="green"
@@ -192,7 +194,7 @@ interface SectionItem
  * @param models Available 3D models
  * @returns JSX
  */
-function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem, models: IGlbModel[] }>): react.JSX.Element
+function SpacecraftDetails({ item }: Readonly<{ item: IDbSpacecraftItem, models: IGlbModel[] }>): react.JSX.Element
 {
     const ballisticMassItems: SectionItem[] =
     [
@@ -216,33 +218,37 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
     ]
 
     return (
-        <div className="text-neutral-300 space-y-8">
+        <div className="text-neutral-300 space-y-8 w-full">
 
             {/* <h1 className="text-3xl font-bold text-orange-300 border-b-2 mb-2">{item.name}</h1> */}
 
-            <Section title="Ballistic / Mass" items={ballisticMassItems} />
+            <div className="flex gap-4">
 
-            <Section title="Orbit" items={orbitItems} />
+                <div className="w-1/2 flex flex-col gap-4 min-w-150">
 
-            <Section title="Style" items={styleItems} />
+                    <Section title="Ballistic / Mass" items={ballisticMassItems} />
 
-            <div className="flex gap-4 h-75 text-gray-500">
+                    <Section title="Orbit" items={orbitItems} />
 
-                {/* Image */}
+                    <Section title="Style" items={styleItems} />
 
-                {
-                    item.image
-                    ?
-                    <img
-                        src={item.image ? `data:image/png;base64,${item.image}` : undefined}
-                        alt={item.name}
-                        className="w-1/2 rounded border-2 border-neutral-400"
-                    />
-                    :
-                    <div className="border-neutral-600 border-2 rounded w-1/2 flex items-center justify-center">
-                        Image preview not available
-                    </div>
-                }
+                    {/* Image */}
+
+                    {
+                        item.image
+                        ?
+                        <img
+                            src={item.image ? `data:image/png;base64,${item.image}` : undefined}
+                            alt={item.name}
+                            className="m-auto w-150 h-75 rounded border-2 border-neutral-400"
+                        />
+                        :
+                        <div className="border-neutral-600 border-2 rounded w-full flex items-center justify-center text-gray-500">
+                            Image preview not available
+                        </div>
+                    }
+
+                </div>
 
                 {/* 3D Model */}
 
@@ -251,14 +257,30 @@ function SpacecraftDetails({ item, models }: Readonly<{ item: IDbSpacecraftItem,
                     ?
                     <div className="w-1/2">
 
-                        <GlbViewer
+                        {/* <GlbViewer
                             model={item.model}
                             scale={models.find(m => m.name === item.model)?.scale ?? 1}
-                        />
+                        /> */}
+
+                        <div className="border-neutral-400 border-2 rounded w-full h-full bg-neutral-500">
+
+                            <model-viewer
+                                src={`./models/${item.model}.glb`}
+                                alt="GLB model"
+                                camera-controls
+                                auto-rotate
+                                shadow-intensity="5"
+                                environment-image="neutral"
+                                camera-orbit="0deg 65deg 10m"
+                                field-of-view="35deg"
+                                style={{ width: "100%", height: "100%" }}
+                            />
+
+                        </div>
 
                     </div>
                     :
-                    <div className="border-neutral-600 border-2 rounded w-1/2 flex items-center justify-center">
+                    <div className="border-neutral-600 border-2 rounded w-1/2 flex items-center justify-center text-center text-gray-500">
                         Model preview not available
                     </div>
                 }

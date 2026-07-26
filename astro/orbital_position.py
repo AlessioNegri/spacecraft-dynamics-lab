@@ -11,10 +11,6 @@ References:
     - Chapter 4: Time of Flight
 """
 
-__author__      = "Alessio Negri"
-__license__     = "LGPL v3"
-__maintainer__  = "Alessio Negri"
-
 import astropy.units as u
 import numpy as np
 import scipy.optimize as optimize
@@ -22,9 +18,12 @@ import scipy.optimize as optimize
 import astro.bodies as bodies
 import astro.common as common
 
+error_period: str = "'period' must be positive"
+
+error_time_of_flight: str = "'time_of_flight' must be positive"
+
 class OrbitalPosition():
-    """OrbitalPosition
-    """
+    """OrbitalPosition"""
     
     @staticmethod
     def circular_orbit_time(true_anomaly: u.Quantity, period: u.Quantity) -> u.Quantity:
@@ -45,7 +44,7 @@ class OrbitalPosition():
         
         common.check_angle(np.rad2deg(theta))
         
-        if T <= 0: raise ValueError("'period' must be positive")
+        if T <= 0: raise ValueError(error_period)
         
         t: float = theta / (2 * np.pi) * T
         
@@ -68,9 +67,9 @@ class OrbitalPosition():
         
         T: float = period.to_value(u.s)
         
-        if tof <= 0: raise ValueError("'time_of_flight' must be positive")
+        if tof <= 0: raise ValueError(error_time_of_flight)
         
-        if T <= 0: raise ValueError("'period' must be positive")
+        if T <= 0: raise ValueError(error_period)
         
         theta: float = np.rad2deg((2 * np.pi / T) * tof)
         
@@ -98,15 +97,15 @@ class OrbitalPosition():
         
         common.check_angle(np.rad2deg(theta))
         
-        if T <= 0: raise ValueError("'period' must be positive")
+        if T <= 0: raise ValueError(error_period)
         
         if e < 0 or e >= 1: raise ValueError("'eccentricity' must be between 0 and 1")
         
         E: float = 2 * np.arctan(np.sqrt((1 - e) / (1 + e)) * np.tan(theta / 2))
         
-        M_e: float = E - e * np.sin(E) # ? Mean anomaly
+        m_e: float = E - e * np.sin(E) # ? Mean anomaly (M_E)
         
-        t: float = M_e / (2 * np.pi) * T
+        t: float = m_e / (2 * np.pi) * T
         
         return t * u.s
     
@@ -132,19 +131,19 @@ class OrbitalPosition():
         
         e: float = eccentricity.to_value()
         
-        if tof <= 0: raise ValueError("'time_of_flight' must be positive")
+        if tof <= 0: raise ValueError(error_time_of_flight)
         
-        if T <= 0: raise ValueError("'period' must be positive")
+        if T <= 0: raise ValueError(error_period)
         
         if e < 0 or e >= 1: raise ValueError("'eccentricity' must be between 0 and 1")
         
-        M_e: float = (2 * np.pi / T) * tof # ? Mean anomaly
+        m_e: float = (2 * np.pi / T) * tof # ? Mean anomaly (M_E)
         
-        f: callable = lambda E: E - e * np.sin(E) - M_e
+        f: callable = lambda E: E - e * np.sin(E) - m_e
         
         df: callable = lambda E: 1 - e * np.cos(E)
         
-        E_0: float = (M_e + 0.5 * e) if M_e < np.pi else (M_e - 0.5 * e) # M_e + e * np.sin(M_e) + 0.5 * e**2 * np.sin(2 * M_e)
+        E_0: float = (m_e + 0.5 * e) if m_e < np.pi else (m_e - 0.5 * e) # m_e + e * np.sin(m_e) + 0.5 * e**2 * np.sin(2 * m_e)
         
         E: float = optimize.newton(f, x0=E_0, fprime=df, maxiter=100, tol=1e-8) # ? Eccentric anomaly
         
@@ -179,9 +178,9 @@ class OrbitalPosition():
         
         D: float = np.tan(theta / 2) # ? Parabolic eccentric anomaly
         
-        M_p: float = 1/2 * D + 1/6 * D**3 # ? Mean anomaly + Barker's equation
+        m_p: float = 1/2 * D + 1/6 * D**3 # ? Mean anomaly (M_p) + Barker's equation
         
-        t: float = M_p * h**3 / mu**2
+        t: float = m_p * h**3 / mu**2
         
         return t * u.s
     
@@ -205,16 +204,16 @@ class OrbitalPosition():
         
         h: float = specific_angular_momentum.to_value(u.km**2 / u.s)
         
-        if tof <= 0: raise ValueError("'time_of_flight' must be positive")
+        if tof <= 0: raise ValueError(error_time_of_flight)
         
         common.check_attractor(attractor)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        M_p: float = tof * mu**2 / h**3 # ? Mean anomaly
+        m_p: float = tof * mu**2 / h**3 # ? Mean anomaly (M_p)
         
-        theta: float = 2 * np.arctan( (3 * M_p + np.sqrt((3 * M_p)**2 + 1))**(1/3) -\
-            (3 * M_p + np.sqrt((3 * M_p)**2 + 1))**(-1/3) )
+        theta: float = 2 * np.arctan( (3 * m_p + np.sqrt((3 * m_p)**2 + 1))**(1/3) -\
+            (3 * m_p + np.sqrt((3 * m_p)**2 + 1))**(-1/3) )
         
         return common.wrap_angle(np.rad2deg(theta), low=0, high=360) * u.deg
     
@@ -251,9 +250,9 @@ class OrbitalPosition():
         
         F: float = 2 * np.arctanh(np.sqrt((e - 1) / (e + 1)) * np.tan(theta / 2)) # ? Hyperbolic eccentric anomaly
         
-        M_h: float = e * np.sinh(F) - F # ? Mean anomaly
+        m_h: float = e * np.sinh(F) - F # ? Mean anomaly (M_h)
         
-        t: float = M_h * h**3 / mu**2 * (e**2 - 1)**(-3/2)
+        t: float = m_h * h**3 / mu**2 * (e**2 - 1)**(-3/2)
         
         return t * u.s
     
@@ -281,7 +280,7 @@ class OrbitalPosition():
         
         e: float = eccentricity.to_value()
         
-        if tof <= 0: raise ValueError("'time_of_flight' must be positive")
+        if tof <= 0: raise ValueError(error_time_of_flight)
         
         common.check_attractor(attractor)
         
@@ -289,11 +288,11 @@ class OrbitalPosition():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        M_h: float = tof * mu**2 / h**3 * (e**2 - 1)**(3/2) # ? Mean anomaly
+        m_h: float = tof * mu**2 / h**3 * (e**2 - 1)**(3/2) # ? Mean anomaly
         
-        F_0: float = np.arcsinh(M_h / e) # np.log(2 * M_h / e + 1.8) if M_h > 0 else -np.log(-2 * M_h / e + 1.8)
+        F_0: float = np.arcsinh(m_h / e) # np.log(2 * m_h / e + 1.8) if m_h > 0 else -np.log(-2 * m_h / e + 1.8)
         
-        f: callable = lambda F: e * np.sinh(F) - F - M_h
+        f: callable = lambda F: e * np.sinh(F) - F - m_h
         
         df: callable = lambda F: e * np.cosh(F) - 1
         
