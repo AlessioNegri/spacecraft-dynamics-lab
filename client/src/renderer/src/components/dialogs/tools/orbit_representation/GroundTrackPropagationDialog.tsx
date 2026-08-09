@@ -1,5 +1,7 @@
 import * as react from "react"
 import * as Form from "@radix-ui/react-form"
+import * as plotly from "plotly.js"
+import Plot from "react-plotly.js"
 
 import http from "@renderer/common/http"
 
@@ -11,7 +13,8 @@ interface IFormIn
 {
     attractor: string
     oe: IOrbitalElements
-    deltaTime: number
+    duration: number
+    samples: number
 }
 
 interface IFormOut
@@ -20,6 +23,12 @@ interface IFormOut
     daop_dt: number // ? Argument Of Periapsis variation
     alpha: number // ? Right Ascension
     delta: number // ? Declination
+    tangentPointAngle: number
+    lineOfSightAngle: number
+    horizonFootprintArcLengthAttractor: number
+    longitude: number[]
+    latitude: number[]
+    horizonFootprintArcLengthEarth: number[]
 }
 
 const defaultIn: IFormIn =
@@ -35,7 +44,8 @@ const defaultIn: IFormIn =
         aop: 45,
         ta: 230
     },
-    deltaTime: 45 * 60
+    duration: 45 * 60,
+    samples: 100
 }
 
 const defaultOut: IFormOut =
@@ -43,7 +53,13 @@ const defaultOut: IFormOut =
     draan_dt: 0,
     daop_dt: 0,
     alpha: 0,
-    delta: 0
+    delta: 0,
+    tangentPointAngle: 0,
+    lineOfSightAngle: 0,
+    horizonFootprintArcLengthAttractor: 0,
+    longitude: [],
+    latitude: [],
+    horizonFootprintArcLengthEarth: []
 }
 
 interface Props
@@ -61,9 +77,72 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
 
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
 
+    const [data, setData] = react.useState<plotly.Data[]>([])
+
     // --- USE REF ---
 
     const formRef = react.useRef<HTMLFormElement>(null)
+
+    // --- USE MEMO ---
+
+    const latAnnotations =
+    [
+        { x: 0, y: -90, text: "" },
+        { x: 0, y: 0, text: "" },
+        { x: 0, y: 90, text: "" }
+    ].map(a => ({
+        ...a,
+        xref: "x",
+        yref: "y",
+        showarrow: false,
+        font: { color: "#e5e5e5", size: 12 }
+    }))
+
+    const lonAnnotations =
+    [
+        { x: -180, y: -90, text: "" },
+        { x: 0, y: -90, text: "" },
+        { x: 180, y: -90, text: "" }
+    ].map(a => ({
+        ...a,
+        xref: "x",
+        yref: "y",
+        showarrow: false,
+        font: { color: "#e5e5e5", size: 12 }
+    }))
+
+    const layout: any = react.useMemo(() => (
+    {
+        autosize: true,
+        showlegend: false,
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        geo:
+        {
+            projection: { type: "equirectangular" },
+            showland: true,
+            landcolor: "#2f4f2f", // "#111827",
+            showcountries: true,
+            countrycolor: "888", // "#444444",
+            showocean: true,
+            oceancolor: "#0a2a43", // "#0b1220",
+            showlakes: true,
+            lakecolor: "#0a1b33",
+            showcountriesframe: false,
+            showcoastlines: true,
+            coastlinecolor: "#555555",
+            lataxis: { showgrid: true, gridcolor: "#323232", },
+            lonaxis: { showgrid: true, gridcolor: "#323232", }
+        },
+        margin: { l: 30, r: 30, t: 30, b: 30 },
+        title:
+        {
+            text: "Earth Ground Track",
+            font: { color: "#ffffff", size: 18 }
+        },
+        font: { color: "#e5e5e5" },
+        annotations: [ ...latAnnotations, ...lonAnnotations ]
+    }), [])
 
     // --- HANDLE ---
 
@@ -92,7 +171,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
             let response: any = await http.api.put(`/tools/propagate-ground-track`, formIn)
 
             const result: IFormOut = response.data
-
+            
             setFormOut(result)
         }
         catch (err)
@@ -100,6 +179,76 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
             http.checkError(import.meta.url, err)
         }
     }
+
+    react.useEffect(() =>
+    {
+        const trace: plotly.Data =
+        {
+            lon: formOut.longitude,
+            lat: formOut.latitude,
+            type: "scattergeo",
+            mode: "lines+markers",
+            marker: { color: "#ff9900", size: 6 },
+            line: { color: "#00ccff", width: 2 },
+            name: "Ground Track"
+        }
+
+        const footprintTraces: plotly.Data[] = formOut.latitude.map((lat0, i) =>
+        {
+            const lon0Rad: number = formOut.longitude[i] * Math.PI / 180
+
+            const lat0Rad: number = lat0 * Math.PI / 180
+
+            const arc: number = formOut.horizonFootprintArcLengthEarth[i]
+
+            const angularRadius: number = arc / 6378
+
+            const N: number = 100
+
+            const circleLat: number[] = []
+            const circleLon: number[] = []
+
+            let circleLat0: number = 0
+            let circleLon0: number = 0
+
+            for (let k = 0; k < N; k++)
+            {
+                const theta: number = 2 * Math.PI * k / N
+
+                const lat: number = Math.asin(
+                    Math.sin(lat0Rad) * Math.cos(angularRadius) +
+                    Math.cos(lat0Rad) * Math.sin(angularRadius) * Math.cos(theta)
+                )
+
+                const lon: number = lon0Rad + Math.atan2(
+                    Math.sin(theta) * Math.sin(angularRadius) * Math.cos(lat0Rad),
+                    Math.cos(angularRadius) - Math.sin(lat0Rad) * Math.sin(lat)
+                )
+
+                circleLat.push(lat * 180 / Math.PI)
+                circleLon.push(lon * 180 / Math.PI)
+
+                if (k === 0)
+                {
+                    circleLat0 = circleLat[0]
+                    circleLon0 = circleLon[0]
+                }
+            }
+
+            circleLat.push(circleLat0)
+            circleLon.push(circleLon0)
+
+            return {
+                lon: circleLon,
+                lat: circleLat,
+                type: "scattergeo",
+                mode: "lines",
+                line: { color: "rgba(255,255,255,0.3)", width: 1 },
+            }
+        })
+
+        setData([trace, ...footprintTraces])
+    }, [formOut])
 
     // --- RENDERING ---
 
@@ -116,7 +265,8 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     content:
                         `Given the initial orbital elements of a satellite relative to the Inertial Reference Frame,
                         compute the right ascension and declination relative to the rotating earth after a given time
-                        interval.`
+                        interval. In addition, the horizon footprint is evaluated and also shown in the Earth Ground
+                        Track`
                 }
             }>
 
@@ -147,15 +297,27 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                 />
 
                 <InputField
-                    name="deltaTime"
-                    label="Time Delta"
-                    symbol="\Delta t"
+                    name="duration"
+                    label="Duration"
+                    symbol="t"
                     unit="s"
-                    value={formIn.deltaTime}
+                    value={formIn.duration}
                     onChange={handleChange}
                     min={0}
                 />
-                
+
+                <InputField
+                    name="samples"
+                    label="Samples"
+                    symbol="\#"
+                    unit=""
+                    type="number"
+                    value={formIn.samples}
+                    onChange={handleChange}
+                    min={2}
+                    max={1000}
+                />
+
                 <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
 
                 <InputField
@@ -199,7 +361,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     unit="deg"
                     value={formIn.oe.raan}
                     onChange={handleChange}
-                    min={-360}
+                    min={0}
                     max={360}
                 />
 
@@ -211,7 +373,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     unit="deg"
                     value={formIn.oe.aop}
                     onChange={handleChange}
-                    min={-360}
+                    min={0}
                     max={360}
                 />
 
@@ -223,7 +385,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     unit="deg"
                     value={formIn.oe.ta}
                     onChange={handleChange}
-                    min={-360}
+                    min={0}
                     max={360}
                 />
 
@@ -261,7 +423,41 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     value={formOut.delta}
                 />
 
+                <div className="col-span-full flex gap-4">
+
+                    <OutputField
+                        label="Tangent point angle"
+                        symbol="\beta"
+                        unit="deg"
+                        value={formOut.tangentPointAngle}
+                    />
+
+                    <OutputField
+                        label="Line of sight angle"
+                        symbol="\delta"
+                        unit="deg"
+                        value={formOut.lineOfSightAngle}
+                    />
+
+                    <OutputField
+                        label="Horizon footprint arc length"
+                        symbol="C_f"
+                        unit="km"
+                        value={formOut.horizonFootprintArcLengthAttractor}
+                    />
+
+                </div>
+
             </Form.Root>
+
+            {/* MAP PLOT */}
+
+            <Plot
+                data={data}
+                layout={layout}
+                config={{ responsive: true, displaylogo: false, scrollZoom: true, staticPlot: false }}
+                style={{ width: "100%", height: "400px" }}
+            />
 
         </DialogRUI>
     )

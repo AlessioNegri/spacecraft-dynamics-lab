@@ -140,7 +140,64 @@ def test_example_4_11():
     assert np.allclose(v_GEF.to_value(u.km / u.s)[0], -3.040, atol=1e-2)
     assert np.allclose(v_GEF.to_value(u.km / u.s)[1], 3.330, atol=1e-3)
     assert np.allclose(v_GEF.to_value(u.km / u.s)[2], 0.6327, atol=1e-4)
+
+def test_latitude():
+    """EXAMPLE 5.4 - BOOK 3"""
     
+    latitude, hemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=59.04 * u.deg)
+    
+    assert np.isclose(latitude.to_value(u.deg), 25.38, atol=1e-2)
+    assert hemisphere == o3d.Hemisphere.NORTH
+    
+    latitude, hemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=287.0 * u.deg)
+        
+    assert np.isclose(latitude.to_value(u.deg), 28.56, atol=1e-2)
+    assert hemisphere == o3d.Hemisphere.SOUTH
+
+def test_longitude():
+    """EXAMPLE 5.4 - BOOK 3"""
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=9684 * u.km,
+                                                  eccentricity=0.3 * u.one,
+                                                  inclination=30 * u.deg,
+                                                  right_ascension_of_ascending_node=210 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=59.04 * u.deg)
+    
+    latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=59.04 * u.deg)
+    
+    longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=oe,
+                                                           latitude=latitude,
+                                                           orbit_time=488.5 * u.minute)
+    
+    assert np.isclose(longitude.angle.to_value(u.deg), 154.3, atol=1e-1)
+    assert longitude.hemisphere == o3d.Hemisphere.EAST
+    
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=9684 * u.km,
+                                                  eccentricity=0.3 * u.one,
+                                                  inclination=30 * u.deg,
+                                                  right_ascension_of_ascending_node=210 * u.deg,
+                                                  argument_of_periapsis=0 * u.deg,
+                                                  true_anomaly=287 * u.deg)
+    
+    latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=287 * u.deg)
+    
+    longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=oe,
+                                                            latitude=latitude,
+                                                            orbit_time=613.2 * u.minute)
+    
+    assert np.isclose(longitude.angle.to_value(u.deg), 0.5, atol=1e-1)
+    assert longitude.hemisphere == o3d.Hemisphere.EAST
+
+def test_horizon_footprint():
+    """EXAMPLE 5.5 - BOOK 3"""
+    
+    c_f, beta, delta = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=400 * u.km)
+    
+    assert np.isclose(c_f.to_value(u.km), 4404, atol=1e-0)
+    assert np.isclose(beta.to_value(u.deg), 19.78, atol=1e-2)
+    assert np.isclose(delta.to_value(u.deg), 70.22, atol=1e-2)
+
 def test_ground_track_propagation():
     """EXAMPLE 4.12"""
     

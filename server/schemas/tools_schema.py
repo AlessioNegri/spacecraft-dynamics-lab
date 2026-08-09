@@ -1,6 +1,5 @@
 import fastapi
 import pydantic
-import typing
 
 from schemas.common import Vector3D, OrbitalElements
 
@@ -70,12 +69,23 @@ class CartesianOutModelInfo(pydantic.BaseModel):
     position: Vector3D
     velocity: Vector3D
     
+class GroundTrackInModelInfo(pydantic.BaseModel):
+    attractor: str
+    oe: OrbitalElements
+    duration: float | None = None
+    samples: int | None = None
+
 class GroundTrackOutModelInfo(pydantic.BaseModel):
-    
     draan_dt: float
     daop_dt: float
     alpha: float
     delta: float
+    tangentPointAngle: float
+    lineOfSightAngle: float
+    horizonFootprintArcLengthAttractor: float
+    longitude: list[float]
+    latitude: list[float]
+    horizonFootprintArcLengthEarth: list[float]
     
 # * Orbit Determination
 

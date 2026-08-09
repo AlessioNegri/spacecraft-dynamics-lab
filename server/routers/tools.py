@@ -1,5 +1,6 @@
 import astropy.time as time
 import astropy.units as u
+import copy
 import fastapi
 import numpy as np
 import schemas.tools_schema as schema
@@ -8,6 +9,7 @@ import astro.bodies as bodies
 import astro.two_body_problem as tbp
 import astro.orbit_3d as o3d
 import astro.orbit_determination as od
+import astro.orbital_position as op
 
 # --- HTTP ---
 
@@ -148,41 +150,124 @@ async def put_convert_keplerian_to_cartesian(data: schema.KeplerianInModelInfo) 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
 @router.put("/propagate-ground-track", response_model=schema.GroundTrackOutModelInfo)
-async def put_propagate_ground_track(data: schema.KeplerianInModelInfo) -> fastapi.responses.JSONResponse:
+async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fastapi.responses.JSONResponse:
     """HTTP PUT Propagate Ground Track
     
     Args:
-        data (schema.KeplerianInModelInfo): Keplerian orbital elements
-        
+        data (schema.GroundTrackPathInModelInfo): Keplerian orbital elements and path settings
+
     Returns:
         fastapi.responses.JSONResponse: JSON response
     """
     
+    # * Extract
+    
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    dt: u.Quantity = data.deltaTime * u.s if data.deltaTime is not None else 0 * u.s
+    R_E: u.Quantity = bodies.BODIES[attractor].R_E
+
+    duration: u.Quantity = data.duration * u.s if data.duration is not None else 0 * u.s
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
-                                                  semimajor_axis=data.oe.sma * u.km,
+    samples: int = data.samples if data.samples is not None else 180
+    
+    if samples < 2: samples = 2
+
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=data.oe.sma * u.km,
                                                   eccentricity=data.oe.ecc * u.one,
                                                   inclination=data.oe.inc * u.deg,
                                                   right_ascension_of_ascending_node=data.oe.raan * u.deg,
                                                   argument_of_periapsis=data.oe.aop * u.deg,
                                                   true_anomaly=data.oe.ta * u.deg)
     
+    # * Generic ground track
+    
     d_raan_dt, d_argp_dt = o3d.Orbit3D.planet_oblateness_effect(attractor=attractor, orbital_elements=oe)
     
     alpha, delta = o3d.Orbit3D.ground_track_propagation(attractor=attractor,
-                                                        orbital_elements=oe,
-                                                        time_step=time.TimeDelta(dt))
+                                                        orbital_elements=copy.deepcopy(oe),
+                                                        time_step=time.TimeDelta(duration))
     
+    # * Horizon footprint
+    
+    r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+    
+    c_f, beta, delta_hf = o3d.Orbit3D.horizon_footprint(attractor=attractor, altitude=np.linalg.norm(r) - R_E)
+    
+    # * Earth ground track
+    
+    period: u.Quantity = oe.calc_orbital_period(attractor=bodies.Attractor.EARTH)
+
+    if duration.to_value(u.s) <= 0: duration = period
+
+    if period.to_value(u.s) <= 0: duration = 0 * u.s
+
+    t_0: u.Quantity
+
+    if oe.eccentricity.to_value(u.one) == 0:
+        
+        t_0 = op.OrbitalPosition.circular_orbit_time(true_anomaly=oe.true_anomaly, period=period)
+        
+    else:
+        
+        t_0 = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe.true_anomaly,
+                                                       period=period,
+                                                       eccentricity=oe.eccentricity)
+    
+    step_time: float = duration.to_value(u.s) / max(samples - 1, 1)
+
+    longitudes: list[float] = []
+    latitudes: list[float] = []
+    footprint: list[float] = []
+    
+    for index in range(samples):
+        
+        t_i: u.Quantity = t_0 + index * step_time * u.s
+        
+        if (t_i == 0 * u.s):
+            
+            ta_i: u.Quantity = 0 * u.deg
+        
+        else:
+        
+            if oe.eccentricity.to_value() == 0:
+                
+                ta_i: u.Quantity = op.OrbitalPosition.circular_orbit_true_anomaly(time_of_flight=t_i, period=period)
+                
+            else:
+                
+                ta_i: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_i,
+                                                                                    period=period,
+                                                                                    eccentricity=oe.eccentricity)
+        
+        oe.true_anomaly = ta_i
+        
+        r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+        
+        c_f_e, _, _ = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=np.linalg.norm(r) - R_E)
+        
+        latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=oe.inclination, true_anomaly=ta_i)
+
+        longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=copy.deepcopy(oe),
+                                                               latitude=latitude,
+                                                               orbit_time=t_i)
+        
+        longitudes.append(longitude.to_signed_angle().to_value(u.deg))
+        latitudes.append(latitude.to_signed_angle().to_value(u.deg))
+        footprint.append(c_f_e.to_value(u.km))
+
     result: schema.GroundTrackOutModelInfo = schema.GroundTrackOutModelInfo(
-        draan_dt = d_raan_dt.to_value(),
-        daop_dt = d_argp_dt.to_value(),
-        alpha = alpha.to_value(),
-        delta = delta.to_value()
+        draan_dt = d_raan_dt.to_value(u.deg / u.day),
+        daop_dt = d_argp_dt.to_value(u.deg / u.day),
+        alpha = alpha.to_value(u.deg),
+        delta = delta.to_value(u.deg),
+        tangentPointAngle=beta.to_value(u.deg),
+        lineOfSightAngle=delta_hf.to_value(u.deg),
+        horizonFootprintArcLengthAttractor=c_f.to_value(u.km),
+        longitude = longitudes,
+        latitude = latitudes,
+        horizonFootprintArcLengthEarth=footprint,
     )
-    
+
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
 # ? Orbit Determination

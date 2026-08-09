@@ -87,7 +87,7 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
   <div>
     <h3>Ground Track Propagation</h3>
     <p>
-      Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>right ascension</strong> and <strong>declination</strong> of the satellite on the propagated position, with the oblateness effect of the selected planet.
+      Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>right ascension</strong> and <strong>declination</strong> of the satellite on the propagated position, with the oblateness effect of the selected planet. In addition, the horizon footprint parameters are evaluated and an overall visualization is visible at the bottom (only for Earth).
     </p>
   </div>
 

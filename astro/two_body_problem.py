@@ -11,6 +11,9 @@ References:
     
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 2: Two-Body Orbital Mechanics
+
+- Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
+    - Chapter 2: Earth's Atmosphere
 """
 
 import astropy.time as time
@@ -107,7 +110,8 @@ class Orbit:
         
         # >>> Eccentricity
         
-        e: float = np.sqrt((2 * h_m**2 * epsilon) / (mu **2) + 1)
+        # ! Avoid very small negative numbers
+        e: float = np.sqrt(max((2 * h_m**2 * epsilon) / (mu **2) + 1, 0))
         
         parameters.eccentricity = e * u.one
         

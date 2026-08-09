@@ -5,6 +5,7 @@ import DialogRUI from "./DialogRUI"
 
 import omes from "@renderer/assets/references/orbital-mechanics-for-engineering-students.png"
 import sfd from "@renderer/assets/references/space-flight-dynamics.png"
+import msdp from "@renderer/assets/references/manned-spacecraft-design-principles.png"
 // import iar from "@renderer/assets/references/introduction-to-astrodynamic-reentry.png"
 
 interface Reference {
@@ -24,7 +25,7 @@ const references: Reference[] =
         title: "Orbital Mechanics for Engineering Students",
         authors: "Howard D. Curtis",
         year: 2013,
-        publisher: "Elsevier Science",
+        publisher: "Elsevier",
         series: "Aerospace Engineering",
         isbn: "978-0080977485",
         cover: omes,
@@ -41,6 +42,16 @@ const references: Reference[] =
         cover: sfd,
         // link: "https://www.google.it/books/edition/Space_Flight_Dynamics/Cp1PDwAAQBAJ?hl=it&gbpv=0"
         link: "https://www.wiley.com/en-us/Space+Flight+Dynamics-p-9781119157823"
+    },
+    {
+        title: "Manned Spacecraft - Design Principles",
+        authors: "Pasquale M. Sforza",
+        year: 2015,
+        publisher: "Elsevier",
+        series: "Aerospace Engineering",
+        isbn: "978-0128044254",
+        cover: msdp,
+        link: "https://shop.elsevier.com/books/manned-spacecraft-design-principles/sforza/978-0-12-804425-4"
     },
     // {
     //     title: "Introduction To Astrodynamic Reentry",

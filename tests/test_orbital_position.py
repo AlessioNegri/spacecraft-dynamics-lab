@@ -18,7 +18,7 @@ def test_circular_orbit_true_anomaly():
     
     assert np.isclose(nu.to_value(u.deg), 90)
 
-def test_elliptical_orbit_time():
+def test_elliptical_orbit_time_1():
     """EXAMPLE 3.1"""
     
     T: u.Quantity = 18834 * u.s
@@ -28,6 +28,23 @@ def test_elliptical_orbit_time():
     t: u.Quantity = OrbitalPosition.elliptical_orbit_time(true_anomaly=nu, period=T, eccentricity=e)
 
     assert np.isclose(t.to_value(u.s), 4077, atol=1e-1)
+
+def test_elliptical_orbit_time_2():
+    """EXAMPLE 5.4.1 - BOOK 3"""
+    
+    T: u.Quantity = 158 * u.minute
+    e: u.Quantity = 0.3 * u.one
+    nu: u.Quantity = 59.04 * u.deg
+
+    t: u.Quantity = OrbitalPosition.elliptical_orbit_time(true_anomaly=nu, period=T, eccentricity=e)
+
+    assert np.isclose(t.to_value(u.s), 867.6, atol=1e-1)
+    
+    nu: u.Quantity = 287.0 * u.deg
+
+    t: u.Quantity = OrbitalPosition.elliptical_orbit_time(true_anomaly=nu, period=T, eccentricity=e)
+
+    assert np.isclose(t.to_value(u.s), 8358.56, atol=1e-2)
     
 def test_elliptical_orbit_true_anomaly():
     """EXAMPLE 3.2"""

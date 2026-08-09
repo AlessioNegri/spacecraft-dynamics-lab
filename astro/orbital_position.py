@@ -9,6 +9,9 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 4: Time of Flight
+
+- Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
+    - Chapter 2: Earth's Atmosphere
 """
 
 import astropy.units as u
@@ -101,7 +104,8 @@ class OrbitalPosition():
         
         if e < 0 or e >= 1: raise ValueError("'eccentricity' must be between 0 and 1")
         
-        E: float = 2 * np.arctan(np.sqrt((1 - e) / (1 + e)) * np.tan(theta / 2))
+        # ! atan2 preserves the correct quadrant, unlike atan
+        E: float = 2 * np.arctan2(np.sqrt(1 - e) * np.sin(theta / 2), np.sqrt(1 + e) * np.cos(theta / 2))
         
         m_e: float = E - e * np.sin(E) # ? Mean anomaly (M_E)
         

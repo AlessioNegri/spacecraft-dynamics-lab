@@ -14,6 +14,8 @@ import GitHubIssuesDialog from "../dialogs/GitHubIssuesDialog"
 import NewFeaturesDialog from "../dialogs/NewFeaturesDialog"
 import DisclaimerDialog from "../dialogs/DisclaimerDialog"
 
+import AtmosphereModelDialog from "../dialogs/tools/models/AtmosphereModelDialog"
+
 import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representation/CartesianOrbitParametersDialog"
 import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/CartesianKeplerianDialog"
 import CartesianPerifocalDialog from "../dialogs/tools/orbit_representation/CartesianPerifocalDialog"
@@ -41,7 +43,7 @@ import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSync
 
 import OrbitParametersDialog from "../dialogs/tools/circular_restricted_three_body_problem/OrbitParametersDialog"
 import ZeroVelocityCurvesDialog from "../dialogs/tools/circular_restricted_three_body_problem/ZeroVelocityCurvesDialog"
-//noto:laptop-computer
+
 const DIALOGS =
 {
     aboutDialog: AboutDialog,
@@ -49,6 +51,8 @@ const DIALOGS =
     referencesDialog: ReferencesDialog,
     newFeaturesDialog: NewFeaturesDialog,
     disclaimerDialog: DisclaimerDialog,
+
+    atmosphereDialog: AtmosphereModelDialog,
 
     cartesianOrbitParametersDialog: CartesianOrbitParametersDialog,
     cartesianKeplerianDialog: CartesianKeplerianDialog,
@@ -145,6 +149,11 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
     [
         { checkable: true, checked: showSideBar, label: "Side Bar", shortcut: "Ctrl+B", action: () => globalThis.window.api.triggerSideBar() },
         { checkable: true, checked: showConsole, label: "Console", shortcut: "Ctrl+L", action: () => globalThis.window.api.triggerConsole() }
+    ]
+
+    const models: IMenuItem[] =
+    [
+        { label: "Atmosphere", icon: "mdi:weather-partly-cloudy", action: () => setOpenDialog("atmosphereDialog") }
     ]
 
     const tools: IMenuItem[] =
@@ -300,6 +309,8 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
 
                     <Menu label="View" items={view} />
 
+                    <Menu label="Models" items={models} />
+
                     <Menu label="Tools" items={tools} />
 
                     <Menu label="Help" items={help} />
@@ -389,20 +400,28 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
 
                 <Menubar.SubTrigger
                     className="px-2 py-1.5 text-base flex justify-between items-center cursor-pointer rounded
-                        hover:bg-neutral-500 hover:text-white"
+                        hover:bg-neutral-500 hover:text-white group"
                 >
                     <div className="w-8 flex justify-center">
 
                         {
                             props.item.icon &&
-                            <iconify.Icon icon={props.item.icon} width={24} className="text-orange-300" />
+                            <iconify.Icon
+                                icon={props.item.icon}
+                                width={24}
+                                className="text-orange-300 group-hover:text-cyan-300 transition-colors duration-200"
+                            />
                         }
 
                     </div>
 
                     <span className="flex-1 ps-4">{props.item.label}</span>
 
-                    <iconify.Icon icon="line-md:chevron-small-triple-right" width={24} className="text-orange-300 w-10"/>
+                    <iconify.Icon
+                        icon="line-md:chevron-small-triple-right"
+                        width={24}
+                        className="text-orange-300 w-10 group-hover:text-cyan-300 transition-colors duration-200"
+                    />
 
                 </Menubar.SubTrigger>
 
@@ -432,7 +451,7 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
         <Menubar.Item
             onClick={props.item.action}
             className="px-2 py-1.5 text-base flex justify-start items-center cursor-pointer rounded
-                hover:bg-neutral-500 hover:text-white">
+                hover:bg-neutral-500 hover:text-white group">
 
             <div className="w-10 flex justify-center">
             
@@ -443,7 +462,11 @@ function MenuItem(props: Readonly<MenuItemProps>): react.JSX.Element
 
             {
                 props.item.icon &&
-                <iconify.Icon icon={props.item.icon} width={24} className="text-orange-300" />
+                <iconify.Icon
+                    icon={props.item.icon}
+                    width={24}
+                    className="text-orange-300 group-hover:text-cyan-300 transition-colors duration-200"
+                />
             }
 
             </div>

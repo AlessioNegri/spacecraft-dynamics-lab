@@ -15,7 +15,9 @@ const newFeatures: string[] =
     `References dialog in Help menu`,
     `GitHub Issues dialog in Help menu`,
     `What's New dialog in Help menu`,
-    `Added more than 100 spacecraft models`
+    `Added more than 100 spacecraft models`,
+    `Atmosphere model`,
+    `Ground track visualization with horizon footprint`,
 ]
 
 interface Props

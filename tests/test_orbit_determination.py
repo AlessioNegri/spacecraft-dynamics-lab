@@ -66,7 +66,7 @@ def test_lambert():
     assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 30.71, atol=1e-2)
     assert np.isclose(oe.true_anomaly.to_value(u.deg), 350.8, atol=1e-1)
     
-    assert np.isclose(t_1.to_value(u.s), -256.1, atol=1e-1)
+    assert np.isclose((t_1 - orb_par.period).to_value(u.s), -256.1, atol=1e-1)
 
 def test_timestamp_2_julian_day_1():
     """EXAMPLE 5.4"""

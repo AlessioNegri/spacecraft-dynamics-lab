@@ -11,6 +11,9 @@ References:
     - Chapter 3: Orbit Determination
     - Chapter 7: Impulsive Orbital Maneuvers
     - Chapter 9: Low-Thrust Transfers
+
+- Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
+    - Chapter 2: Earth's Atmosphere
 """
 
 import astropy.time as time

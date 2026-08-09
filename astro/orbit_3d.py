@@ -9,6 +9,9 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 3: Orbit Determination
+
+- Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
+    - Chapter 2: Earth's Atmosphere
 """
 
 import astropy.units as u
@@ -21,6 +24,7 @@ import astro.common as common
 import astro.orbital_position as orbital_position
 import astro.two_body_problem as two_body_problem
 
+from astro.enums import Hemisphere, AngleHemisphere
 from astro.models.orbital_elements import OrbitalElements
 
 class Orbit3D():
@@ -399,6 +403,185 @@ class Orbit3D():
         d_argp_dt: float = - 3/2 * (np.sqrt(mu) * J_2 * R_E**2) / ((1 - ecc**2)**2 * a**(7/2)) * (5/2 * np.sin(inc)**2 - 2)
         
         return [u.Quantity(d_raan_dt, u.rad / u.s).to(u.deg / u.s), u.Quantity(d_argp_dt, u.rad / u.s).to(u.deg / u.s)]
+    
+    @staticmethod
+    def latitude(inclination: u.Quantity, true_anomaly: u.Quantity) -> AngleHemisphere:
+        """Calculate the spacecraft latitude
+
+        Args:
+            inclination (u.Quantity): Orbit inclination
+            true_anomaly (u.Quantity): Orbit true anomaly position
+
+        Returns:
+            AngleHemisphere: (Latitude, Hemisphere)
+        """
+        
+        common.check_angle(inclination)
+        common.check_angle(true_anomaly)
+        
+        if not (0 <= inclination.to_value(u.deg) <= 180):
+                
+            raise ValueError("'angle' must be in [-360, +360] deg")
+        
+        inc: float = inclination.to_value(u.rad)
+        ta: float = true_anomaly.to_value(u.rad)
+        
+        lat: u.Quantity = u.Quantity(np.arcsin(np.sin(inc) * np.sin(ta)) * u.rad, u.deg)
+        
+        if lat > 0 * u.deg:
+            
+            hemisphere: Hemisphere = Hemisphere.NORTH
+            
+        elif lat < 0 * u.deg:
+            
+            hemisphere: Hemisphere = Hemisphere.SOUTH
+            
+        else:
+            
+            hemisphere: Hemisphere = Hemisphere.EQUATOR
+
+        return AngleHemisphere(angle=np.abs(lat), hemisphere=hemisphere)
+
+    @staticmethod
+    def longitude(orbital_elements: OrbitalElements,
+                  latitude: AngleHemisphere,
+                  orbit_time: u.Quantity) -> AngleHemisphere:
+        """Calculate the spacecraft longitude
+
+        Args:
+            orbital_elements (u.Quantity): Orbital elements
+            latitude (AngleHemisphere): Spacecraft latitude
+            orbit_time (u.Quantity): Spacecraft orbit time
+
+        Returns:
+            AngleHemisphere: (Longitude, Hemisphere)
+        """
+        
+        common.check_orbital_elements(orbital_elements)
+        common.check_angle(latitude.angle)
+        
+        if latitude.hemisphere == Hemisphere.NORTH:
+            
+            lat: float = latitude.angle.to_value(u.rad)
+        
+        else:
+            
+            lat: float = -latitude.angle.to_value(u.rad)
+        
+        t: float = orbit_time.to_value(u.s)
+        
+        sma: float = orbital_elements.semimajor_axis.to_value(u.km)
+        ecc: float = orbital_elements.eccentricity.to_value(u.one)
+        inc: float = orbital_elements.inclination.to_value(u.rad)
+        raan: float = orbital_elements.right_ascension_of_ascending_node.to_value(u.deg)
+        aop: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
+        ta: float = orbital_elements.true_anomaly.to_value(u.rad)
+        
+        r_p: float = orbital_elements.calc_perigee_radius().to_value(u.km)
+        
+        # * Longitudinal angle (not the conventional earth-based longitude)
+        
+        l_o: u.Quantity = u.Quantity(np.arcsin(np.tan(lat) / np.tan(inc)) * u.rad, u.deg)
+        
+        # * Corrected longitudinal angle
+        
+        u_: float = aop + ta
+        
+        lambda_: u.Quantity = u.Quantity(np.atan2(np.sin(u_) * np.cos(inc), np.cos(u_)) * u.rad, u.deg)
+        
+        #! Wrong formula found on Book 3
+        # lambda_: u.Quantity = l_o
+        
+        # if 0 * u.deg < u_ and u_ <= 90 * u.deg:
+            
+        #     lambda_ = l_o
+        
+        # elif 90 * u.deg < u_ and u_ <= 180 * u.deg:
+            
+        #     lambda_ = 180 * u.deg - l_o
+        
+        # elif 180 * u.deg < u_ and u_ <= 270 * u.deg:
+            
+        #     lambda_ = 180 * u.deg - l_o
+        
+        # elif 270 * u.deg < u_ and u_ <= 360 * u.deg:
+            
+        #     lambda_ = 360 * u.deg + l_o
+        
+        # * Effect of earth rotation
+        
+        lambda_r: u.Quantity = - (360 / 86_164) * t * u.deg
+        
+        # * Effect of regression of nodes
+        
+        r: float = r_p * (1 + ecc) / (1 + ecc * np.cos(ta))
+        
+        lambda_o: u.Quantity = (- 2.3963e9 * np.cos(inc) * (r ** (-3.5)) * t) * u.deg
+        
+        # * Effect of rotation of apsides
+        
+        lambda_a: u.Quantity = (1.1943e10 * (4 - 5 * np.sin(inc)**2) / (sma**3.5 * (1 - ecc**2)**2) * t) * u.deg
+        
+        # * Earth-based longitude
+        
+        long: u.Quantity = lambda_.to(u.deg) + lambda_r.to(u.deg) + lambda_o.to(u.deg) + lambda_a.to(u.deg)
+        
+        # * Longitude of the ascending node
+        
+        l_o_1: u.Quantity = raan * u.deg
+        
+        # * Spacecraft longitude
+        
+        long += l_o_1
+        
+        long = common.wrap_angle(long.to(u.deg), low=0, high=360)
+        
+        if long < 180 * u.deg:
+            
+            hemisphere: Hemisphere = Hemisphere.EAST
+            
+        else:
+            
+            long = 360 * u.deg - long
+            
+            hemisphere: Hemisphere = Hemisphere.WEST
+        
+        return AngleHemisphere(angle=long, hemisphere=hemisphere)
+
+    @staticmethod
+    def horizon_footprint(attractor: bodies.Attractor,
+                          altitude: u.Quantity) -> typing.Tuple[u.Quantity, u.Quantity, u.Quantity]:
+        """Calculates the horizon footprint for maximum line of sight
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            altitude (u.Quantity): Altitude of the spacecraft
+
+        Returns:
+            typing.Tuple[u.Quantity, u.Quantity, u.Quantity]: (horizon footprint, tangent point angle, line of sight angle)
+        """
+        
+        common.check_attractor(attractor)
+        
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
+        
+        if altitude.to_value(u.km) <= 0:
+            
+            return (0 * u.km, 0 * u.rad, 0 * u.rad)
+        
+        # * Tangent point angle
+        
+        beta: float = np.arccos(1 / (1 + altitude.to_value(u.km) / R_E))
+        
+        # * Line of sight angle
+        
+        delta: float = np.pi - np.pi * 0.5 - beta
+        
+        # * Arc length of the horizon footprint
+        
+        c_f: float = 2 * beta * R_E
+        
+        return (c_f * u.km, beta * u.rad, delta * u.rad)
     
     @staticmethod
     def ground_track_propagation(attractor: bodies.Attractor,

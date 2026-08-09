@@ -57,23 +57,11 @@ Spacecraft Dynamics Lab is an experiment:
 
 Here are some references that were used to develop the application:
 
-| **Title** | **Orbital Mechanics for Engineering Students** |
-| --- | --- |
-| **Authors** | Howard D. Curtis |
-| **ISBN** | 9780080977485 |
-| **Series** | Aerospace Engineering |
-| **Year** | 2013 |
-| **Publisher** | Elsevier Science |
-| **URL** | [https://www.google.it/books/](https://www.google.it/books/edition/Orbital_Mechanics_for_Engineering_Studen/2U9Z8k0TlTYC?hl=it&gbpv=0) |
-
-| **Title** | **Space Flight Dynamics** |
-| --- | --- |
-| **Authors** | Craig A. Kluever |
-| **ISBN** | 9781119157823 |
-| **Series** | Aerospace |
-| **Year** | 2018 |
-| **Publisher** | Wiley |
-| **URL** | [https://www.google.it/books/](https://www.google.it/books/edition/Space_Flight_Dynamics/Cp1PDwAAQBAJ?hl=it&gbpv=0) |
+| **Title** | **Authors** | **Year** | **Publisher** | **URL** |
+| --- | --- | --- | --- | --- |
+| **Orbital Mechanics for Engineering Students** | Howard D. Curtis | 2013 | Elsevier | [View Book →](https://www.elsevier.com/books/orbital-mechanics-for-engineering-students/curtis/9780080977478) |
+| **Space Flight Dynamics** | Craig A. Kluever | 2018 | Wiley | [View Book →](https://www.wiley.com/en-us/Space+Flight+Dynamics-p-9781119157823) |
+| **Manned Spacecraft – Design Principles** | Pasquale M. Sforza | 2015 | Elsevier | [View Book →](https://shop.elsevier.com/books/manned-spacecraft-design-principles/sforza/978-0-12-804425-4) |
 
 <p align="center">
     <img src="./docs/images/references.png" width="50%" alt="about">
@@ -90,6 +78,8 @@ Here are some references that were used to develop the application:
 ➡️ [STRUCTURE](docs/github/structure.md)
 
 ---
+
+➡️ [MODELS](docs/github/models.md)
 
 ➡️ [TOOLS](docs/github/tools.md)
 

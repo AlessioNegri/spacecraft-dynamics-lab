@@ -2,7 +2,9 @@
 Container for enums used in astro library
 """
 
+import astropy.units as u
 import enum
+import typing
 
 class OrbitDirection(enum.IntEnum):
     """Orbit direction type"""
@@ -33,3 +35,44 @@ class FlybySide(enum.IntEnum):
     
     DARK_SIDE = 0
     SUNLIT_SIDE = 1
+
+class Hemisphere(enum.Enum):
+    """Hemisphere region"""
+    
+    NORTH = "N"
+    SOUTH = "S"
+    EQUATOR = "EQ"
+    EAST = "E"
+    WEST = "W"
+
+class AngleHemisphere(typing.NamedTuple):
+    """Tuple with angle and hemisphere"""
+    
+    angle: u.Quantity
+    hemisphere: Hemisphere
+    
+    def to_signed_angle(self) -> u.Quantity:
+        
+        if self.hemisphere == Hemisphere.NORTH:
+            
+            return self.angle
+        
+        elif self.hemisphere == Hemisphere.SOUTH:
+            
+            return -self.angle
+
+        elif self.hemisphere == Hemisphere.EAST:
+                    
+            return self.angle
+        
+        elif self.hemisphere == Hemisphere.WEST:
+            
+            return -self.angle
+
+        elif self.hemisphere == Hemisphere.EQUATOR:
+            
+            return 0 * u.deg
+        
+        else:
+            
+            return 0 * u.deg
