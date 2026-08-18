@@ -92,6 +92,9 @@ BODIES[Attractor.VENUS] = Body(
     semi_major_axis=0.723_332 * u.AU
 )
 
+# ? g_0 = 9.8066500 * u.m / u.s**2 => convention for internationally defined standard gravity
+# ? g_0 = 9.7982876 * u.m / u.s**2 => average gravity over Earth's surface (oblateness, rotation, latitude distribution)
+
 BODIES[Attractor.EARTH] = Body(
     name=Attractor.EARTH,
     mu=398_600.4418 * u.km**3 / u.s**2,

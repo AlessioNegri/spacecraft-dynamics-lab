@@ -85,6 +85,20 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
 <div class="side-view">
 
   <div>
+    <h3>Keplerian → Equinoctial</h3>
+    <p>
+      Convert the <strong>Keplerian orbital</strong> elements to the standard <strong>equinoctial</strong> elements.
+      This representation avoids the singularity of classical elements for circular or equatorial orbits.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/keplerian-equinoctial.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
     <h3>Ground Track Propagation</h3>
     <p>
       Given a main <strong>attractor</strong> and the <strong>keplerian parameters</strong> of an orbit, the converter calculates the <strong>right ascension</strong> and <strong>declination</strong> of the satellite on the propagated position, with the oblateness effect of the selected planet. In addition, the horizon footprint parameters are evaluated and an overall visualization is visible at the bottom (only for Earth).
@@ -167,6 +181,19 @@ The `Orbit Determination` dialogs furnishes different utilities to convert predi
 ## 🚀 Orbital Maneuvers
 
 The `Orbital Maneuvers` dialogs furnishes different utilities to analyse the orbital maneuvers characteristics.
+
+<div class="side-view">
+
+  <div>
+    <h3>Super-Synchronous Transfer</h3>
+    <p>
+      Parametric super-synchronous transfer study: each curve corresponds to a different SSTO inclination value (representing the launch site latitudes) and plots dV₂ + dV₃ against the normalized SSTO apoapsis radius.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/super-synchronous-transfer.png" alt="image">
+
+</div>
 
 <div class="side-view">
 

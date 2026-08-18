@@ -1083,7 +1083,7 @@ class OrbitDetermination():
     # --- PRIVATE ---
     
     @staticmethod
-    def _lambert_equation(z : float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
+    def _lambert_equation(z: float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
         """
         Lambert equation
 

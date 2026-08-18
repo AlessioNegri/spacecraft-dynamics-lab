@@ -62,6 +62,7 @@ Here are some references that were used to develop the application:
 | **Orbital Mechanics for Engineering Students** | Howard D. Curtis | 2013 | Elsevier | [View Book →](https://www.elsevier.com/books/orbital-mechanics-for-engineering-students/curtis/9780080977478) |
 | **Space Flight Dynamics** | Craig A. Kluever | 2018 | Wiley | [View Book →](https://www.wiley.com/en-us/Space+Flight+Dynamics-p-9781119157823) |
 | **Manned Spacecraft – Design Principles** | Pasquale M. Sforza | 2015 | Elsevier | [View Book →](https://shop.elsevier.com/books/manned-spacecraft-design-principles/sforza/978-0-12-804425-4) |
+| **Astronautics - The Physics of Space Flight** | Ulrich Walter | 2018 | Springer | [View Book →](https://link.springer.com/book/10.1007/978-3-319-74373-8) |
 
 <p align="center">
     <img src="./docs/images/references.png" width="50%" alt="about">

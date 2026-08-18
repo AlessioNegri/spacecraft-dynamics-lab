@@ -45,12 +45,18 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
         conicType                = orbit_parameters.conic_type,
         specificAngularMomentum  = orbit_parameters.specific_angular_momentum.to_value(),
         specificMechanicalEnergy = orbit_parameters.specific_energy.to_value(),
+        semiLatusRectum          = orbit_parameters.semilatus_rectum.to_value(),
+        transverseVelocity       = orbit_parameters.transverse_velocity.to_value(),
         eccentricity             = orbit_parameters.eccentricity,
+        periapsisVelocity        = orbit_parameters.periapsis_velocity.to_value(),
+        apoapsisVelocity         = orbit_parameters.apoapsis_velocity.to_value(),
         orbitalPeriod            = orbit_parameters.period.to_value(),
         apoapsisRadius           = orbit_parameters.apoapsis_radius.to_value(),
         periapsisRadius          = orbit_parameters.periapsis_radius.to_value(),
         semiMajorAxis            = orbit_parameters.semimajor_axis.to_value(),
         semiMinorAxis            = orbit_parameters.semiminor_axis.to_value(),
+        firstCosmicVelocity      = orbit_parameters.first_cosmic_velocity.to_value(),
+        secondCosmicVelocity     = orbit_parameters.second_cosmic_velocity.to_value(),
         escapeVelocity           = orbit_parameters.escape_velocity.to_value(),
         infiniteTrueAnomaly      = orbit_parameters.asymptotic_true_anomaly.to_value(),
         hyperbolaAsymptoteAngle  = orbit_parameters.asymptote_angle.to_value(),
@@ -58,6 +64,7 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
         aimingRadius             = orbit_parameters.aiming_radius.to_value(),
         hyperbolicExcessSpeed    = orbit_parameters.hyperbolic_excess_speed.to_value(),
         characteristicEnergy     = orbit_parameters.characteristic_energy.to_value(),
+        oberthManeuverVelocity   = orbit_parameters.oberth_maneuver_velocity.to_value(),
         rightAscension           = alpha.to_value(),
         declination              = delta.to_value()
     )
@@ -147,6 +154,37 @@ async def put_convert_keplerian_to_cartesian(data: schema.KeplerianInModelInfo) 
         velocity = schema.Vector3D(x=v_GEF[0].to_value(), y=v_GEF[1].to_value(), z=v_GEF[2].to_value())
     )
     
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/convert-keplerian-to-equinoctial", response_model=schema.EquinoctialOutModelInfo)
+async def put_convert_keplerian_to_equinoctial(data: schema.EquinoctialInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Keplerian --> Equinoctial Orbital Elements conversion
+
+    Args:
+        data (schema.EquinoctialInModelInfo): Keplerian orbital elements
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=data.orbitalElements.sma * u.km,
+                                                  eccentricity=data.orbitalElements.ecc * u.one,
+                                                  inclination=data.orbitalElements.inc * u.deg,
+                                                  right_ascension_of_ascending_node=data.orbitalElements.raan * u.deg,
+                                                  argument_of_periapsis=data.orbitalElements.aop * u.deg,
+                                                  true_anomaly=data.orbitalElements.ta * u.deg)
+
+    eq: o3d.EquinoctialOrbitalElements = o3d.Orbit3D.keplerian_to_equinoctial(orbital_elements=oe)
+
+    result: schema.EquinoctialOutModelInfo = schema.EquinoctialOutModelInfo(
+        semimajorAxis=eq.semimajor_axis.to_value(u.km),
+        eccentricityVectorH=eq.eccentricity_vector_h.to_value(u.one),
+        eccentricityVectorK=eq.eccentricity_vector_k.to_value(u.one),
+        ascendingNodeVectorP=eq.ascending_node_vector_p.to_value(u.one),
+        ascendingNodeVectorQ=eq.ascending_node_vector_q.to_value(u.one),
+        periapsisLocation=eq.periapsis_locaton.to_value(u.deg)
+    )
+
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
 @router.put("/propagate-ground-track", response_model=schema.GroundTrackOutModelInfo)

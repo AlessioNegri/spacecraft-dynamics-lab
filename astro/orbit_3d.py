@@ -11,7 +11,10 @@ References:
     - Chapter 3: Orbit Determination
 
 - Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
-    - Chapter 2: Earth's Atmosphere
+    - Chapter 5: Orbital Mechanics
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 7: Orbits
 """
 
 import astropy.units as u
@@ -25,7 +28,7 @@ import astro.orbital_position as orbital_position
 import astro.two_body_problem as two_body_problem
 
 from astro.enums import Hemisphere, AngleHemisphere
-from astro.models.orbital_elements import OrbitalElements
+from astro.models.orbital_elements import OrbitalElements, EquinoctialOrbitalElements
 
 class Orbit3D():
     """Orbit in Three Dimensions"""
@@ -130,6 +133,8 @@ class Orbit3D():
         
         # >>> 7. Line of nodes
         
+        # ? In case inclination is 0, you can use the longitude of periapsis (Ω + ω)
+        
         N: np.ndarray
         
         tol: float = 1e-6 # ? Tolerance to consider the orbit as equatorial or polar
@@ -170,6 +175,8 @@ class Orbit3D():
         
         ecc: np.ndarray = 1 / mu * ((v_m**2 - mu / r_m) * r - r_m * v_r * v)
         
+        # ? \vec{A} = \mu * \vec{e} => Laplace–Runge–Lenz vector
+        
         # >>> 11. Eccentricity
         
         ecc_m: float = np.linalg.norm(ecc)
@@ -177,6 +184,8 @@ class Orbit3D():
         oe.eccentricity = ecc_m * u.one
         
         # >>> 12. Argument of periapsis
+        
+        # ? In case eccentricity is 0, you can use the orbital longitude (Ω + ω + θ) and the mean longitude (Ω + ω + M)
         
         if ecc_m < tol:
             
@@ -335,6 +344,45 @@ class Orbit3D():
         v_gef: u.Quantity = np.matmul(R, v_pf) * u.km / u.s # ? v_GEF
         
         return [r_gef, v_gef]
+    
+    @staticmethod
+    def keplerian_to_equinoctial(orbital_elements: OrbitalElements) -> EquinoctialOrbitalElements:
+        """Orbital Elements --> Equinoctial Orbital Elements
+
+        Args:
+            orbital_elements (OrbitalElements): Orbital Elements
+
+        Returns:
+            EquinoctialOrbitalElements: Equinoctial Orbital Elements
+        """
+        
+        sma: float = orbital_elements.semimajor_axis.to_value(u.km)
+        ecc: float = orbital_elements.eccentricity.to_value(u.one)
+        inc: float = orbital_elements.inclination.to_value(u.rad)
+        raan: float = orbital_elements.right_ascension_of_ascending_node.to_value(u.rad)
+        aop: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
+        ta: float = orbital_elements.true_anomaly.to_value(u.rad)
+
+        # * Eccentricity vector components
+        
+        h: float = ecc * np.sin(raan + aop)
+        k: float = ecc * np.cos(raan + aop)
+
+        # * Rescaled ascending node vector components
+        
+        p: float = np.tan(inc / 2) * np.sin(raan)
+        q: float = np.tan(inc / 2) * np.cos(raan)
+        
+        # * Location of the periapsis in time
+                
+        l: float = raan + aop + ta
+
+        return EquinoctialOrbitalElements(semimajor_axis=sma * u.km,
+                                          eccentricity_vector_h=h * u.one,
+                                          eccentricity_vector_k=k * u.one,
+                                          ascending_node_vector_p=p * u.one,
+                                          ascending_node_vector_q=q * u.one,
+                                          periapsis_locaton=l * u.rad)
     
     @staticmethod
     def perifocal_to_geocentric_equatorial_position_vector(orbital_elements: OrbitalElements,

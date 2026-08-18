@@ -33,3 +33,7 @@ universal_gravitational_constant : u.Quantity = 6.674_301_5e-20 * u.km**3 / u.s*
 # * Atmospheric gas constant - R
 
 atmospheric_gas_constant: u.Quantity = 287.052874 * u.J / (u.kg * u.K)
+
+# * Geocentric equatorial radius - r_GEO
+
+geocentric_equatorial_radius: float = 42_164.0

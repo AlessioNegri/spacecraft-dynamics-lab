@@ -11,7 +11,10 @@ References:
     - Chapter 4: Time of Flight
 
 - Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
-    - Chapter 2: Earth's Atmosphere
+    - Chapter 5: Orbital Mechanics
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 7: Orbits
 """
 
 import astropy.units as u
@@ -141,13 +144,18 @@ class OrbitalPosition():
         
         if e < 0 or e >= 1: raise ValueError("'eccentricity' must be between 0 and 1")
         
-        m_e: float = (2 * np.pi / T) * tof # ? Mean anomaly (M_E)
+        m_e: float = (2 * np.pi / T) * tof # ? Mean anomaly (M_E) [ 0 <= m_e <= np.pi ]
         
         f: callable = lambda E: E - e * np.sin(E) - m_e
         
         df: callable = lambda E: 1 - e * np.cos(E)
         
-        E_0: float = (m_e + 0.5 * e) if m_e < np.pi else (m_e - 0.5 * e) # m_e + e * np.sin(m_e) + 0.5 * e**2 * np.sin(2 * m_e)
+        E_0: float = (m_e + 0.5 * e) if m_e < np.pi else (m_e - 0.5 * e)
+        
+        # ? E_0 = m_e + e * np.sin(m_e) + 0.5 * e**2 * np.sin(2 * m_e)
+        
+        # ? E_0 = m_e + e**2 * ( (6 * m_e)**(1/3) - m_e )                       @ 0 <= m_e < 0.25
+        # ? E_0 = m_e + e * np.sin(m_e) / ( 1 - np.sin(m_e + e) + np.sin(m_e) ) @ 0.25 <= m_e < np.pi
         
         E: float = optimize.newton(f, x0=E_0, fprime=df, maxiter=100, tol=1e-8) # ? Eccentric anomaly
         
@@ -194,6 +202,10 @@ class OrbitalPosition():
                                      attractor: bodies.Attractor) -> u.Quantity:
         """
         Calculate the true anomaly on a parabolic orbit at given time of flight
+        
+        Barker's equation
+            
+            M_p = 1/2 * G + 1/3 * G**3 with G = tan(θ / 2) and q = 3 * M_p
 
         Args:
             time_of_flight (u.Quantity): Time of flight
@@ -216,8 +228,9 @@ class OrbitalPosition():
         
         m_p: float = tof * mu**2 / h**3 # ? Mean anomaly (M_p)
         
-        theta: float = 2 * np.arctan( (3 * m_p + np.sqrt((3 * m_p)**2 + 1))**(1/3) -\
-            (3 * m_p + np.sqrt((3 * m_p)**2 + 1))**(-1/3) )
+        q: float = 3 * m_p # ? Auxiliary variable
+        
+        theta: float = 2 * np.arctan( (q + np.sqrt(q**2 + 1))**(1/3) - (q + np.sqrt(q**2 + 1))**(-1/3) )
         
         return common.wrap_angle(np.rad2deg(theta), low=0, high=360) * u.deg
     

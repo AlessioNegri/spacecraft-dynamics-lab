@@ -20,6 +20,7 @@ import CartesianOrbitParametersDialog from "../dialogs/tools/orbit_representatio
 import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/CartesianKeplerianDialog"
 import CartesianPerifocalDialog from "../dialogs/tools/orbit_representation/CartesianPerifocalDialog"
 import KeplerianCartesianDialog from "../dialogs/tools/orbit_representation/KeplerianCartesianDialog"
+import KeplerianEquinoctialDialog from "../dialogs/tools/orbit_representation/KeplerianEquinoctialDialog"
 import GroundTrackPropagationDialog from "../dialogs/tools/orbit_representation/GroundTrackPropagationDialog"
 
 import GibbsMethodDialog from "../dialogs/tools/orbit_determination/GibbsMethodDialog"
@@ -28,6 +29,7 @@ import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/Topocen
 import AngleRangeDialog from "../dialogs/tools/orbit_determination/AngleRangeDialog"
 import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
 
+import SuperSynchronousTransferDialog from "../dialogs/tools/orbital_maneuvers/SuperSynchronousTransferDialog"
 import NonImpulsiveManeuversDialog from "../dialogs/tools/orbital_maneuvers/NonImpulsiveManeuversDialog"
 
 import LvlhKinematicsDialog from "../dialogs/tools/relative_motion/LvlhKinematicsDialog"
@@ -58,6 +60,7 @@ const DIALOGS =
     cartesianKeplerianDialog: CartesianKeplerianDialog,
     cartesianPerifocalDialog: CartesianPerifocalDialog,
     keplerianCartesianDialog: KeplerianCartesianDialog,
+    keplerianEquinoctialDialog: KeplerianEquinoctialDialog,
     groundTrackPropagationDialog: GroundTrackPropagationDialog,
 
     gibbsMethodDialog: GibbsMethodDialog,
@@ -66,6 +69,7 @@ const DIALOGS =
     angleRangeDialog: AngleRangeDialog,
     gaussMethodDialog: GaussMethodDialog,
 
+    superSynchronousTransferDialog: SuperSynchronousTransferDialog,
     nonImpulsiveManeuversDialog: NonImpulsiveManeuversDialog,
 
     lvlhKinematicsDialog: LvlhKinematicsDialog,
@@ -167,6 +171,7 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
                 { label: "Cartesian → Keplerian", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianKeplerianDialog") },
                 { label: "Cartesian → Perifocal", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianPerifocalDialog") },
                 { label: "Keplerian → Cartesian", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("keplerianCartesianDialog") },
+                { label: "Keplerian → Equinoctial", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("keplerianEquinoctialDialog") },
                 { label: "Ground Track Propagation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("groundTrackPropagationDialog") }
             ]
         },
@@ -187,6 +192,7 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
             icon: "game-icons:rocket",
             children:
             [
+                { label: "Super-Synchronous Transfer", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("superSynchronousTransferDialog") },
                 { label: "Non-Impulsive Maneuvers", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("nonImpulsiveManeuversDialog") }
             ]
         },

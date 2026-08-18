@@ -10,6 +10,9 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 4: Time of Flight
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 7: Orbits
 """
 
 import astropy.time as time
@@ -22,7 +25,7 @@ import astro.bodies as bodies
 import astro.common as common
 
 class LagrangeCoefficients():
-    """Lagrange Coefficients"""
+    """Lagrange Coefficients - Universal Variable Formulation"""
     
     # --- STATIC ---
     
@@ -90,7 +93,7 @@ class LagrangeCoefficients():
     @staticmethod
     def S(z: float) -> float:
         """
-        Stumpff Function S
+        Stumpff Function S => c_3(z)
 
         Args:
             z (float): Variable
@@ -106,7 +109,7 @@ class LagrangeCoefficients():
     @staticmethod
     def C(z: float) -> float:
         """
-        Stumpff Function C
+        Stumpff Function C => c_2(z)
 
         Args:
             z (float): Variable
@@ -179,7 +182,7 @@ class LagrangeCoefficients():
                               delta_time: time.TimeDelta,
                               universal_anomaly: u.Quantity) -> typing.List[u.Quantity]:
         """
-        Calculate the Lagrange coefficients f and g using the universal variable chi
+        Calculate the Lagrange-Gibbs coefficients f and g using the universal variable chi
 
         Args:
             attractor (bodies.Attractor): Main attractor

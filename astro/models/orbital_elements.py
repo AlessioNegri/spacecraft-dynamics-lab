@@ -7,7 +7,23 @@ import astro.common as common
 
 @dc.dataclass
 class OrbitalElements:
-    """Classical Orbital Elements"""
+    """
+    Classical Orbital Elements
+        - semimajor axis (a)
+        - eccentricity (e)
+        - inclination (i)
+        - right ascension of ascending node (Ω)
+        - argument of periapsis (ω)
+        - time after periapsis passage (t - t_p) or mean anomaly (M = n * (t - t_p))
+    
+    Keplerian Elements
+        - semimajor axis (a)
+        - eccentricity (e)
+        - inclination (i)
+        - right ascension of ascending node (Ω)
+        - argument of periapsis (ω)
+        - true anomaly (θ) or eccentric anomaly (E) or hyperbolic anomaly (F) or universal anomaly (G)
+    """
     
     specific_angular_momentum           : u.Quantity = dc.field(default_factory=lambda: 0 * u.km**2 / u.s)
     semimajor_axis                      : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
@@ -93,7 +109,9 @@ class OrbitalElements:
         
         mu: u.Quantity = bodies.BODIES[attractor].mu
         
-        return (a * (1 - e**2)) if h == 0 else (h**2 / mu)
+        p: u.Quantity = (a * (1 - e**2)) if h == 0 else (h**2 / mu)
+        
+        return p
     
     def update_from_perigee_apogee(self, periapsis_radius: u.Quantity, apoapsis_radius: u.Quantity) -> None:
         
@@ -102,3 +120,42 @@ class OrbitalElements:
         
         self.semimajor_axis = 0.5 * (r_p + r_a)
         self.eccentricity = (r_a - r_p) / (r_a + r_p)
+    
+    def calc_velocity(self, attractor: bodies.Attractor) -> u.Quantity:
+        
+        common.check_attractor(attractor)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        e: float = self.eccentricity.to_value(u.one)
+        
+        h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        theta: float = self.true_anomaly.to_value(u.rad)
+        
+        r: float = h**2 / mu * 1 / (1 + e * np.cos(theta))
+        
+        v_t: float = h / r
+        
+        v_r: float = mu / h * e * np.sin(theta)
+        
+        v: float = np.sqrt(v_r**2 + v_t**2)
+        
+        return v * u.km / u.s
+
+@dc.dataclass
+class EquinoctialOrbitalElements:
+    """
+    (Standard) Equinoctial Orbital Elements
+        - semimajor axis (a)
+        - eccentricity vector components (h, k)
+        - rescaled ascending node vector components (p, q)
+        - location of periapsis in time (l)
+    """
+
+    semimajor_axis          : u.Quantity = dc.field(default_factory=lambda: 0 * u.km)
+    eccentricity_vector_h   : u.Quantity = dc.field(default_factory=lambda: 0 * u.one)
+    eccentricity_vector_k   : u.Quantity = dc.field(default_factory=lambda: 0 * u.one)
+    ascending_node_vector_p : u.Quantity = dc.field(default_factory=lambda: 0 * u.one)
+    ascending_node_vector_q : u.Quantity = dc.field(default_factory=lambda: 0 * u.one)
+    periapsis_locaton       : u.Quantity = dc.field(default_factory=lambda: 0 * u.deg)

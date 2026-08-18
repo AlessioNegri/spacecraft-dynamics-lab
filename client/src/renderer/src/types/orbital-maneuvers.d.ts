@@ -129,6 +129,24 @@ interface IOrbits
 
 // * Tools
 
+interface ISuperSynchronousTransferFormInput
+{
+    sstoPeriapsisRadius: number
+    samples: number
+}
+
+interface ISuperSynchronousTransferSeries
+{
+    label: string
+    x: number[]
+    y: number[]
+}
+
+interface ISuperSynchronousTransferOut
+{
+    series: ISuperSynchronousTransferSeries[]
+}
+
 interface IToolsCoplanarCircleCircleFormInput
 {
     attractor: string

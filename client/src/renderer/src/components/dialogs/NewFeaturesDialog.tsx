@@ -18,6 +18,10 @@ const newFeatures: string[] =
     `Added more than 100 spacecraft models`,
     `Atmosphere model`,
     `Ground track visualization with horizon footprint`,
+    `Conversion between Keplerian to Equinoctial Orbital Elements`,
+    `New output parameters in Cartesian to Orbit Parameters dialog`,
+    `New algorithms in astro Orbital Maneuvers`,
+    `Super-Synchronous Transfer dialog in Orbital Maneuvers Tool menu`,
 ]
 
 interface Props

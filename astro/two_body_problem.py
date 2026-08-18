@@ -13,7 +13,10 @@ References:
     - Chapter 2: Two-Body Orbital Mechanics
 
 - Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
-    - Chapter 2: Earth's Atmosphere
+    - Chapter 5: Orbital Mechanics
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 7: Orbits
 """
 
 import astropy.time as time
@@ -77,6 +80,10 @@ class Orbit:
         v_m: float = np.linalg.norm(v)
         
         mu: float = bodies.BODIES[attractor].mu.to(u.km**3 / u.s**2).to_value()
+        
+        g_0: float = bodies.BODIES[attractor].g_0.to(u.km / u.s**2).to_value()
+        
+        R_E: float = bodies.BODIES[attractor].R_E.to(u.km).to_value()
 
         parameters: OrbitParameters = OrbitParameters()
         
@@ -90,9 +97,9 @@ class Orbit:
         
         parameters.transverse_velocity = h_m / r_m * u.km / u.s
         
-        # >>> Energy
+        # >>> Energy (vis-viva equation)
         
-        epsilon: float = v_m**2 / 2 - mu / r_m
+        epsilon: float = 1 / 2 * v_m**2 - mu / r_m
         
         parameters.specific_energy = epsilon * u.km**2 / u.s**2
         
@@ -100,7 +107,7 @@ class Orbit:
         
         p: float = h_m**2 / mu
         
-        parameters.semilatus_rectum = p
+        parameters.semilatus_rectum = p * u.km
         
         # >>> Semimajor axis
         
@@ -115,6 +122,12 @@ class Orbit:
         
         parameters.eccentricity = e * u.one
         
+        # >>> Cosmic Velocities
+        
+        parameters.first_cosmic_velocity = np.sqrt(g_0 * R_E) * u.km / u.s
+        
+        parameters.second_cosmic_velocity = np.sqrt(2 * g_0 * R_E) * u.km / u.s
+        
         # >>> Select Orbit Type
         
         # * Linear Trajectory
@@ -127,43 +140,52 @@ class Orbit:
         # * Circular Orbit
         if np.isclose(e, 0.0, rtol=1e-2, atol=1e-4):
             
-            parameters.conic_type       = "circle"
-            parameters.periapsis_radius = r_m * u.km
-            parameters.apoapsis_radius  = r_m * u.km
-            parameters.semiminor_axis   = r_m * u.km
-            parameters.period           = (2 * np.pi) /  np.sqrt(mu) * r_m ** (3 / 2) * u.s
+            parameters.conic_type           = "circle"
+            parameters.periapsis_radius     = r_m * u.km
+            parameters.apoapsis_radius      = r_m * u.km
+            parameters.periapsis_velocity   = np.sqrt(mu / r_m) * u.km / u.s
+            parameters.apoapsis_velocity    = np.sqrt(mu / r_m) * u.km / u.s
+            parameters.semiminor_axis       = r_m * u.km
+            parameters.period               = (2 * np.pi) /  np.sqrt(mu) * r_m ** (3 / 2) * u.s
             
         # * Parabolic Orbit
         elif np.isclose(e, 1.0, rtol=1e-3, atol=1e-6):
             
-            parameters.conic_type       = "parabola"
-            parameters.periapsis_radius = p / 2 * u.km
-            parameters.apoapsis_radius  = 0 * u.km
-            parameters.semiminor_axis   = 0 * u.km
-            parameters.period           = 0 * u.s
-            parameters.escape_velocity  = np.sqrt(2 * mu / parameters.periapsis_radius.to_value()) * u.km / u.s
+            parameters.conic_type           = "parabola"
+            parameters.periapsis_radius     = p / 2 * u.km
+            parameters.apoapsis_radius      = 0 * u.km
+            parameters.periapsis_velocity   = 2 * np.sqrt(mu / p) * u.km / u.s
+            parameters.apoapsis_velocity    = 0 * u.km / u.s
+            parameters.semiminor_axis       = 0 * u.km
+            parameters.period               = 0 * u.s
+            parameters.escape_velocity      = np.sqrt(2 * mu / parameters.periapsis_radius.to_value()) * u.km / u.s
             
             # ! The escape velocity is calculated at perapsis, even if defined for each position
         
         # * Elliptical Orbit
         elif e < 1:
             
-            parameters.conic_type       = "ellipse"
-            parameters.periapsis_radius = p / (1 + e) * u.km
-            parameters.apoapsis_radius  = p / (1 - e) * u.km
-            parameters.semiminor_axis   = a * np.sqrt(1 - e ** 2) * u.km
-            parameters.period           = (2 * np.pi) /  np.sqrt(mu) * a ** (3 / 2) * u.s
+            parameters.conic_type           = "ellipse"
+            parameters.periapsis_radius     = p / (1 + e) * u.km
+            parameters.apoapsis_radius      = p / (1 - e) * u.km
+            parameters.periapsis_velocity   = mu / h_m * (1 + e) * u.km / u.s
+            parameters.apoapsis_velocity    = mu / h_m * (1 - e) * u.km / u.s
+            parameters.semiminor_axis       = a * np.sqrt(1 - e ** 2) * u.km
+            parameters.period               = (2 * np.pi) /  np.sqrt(mu) * a ** (3 / 2) * u.s
         
         # * Hyperbolic Orbit
         else:
             
             parameters.conic_type               = "hyperbola"
-            parameters.periapsis_radius         = p / (1 + e) * u.km
-            parameters.apoapsis_radius          = p / (1 - e) * u.km
+            parameters.periapsis_radius         = - a * (e - 1) * u.km
+            parameters.apoapsis_radius          = 0 * u.km
+            parameters.periapsis_velocity       = mu / h_m * (e + 1) * u.km / u.s
+            parameters.apoapsis_velocity        = 0 * u.km / u.s
             parameters.semiminor_axis           = np.abs(a) * np.sqrt(e ** 2 - 1) * u.km
             parameters.period                   = 0 * u.s
             parameters.escape_velocity          = np.sqrt(2 * mu  / parameters.periapsis_radius.to_value()) * u.km / u.s
             parameters.hyperbolic_excess_speed  = np.sqrt(2 * epsilon) * u.km / u.s
+            parameters.oberth_maneuver_velocity = np.sqrt(parameters.second_cosmic_velocity ** 2 + parameters.hyperbolic_excess_speed ** 2)
             parameters.turning_angle            = np.rad2deg(2 * np.arcsin(1 / e)) * u.deg
             parameters.asymptotic_true_anomaly  = np.rad2deg(np.arccos(-1 / e)) * u.deg
             parameters.asymptote_angle          = np.rad2deg(np.arccos(+1 / e)) * u.deg

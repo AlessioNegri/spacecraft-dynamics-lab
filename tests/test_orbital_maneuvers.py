@@ -2,11 +2,13 @@ import pytest
 
 import astropy.time as time
 import astropy.units as u
+import copy
 import numpy as np
 
 import astro.bodies as bd
 import astro.orbit_3d as o3d
 import astro.orbital_maneuvers as om
+import astro.two_body_problem as tbp
 
 rocket_motor: om.RocketMotor = om.RocketMotor(specific_impulse=300 * u.s,
                                               thrust=400 * u.N,
@@ -156,6 +158,43 @@ def test_hohmann_transfer_3():
     assert np.isclose(maneuver.delta_velocity_list[1].to_value(u.km / u.s), 1.4361, atol=1e-4)
     assert np.isclose(maneuver.delta_mass_list[0].to_value(u.kg), 386.88, atol=1e-2)
     assert np.isclose(maneuver.burn_time_list[0].to_value(u.minute), 50.3, atol=1e-1)
+
+def test_hohmann_transfer_4():
+    """EXAMPLE 8.3.2 - BOOK 4"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 400) * u.km)
+    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 10000) * u.km)
+    
+    direction: om.HohmannDirection = om.HohmannDirection.PERICENTER_APOCENTER
+    
+    maneuver_1: om.ManeuverResult = om.OrbitalManeuvers.hohmann_transfer(attractor=attractor,
+                                                                         rocket_motor=copy.deepcopy(rocket_motor),
+                                                                         orbital_elements_1=oe_1,
+                                                                         orbital_elements_2=oe_2,
+                                                                         direction=direction)
+    
+    maneuver_2: om.ManeuverResult = om.OrbitalManeuvers.circular_hohmann_transfer(attractor=attractor,
+                                                                                  rocket_motor=copy.deepcopy(rocket_motor),
+                                                                                  orbital_elements_1=oe_1,
+                                                                                  orbital_elements_2=oe_2,
+                                                                                  direction=direction)
+    
+    dv_1: list = maneuver_1.delta_velocity_list
+    dv_2: list = maneuver_2.delta_velocity_list
+    
+    tof_1: float = maneuver_1.flight_time_list[0].to_value(u.s)
+    tof_2: float = maneuver_2.flight_time_list[0].to_value(u.s)
+    
+    oe_1: o3d.OrbitalElements = maneuver_1.orbital_elements_list[0]
+    oe_2: o3d.OrbitalElements = maneuver_2.orbital_elements_list[0]
+    
+    assert np.isclose(dv_1[0].to_value(u.km / u.s) + dv_1[1].to_value(u.km / u.s), dv_2[0].to_value(u.km / u.s), atol=1e-4)
+    assert np.isclose(tof_1, tof_2, atol=1e-4)
+    assert np.isclose(oe_1.specific_angular_momentum.to_value(), oe_2.specific_angular_momentum.to_value(), atol=1e-4)
+    assert np.isclose(oe_1.semimajor_axis.to_value(u.km), oe_2.semimajor_axis.to_value(u.km), atol=1e-4)
+    assert np.isclose(oe_1.eccentricity.to_value(u.one), oe_2.eccentricity.to_value(u.one), atol=1e-4)
 
 def test_bi_elliptic_hohmann_transfer():
     """EXAMPLE 6.3"""
@@ -484,6 +523,40 @@ def test_launch_azimuth():
     
     assert np.isclose(launch_azimuth.to_value(u.deg), 349.8, atol=1e-1)
 
+def test_one_impulse_maneuver():
+    """EXAMPLE 8.1.6 - BOOK 4"""
+    
+    oe_LEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=6578.14 * u.km,
+                                                      inclination=28 * u.deg,
+                                                      right_ascension_of_ascending_node=180 * u.deg)
+    
+    oe_GEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=42166 * u.km,
+                                                      inclination=3 * u.deg,
+                                                      right_ascension_of_ascending_node=280 * u.deg)
+    
+    oe_GTO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
+                                                      eccentricity=(42166 - 6578.14) / (42166 + 6578.14) * u.one,
+                                                      inclination=3 * u.deg,
+                                                      right_ascension_of_ascending_node=180 * u.deg)
+    
+    maneuver: om.ManeuverResult = om.OrbitalManeuvers.one_impulse_maneuver(attractor=bd.Attractor.EARTH,
+                                                                           rocket_motor=rocket_motor,
+                                                                           orbital_elements_1=oe_LEO,
+                                                                           orbital_elements_2=oe_GTO)
+    
+    assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 4.578, atol=1e-3)
+    
+    oe_GTO.inclination = 28 * u.deg
+    oe_GTO.right_ascension_of_ascending_node = 280 * u.deg
+    oe_GTO.true_anomaly = 180 * u.deg
+    
+    maneuver: om.ManeuverResult = om.OrbitalManeuvers.one_impulse_maneuver(attractor=bd.Attractor.EARTH,
+                                                                           rocket_motor=rocket_motor,
+                                                                           orbital_elements_1=oe_GTO,
+                                                                           orbital_elements_2=oe_GEO)
+        
+    assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 1.762, atol=1e-3)
+
 def test_inclination_change_maneuver():
     """EXAMPLE 7.7 - BOOK 2"""
     
@@ -497,6 +570,46 @@ def test_inclination_change_maneuver():
                                                                                   orbital_elements_2=oe_2)
     
     assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 0.944, atol=1e-3)
+
+def test_raan_change_maneuver():
+    """EXAMPLE 8.1.6 - BOOK 4"""
+    
+    oe_GEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=42166 * u.km,
+                                                      inclination=3 * u.deg,
+                                                      right_ascension_of_ascending_node=280 * u.deg)
+    
+    oe_GTO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
+                                                      eccentricity=(42166 - 6578.14) / (42166 + 6578.14) * u.one,
+                                                      inclination=3 * u.deg,
+                                                      right_ascension_of_ascending_node=180 * u.deg,
+                                                      true_anomaly=180 * u.deg)
+    
+    maneuver: om.ManeuverResult = om.OrbitalManeuvers.raan_change_maneuver(attractor=bd.Attractor.EARTH,
+                                                                           rocket_motor=rocket_motor,
+                                                                           orbital_elements_1=oe_GTO,
+                                                                           orbital_elements_2=oe_GEO)
+    
+    assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 0.128, atol=1e-3)
+    
+    oe_GTO.inclination = 28 * u.deg
+    
+    maneuver: om.ManeuverResult = om.OrbitalManeuvers.raan_change_maneuver(attractor=bd.Attractor.EARTH,
+                                                                           rocket_motor=rocket_motor,
+                                                                           orbital_elements_1=oe_GTO,
+                                                                           orbital_elements_2=oe_GEO)
+        
+    assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 1.149, atol=1e-3)
+    
+    oe_GEO_minus: o3d.OrbitalElements = copy.deepcopy(oe_GEO)
+    
+    oe_GEO_minus.right_ascension_of_ascending_node = 180 * u.deg
+        
+    maneuver: om.ManeuverResult = om.OrbitalManeuvers.raan_change_maneuver(attractor=bd.Attractor.EARTH,
+                                                                            rocket_motor=rocket_motor,
+                                                                            orbital_elements_1=oe_GEO_minus,
+                                                                            orbital_elements_2=oe_GEO)
+        
+    assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 0.247, atol=1e-3)
     
 def test_plane_change_maneuver_from_dihedral_angle_1():
     """EXAMPLE 6.11"""
@@ -609,6 +722,47 @@ def test_plane_change_maneuver_from_raan_and_inclination():
     assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 9.9574, atol=1e-4)
     assert np.isclose(maneuver.orbital_elements_list[0].argument_of_periapsis.to_value(u.rad), 3.0316, atol=1e-4)
     assert np.isclose(maneuver.orbital_elements_list[0].true_anomaly.to_value(u.rad), 2.7026, atol=1e-4)
+
+def test_lambert():
+    """EXAMPLE 5.2"""
+    
+    attractor: bd.Attractor = bd.Attractor.EARTH
+    
+    r_1: u.Quantity = np.array([5_000, 10_000, 2_100]) * u.km
+    r_2: u.Quantity = np.array([-14_600, 2_500, 7_000]) * u.km
+    
+    v_1, v_2, ecc, _ = om.OrbitalManeuvers.lambert(attractor=attractor,
+                                                departure_position=r_1,
+                                                arrival_position=r_2,
+                                                delta_time=time.TimeDelta(u.Quantity(1, u.hour)))
+    
+    assert np.isclose(v_1[0].to_value(u.km / u.s), -5.9925, atol=1e-4)
+    assert np.isclose(v_1[1].to_value(u.km / u.s), 1.9254, atol=1e-4)
+    assert np.isclose(v_1[2].to_value(u.km / u.s), 3.2456, atol=1e-4)
+    
+    assert np.isclose(v_2[0].to_value(u.km / u.s), -3.3125, atol=1e-4)
+    assert np.isclose(v_2[1].to_value(u.km / u.s), -4.1966, atol=1e-4)
+    assert np.isclose(v_2[2].to_value(u.km / u.s), -0.38529, atol=1e-5)
+    
+    assert np.isclose(ecc.to_value(), 0.4335, atol=1e-4)
+
+def test_super_synchronous_transfer():
+    """EXAMPLE 8.4.3 - BOOK 4"""
+    
+    ssto: om.OrbitalElements = om.OrbitalElements(inclination=25.7 * u.deg,
+                                                  right_ascension_of_ascending_node=173.6 * u.deg,
+                                                  argument_of_periapsis=179.98 * u.deg)
+    
+    ssto.update_from_perigee_apogee(periapsis_radius=6563.1 * u.km, apoapsis_radius=129_885 * u.km)
+    
+    dv_1, dv_2, dv_3 = om.OrbitalManeuvers.super_synchronous_transfer(attractor=bd.Attractor.EARTH,
+                                                                      leo_inclination=28.5 * u.deg,
+                                                                      geo_inclination=0.6 * u.deg,
+                                                                      ssto=ssto)
+    
+    assert np.isclose(dv_1.to_value(u.km / u.s), 2.993, atol=1e-3)
+    assert np.isclose(dv_2.to_value(u.km / u.s), 0.770, atol=1e-3)
+    assert np.isclose(dv_3.to_value(u.km / u.s), 0.703, atol=1e-3)
 
 def test_constant_tangential_thrust_transfer_1():
     """EXAMPLE 6.16"""

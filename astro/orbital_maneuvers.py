@@ -13,17 +13,22 @@ References:
     - Chapter 9: Low-Thrust Transfers
 
 - Pasquale M. Sforza, "Manned Spacecraft - Design Principles"
-    - Chapter 2: Earth's Atmosphere
+    - Chapter 5: Orbital Mechanics
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 8: Orbital Maneuvering
 """
 
 import astropy.time as time
 import astropy.units as u
 import copy
 import numpy as np
+import scipy.optimize as optimize
 import typing
 
 import astro.bodies as bodies
 import astro.common as common
+import astro.physical_constants as constants
 import astro.orbit_3d as o3d
 import astro.orbital_position as op
 import astro.orbit_determination as od
@@ -76,6 +81,8 @@ class OrbitalManeuvers():
         azimuth = azimuth % (2 * np.pi)
         
         return azimuth * u.rad
+    
+    # * Impulsive maneuvers
     
     @staticmethod
     def hohmann_transfer(attractor: bodies.Attractor,
@@ -235,6 +242,136 @@ class OrbitalManeuvers():
         maneuver.flight_time_list=[0.5 * t_t * u.s]
         maneuver.delta_mass_list=[dm_1, dm_2]
         maneuver.burn_time_list=[t_burn_1, t_burn_2]
+        maneuver.orbital_elements_list=[oe_t]
+        maneuver.true_anomaly_list=[ta_1 * u.deg]
+        maneuver.rocket_elevation_angle_list=[0 * u.deg, 0 * u.deg]
+        
+        return maneuver
+    
+    @staticmethod
+    def circular_hohmann_transfer(attractor: bodies.Attractor,
+                                  rocket_motor: RocketMotor,
+                                  orbital_elements_1: OrbitalElements,
+                                  orbital_elements_2: OrbitalElements,
+                                  direction: HohmannDirection) -> ManeuverResult:
+        """
+        Hohmann transfer maneuver between circular orbits
+        
+        The Hohmann transfer is a two-impulse orbital maneuver used to transfer a spacecraft between two coplanar,
+        elliptical or circular orbits around the same central body. It is the minimum-energy transfer between two 
+        circular orbits and a widely used approximation for transfers between low-eccentricity orbits.
+        
+        This implementation generalizes the classical Hohmann transfer to allow transfers between arbitrary coplanar 
+        elliptical orbits, using one of two possible geometric configurations
+        - pericenter → apocenter
+        - apocenter → pericenter
+
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor parameters
+            orbital_elements_1 (OrbitalElements): Orbital elements of the initial orbit
+            orbital_elements_2 (OrbitalElements): Orbital elements of the target orbit
+            direction (HohmannDirection): Direction of the transfer
+
+        Returns:
+            ManeuverResult: Maneuver result
+        """
+        
+        common.check_attractor(attractor)
+        
+        common.check_orbital_elements(orbital_elements_1)
+        
+        common.check_orbital_elements(orbital_elements_2)
+        
+        if orbital_elements_1.eccentricity.to_value(u.one) != 0: raise ValueError("Orbit 1 must be circular")
+        
+        if orbital_elements_2.eccentricity.to_value(u.one) != 0: raise ValueError("Orbit 2 must be circular")
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        g_0: float = bodies.BODIES[attractor].g_0
+        
+        # >>> 0. Orbit radii
+        
+        r_1: float = orbital_elements_1.semimajor_axis.to_value(u.km)
+        r_2: float = orbital_elements_2.semimajor_axis.to_value(u.km)
+        
+        # >>> 1. Inner/Outer orbits
+        
+        r_inn: float = min(r_1, r_2)
+        r_out: float = max(r_1, r_2)
+        
+        v_inn: float = np.sqrt(mu / r_inn)
+        v_out: float = np.sqrt(mu / r_out)
+        
+        # >>> 2. Transfer orbit
+        
+        swap: bool = False
+        
+        if direction == HohmannDirection.PERICENTER_APOCENTER:
+            
+            swap = r_inn > r_out
+            
+        elif direction == HohmannDirection.APOCENTER_PERICENTER:
+            
+            swap = r_out > r_inn
+        
+        a_t: float = 0.5 * (r_inn + r_out)
+        
+        e_t: float = (r_out - r_inn) / (r_out + r_inn)
+        
+        h_t: float = np.sqrt(2 * mu) * np.sqrt(r_out * r_inn / (r_out + r_inn))
+        
+        t_t: float = 2 * np.pi * np.sqrt(a_t**3 / mu) # ? Orbital Period
+        
+        # >>> 3. Delta-V Calculation
+        
+        dv: float = (v_inn - v_out) * ( (np.sqrt(r_inn) + np.sqrt(r_out)) / np.sqrt(a_t) - 1 )
+        
+        ta_1: float = 0.0 # ? True anomaly at first maneuver point
+        ta_t: float = 0.0 # ? True anomaly at second maneuver point
+        
+        if direction == HohmannDirection.PERICENTER_APOCENTER:
+            
+            ta_1 = 0.0
+            
+            ta_t = 0.0 if not swap else 180.0
+        
+        elif direction == HohmannDirection.APOCENTER_PERICENTER:
+            
+            ta_1 = 180.0
+            
+            ta_t = 180.0 if not swap else 0.0
+        
+        argp_t: float = orbital_elements_1.argument_of_periapsis.to_value(u.deg)
+        
+        if swap:
+            
+            argp_t = common.wrap_angle(argp_t + 180.0, -180.0, +180.0)
+        
+        # >>> 4. Result
+        
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        
+        rocket_motor.spacecraft_mass -= dm
+        
+        oe_t: OrbitalElements = OrbitalElements(specific_angular_momentum=h_t * u.km**2 / u.s,
+                                                        semimajor_axis=a_t * u.km,
+                                                        eccentricity=e_t * u.one,
+                                                        inclination=orbital_elements_1.inclination,
+                                                        right_ascension_of_ascending_node=orbital_elements_1.right_ascension_of_ascending_node,
+                                                        argument_of_periapsis=argp_t * u.deg,
+                                                        true_anomaly=ta_t * u.deg)
+
+        maneuver: ManeuverResult = ManeuverResult()
+        
+        maneuver.delta_velocity_list=[dv * u.km / u.s]
+        maneuver.flight_time_list=[0.5 * t_t * u.s]
+        maneuver.delta_mass_list=[dm]
+        maneuver.burn_time_list=[t_burn]
         maneuver.orbital_elements_list=[oe_t]
         maneuver.true_anomaly_list=[ta_1 * u.deg]
         maneuver.rocket_elevation_angle_list=[0 * u.deg, 0 * u.deg]
@@ -994,11 +1131,82 @@ class OrbitalManeuvers():
         return maneuver
     
     @staticmethod
+    def one_impulse_maneuver(attractor: bodies.Attractor,
+                             rocket_motor: RocketMotor,
+                             orbital_elements_1: OrbitalElements,
+                             orbital_elements_2: OrbitalElements) -> ManeuverResult:
+        """
+        General one-impulse maneuver
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor parameters
+            orbital_elements_1 (OrbitalElements): Orbital elements of the initial orbit
+            orbital_elements_2 (OrbitalElements): Orbital elements of the target orbit
+
+        Returns:
+            ManeuverResult: Maneuver result
+        """
+        
+        common.check_attractor(attractor)
+        
+        common.check_orbital_elements(orbital_elements_1)
+        
+        common.check_orbital_elements(orbital_elements_2)
+        
+        g_0: float = bodies.BODIES[attractor].g_0
+        
+        # >>> 1. Orbit 1
+        
+        inc_1: float = orbital_elements_1.inclination.to_value(u.rad)
+        
+        raan_1: float = orbital_elements_1.right_ascension_of_ascending_node.to_value(u.rad)
+        
+        v_1: float = orbital_elements_1.calc_velocity(attractor=attractor).to_value(u.km / u.s)
+        
+        # >>> 2. Orbit 2
+        
+        inc_2: float = orbital_elements_2.inclination.to_value(u.rad)
+        
+        raan_2: float = orbital_elements_2.right_ascension_of_ascending_node.to_value(u.rad)
+        
+        v_2: float = orbital_elements_2.calc_velocity(attractor=attractor).to_value(u.km / u.s)
+        
+        # >>> 3. Result
+        
+        delta_inc: float = (inc_2 - inc_1)
+        
+        delta_raan: float = (raan_2 - raan_1)
+        
+        sin_phi_2: float = np.sin(delta_inc / 2)**2 + np.sin(inc_1) * np.sin(inc_2) * np.sin(delta_raan / 2)**2
+        
+        dv: float = np.sqrt( (v_1 - v_2)**2 + 4 * v_1 * v_2 * sin_phi_2 )
+        
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        
+        rocket_motor.spacecraft_mass -= dm
+        
+        maneuver: ManeuverResult = ManeuverResult()
+        
+        maneuver.delta_velocity_list=[dv * u.km / u.s]
+        maneuver.flight_time_list=[0 * u.s]
+        maneuver.delta_mass_list=[dm]
+        maneuver.burn_time_list=[t_burn]
+        maneuver.true_anomaly_list=[orbital_elements_1.true_anomaly.to(u.deg)]
+        
+        return maneuver
+
+    @staticmethod
     def inclination_change_maneuver(attractor: bodies.Attractor,
                                     rocket_motor: RocketMotor,
                                     orbital_elements_1: OrbitalElements,
                                     orbital_elements_2: OrbitalElements) -> ManeuverResult:
-        """Inclination change maneuver on line on nodes
+        """
+        Inclination change maneuver on line on nodes
+        
+        Genuine inclination change maneuver
 
         Args:
             attractor (bodies.Attractor): Main attractor
@@ -1051,6 +1259,92 @@ class OrbitalManeuvers():
         # >>> 2. Result
         
         dv: float = np.abs(2 * v_1 * np.cos(fpa_1) * np.sin(delta_inc / 2))
+        
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        
+        rocket_motor.spacecraft_mass -= dm
+        
+        maneuver: ManeuverResult = ManeuverResult()
+        
+        maneuver.delta_velocity_list=[dv * u.km / u.s]
+        maneuver.flight_time_list=[0 * u.s]
+        maneuver.delta_mass_list=[dm]
+        maneuver.burn_time_list=[t_burn]
+        maneuver.true_anomaly_list=[(ta_1 * u.rad).to(u.deg)]
+        
+        return maneuver
+
+    @staticmethod
+    def raan_change_maneuver(attractor: bodies.Attractor,
+                             rocket_motor: RocketMotor,
+                             orbital_elements_1: OrbitalElements,
+                             orbital_elements_2: OrbitalElements) -> ManeuverResult:
+        """        
+        Genuine RAAN change maneuver
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            rocket_motor (RocketMotor): Rocket motor parameters
+            orbital_elements_1 (OrbitalElements): Orbital elements of the initial orbit
+            orbital_elements_2 (OrbitalElements): Orbital elements of the target orbit
+
+        Returns:
+            ManeuverResult: Maneuver result
+        """
+        
+        common.check_attractor(attractor)
+        
+        common.check_orbital_elements(orbital_elements_1)
+        
+        common.check_orbital_elements(orbital_elements_2)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        g_0: float = bodies.BODIES[attractor].g_0
+        
+        inc: float = orbital_elements_1.inclination.to_value(u.rad)
+        
+        raan_1: float = orbital_elements_1.right_ascension_of_ascending_node.to_value(u.rad)
+        
+        raan_2: float = orbital_elements_2.right_ascension_of_ascending_node.to_value(u.rad)
+        
+        delta_raan: float = (raan_2 - raan_1)
+        
+        # >>> 1. Orbit 1
+        
+        e_1: float = orbital_elements_1.eccentricity.to_value()
+        
+        h_1: float = orbital_elements_1.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        omega: float = orbital_elements_1.argument_of_periapsis.to_value(u.rad)
+        
+        ta_current: float = common.wrap_angle(orbital_elements_1.true_anomaly.to_value(u.rad), low=0, high=2 * np.pi)
+
+        ta_an: float = common.wrap_angle(-omega + 0.5 * np.pi, low=0, high=2 * np.pi) # ? Orthogonal to Node (+ 90°)
+        
+        ta_dn: float = common.wrap_angle(- omega - 0.5 * np.pi, low=0, high=2 * np.pi) # ? Orthogonal Node (- 90°)
+        
+        ta_1: float = ta_dn if (ta_an < ta_current < ta_dn) else ta_an
+        
+        ta_1 += np.pi / 2 - inc if inc <= np.pi / 2 else np.pi - inc
+        
+        ta_1 = ta_current
+        
+        r_1: float = h_1**2 / mu * 1 / (1 + e_1 * np.cos(ta_1))
+        
+        v_t_1: float = h_1 / r_1
+        
+        v_r_1: float = mu / h_1 * e_1 * np.sin(ta_1)
+        
+        v_1: float = np.sqrt(v_r_1**2 + v_t_1**2)
+        
+        fpa_1: float = np.arctan(v_r_1 / v_t_1)
+        
+        # >>> 2. Result
+        
+        dv: float = np.abs(2 * v_1 * np.cos(fpa_1) * np.sin(inc) * np.sin(delta_raan / 2))
         
         dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
         
@@ -1278,6 +1572,195 @@ class OrbitalManeuvers():
         maneuver.orbital_elements_list = [oe_t]
         
         return maneuver
+    
+    @staticmethod
+    def lambert(attractor: bodies.Attractor,
+                departure_position: u.Quantity,
+                arrival_position: u.Quantity,
+                delta_time: time.TimeDelta) -> typing.Tuple[u.Quantity, u.Quantity, u.Quantity, u.Quantity]:
+        """
+        Solve Lambert's problem.
+
+        Calculation scheme for an Universal Solution to Lambert's problem.
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            departure_position (u.Quantity): Position vector at departure (km)
+            arrival_position (u.Quantity): Position vector at arrival (km)
+            delta_time (time.TimeDelta): Time of flight between `departure_position` and `arrival_position` (s)
+
+        Returns:
+            tuple: (`v_1`, `v_2`, `e`, `p`) where
+                - `v_1`, `v_2` (u.Quantity): velocity vectors at `departure_position` and `arrival_position` (km/s)
+                - `e` (u.Quantity): Lambert transfer eccentricity
+                - `p` (u.Quantity): Lambert transfer semi-latus rectum
+        """
+        
+        # >>> 0. Data
+        
+        r_1: np.ndarray = departure_position.to_value(u.km)
+        r_2: np.ndarray = arrival_position.to_value(u.km)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        common.check_attractor(attractor)
+        common.check_position_vector(r_1)
+        common.check_position_vector(r_2)
+        common.check_time_delta(delta_time)
+        
+        dt: float = delta_time.to_value(u.s)
+        
+        # >>> 1. Dimensionless numbers
+        
+        r_1_m : float = np.linalg.norm(r_1)
+        r_2_m: float = np.linalg.norm(r_2)
+        
+        c: float = np.sqrt(r_1_m**2 + r_2_m**2 - 2 * np.dot(r_1, r_2)) # ? Chord
+        
+        dtau: float = dt * np.sqrt(mu / c**3)
+        
+        s_plus: float = 0.5 * np.sqrt( (r_1_m + r_2_m) / c + 1 )
+        
+        s_minus: float = 0.5 * np.sqrt( (r_1_m + r_2_m) / c - 1 )
+        
+        # >>> 2. Equation solver
+        
+        # ? x = c / a --> x < 0 => hyperbola, x == 0 => parabola, x > 0 => ellipse
+        
+        # * Battin's robust initial guess
+        
+        theta: float = np.arccos(np.clip(np.dot(r_1, r_2) / (r_1_m * r_2_m), -1.0, 1.0))
+
+        x_0: float = 1.0 / (1.0 + (2.0 / np.pi) * ((dtau / (1.0 + np.sin(theta / 2))) - 1.0))
+        
+        try:
+            
+            x: float = optimize.newton(func=OrbitalManeuvers._lambert_equation,
+                                       x0=x_0,
+                                       args=(dtau, s_minus, s_plus))
+        
+        except Exception:
+                    
+            x: float = 0.0
+        
+        # >>> 3. Dimensionless numbers
+        
+        c_minus: float = np.sqrt(1 - x * s_minus**2)
+        
+        c_plus: float = np.sqrt(1 - x * s_plus**2)
+        
+        lambda_: float = 2 * (s_plus * c_minus + s_minus * c_plus)**2
+        
+        rho_1: np.ndarray = r_1 / c
+        
+        rho_1_m: float = np.linalg.vector_norm(rho_1)
+        
+        rho_1_hat: np.ndarray = rho_1 / rho_1_m
+        
+        rho_2: np.ndarray = r_2 / c
+        
+        rho_2_m: float = np.linalg.vector_norm(rho_2)
+        
+        rho_2_hat: np.ndarray = rho_2 / rho_2_m
+        
+        rho: float = rho_1_m * rho_2_m - np.dot(rho_1, rho_2)
+        
+        # >>> 4. Result
+        
+        coeff: float = np.sqrt(mu / c) * (np.sqrt(rho * lambda_)) / np.linalg.vector_norm(np.cross(rho_1, rho_2))
+        
+        v_1_plus: np.ndarray = coeff * (rho_2 - rho_1 + rho_1_hat / lambda_)
+        
+        v_2_minus: np.ndarray = coeff * (rho_2 - rho_1 - rho_2_hat / lambda_)
+        
+        e: np.ndarray = (1 - x * rho_1_m) * rho_1_hat - c / mu * np.dot(rho_1, v_1_plus) * v_1_plus
+        
+        p: float = c * rho * lambda_
+        
+        return [v_1_plus * u.km / u.s, v_2_minus * u.km / u.s, np.linalg.vector_norm(e) * u.one, p * u.km]
+    
+    @staticmethod
+    def super_synchronous_transfer(attractor: bodies.Attractor,
+                                   leo_inclination: u.Quantity,
+                                   geo_inclination: u.Quantity,
+                                   ssto: OrbitalElements) -> typing.List[u.Quantity]:
+        """Super-synchronous transfer maneuver
+        
+        This maneuver computes the delta-v required for a super-synchronous transfer from a low Earth orbit (LEO) to a
+        geostationary orbit (GEO) via a super-synchronous transfer orbit (SSTO). The algorithm calculates the necessary
+        velocity changes at each stage of the transfer, taking into account the inclination differences between the
+        orbits. The maneuver consists of three main burns: the first burn to enter the SSTO, the second burn to adjust
+        the inclination and enter the interim transfer orbit (ITO), and the third burn to circularize the orbit at GEO.
+        The resulting delta-v values for each burn are returned as a list.
+        
+        The first burn is performed by the launch vehicle to enter the SSTO.
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            leo_inclination (u.Quantity): Low Earth Orbit (LEO) inclination
+            geo_inclination (u.Quantity): Geostationary Orbit (GEO) inclination
+            ssto (OrbitalElements): Super-synchronous Transfer Orbit (SSTO) orbital elements
+
+        Returns:
+            typing.List[u.Quantity]: [delta-v for first burn, delta-v for second burn, delta-v for third burn]
+        """
+        
+        common.check_attractor(attractor)
+        
+        common.check_orbital_elements(ssto)
+        
+        common.check_angle(leo_inclination)
+        common.check_angle(geo_inclination)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        inc_leo: float = leo_inclination.to_value(u.rad)
+        inc_geo: float = geo_inclination.to_value(u.rad)
+        
+        r_geo: float = constants.geocentric_equatorial_radius
+        
+        # >>> 0.1 Extract SSTO orbit parameters
+        
+        h_ssto: float = ssto.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        r_per_ssto: float = ssto.calc_perigee_radius().to_value(u.km)
+        r_apo_ssto: float = ssto.calc_apogee_radius().to_value(u.km)
+        
+        inc_ssto: float = ssto.inclination.to_value(u.rad)
+        
+        # >>> 0.2 Create ITO orbit parameters
+        
+        r_per_ito: float = r_geo
+        r_apo_ito: float = r_apo_ssto
+        
+        h_ito: float = np.sqrt(2 * mu) * np.sqrt(r_apo_ito * r_per_ito / (r_apo_ito + r_per_ito))
+        
+        # >>> 1. First kick-burn to SSTO (from launch vehicle with small plane change)
+        
+        v_leo_m: float = np.sqrt(mu / r_per_ssto) # ? LEO -
+        v_leo_p: float = h_ssto / r_per_ssto # ? LEO +
+        
+        dv_1: float = np.sqrt(v_leo_m**2 + v_leo_p**2 - 2 * v_leo_m * v_leo_p * np.cos(inc_leo - inc_ssto))
+        
+        # >>> 2. Second kick-burn to ITO (with plane change)
+        
+        v_ito_m: float = h_ssto / r_apo_ssto # ? ITO -
+        v_ito_p: float = h_ito / r_apo_ssto # ? ITO +
+        
+        dv_2: float = np.sqrt(v_ito_m**2 + v_ito_p**2 - 2 * v_ito_m * v_ito_p * np.cos(inc_ssto - inc_geo))
+        
+        # >>> 3. Third kick-burn to GEO
+        
+        v_geo_m: float = h_ito / r_geo # ? GEO -
+        v_geo_p: float = np.sqrt(mu / r_geo) # ? GEO +
+        
+        dv_3: float = v_geo_m - v_geo_p
+        
+        # >>> 4. Result
+        
+        return [dv_1 * u.km / u.s, dv_2 * u.km / u.s, dv_3 * u.km / u.s]
+    
+    # * Non-impulsive maneuvers
     
     @staticmethod
     def constant_tangential_thrust_transfer_from_time(attractor: bodies.Attractor,
@@ -1737,3 +2220,42 @@ class OrbitalManeuvers():
             iteration += 1
         
         return maneuver, result
+    
+    # --- PRIVATE ---
+    
+    @staticmethod
+    def _lambert_equation(x: float, dtau: float, s_minus: float, s_plus: float) -> float:
+        """
+        Universal-variable Lambert equation
+
+        Args:
+            x (float): Variable
+            dtau (float): Normalized delta time
+            s_minus (float): s minus variable
+            s_plus (float): s plus variable
+
+        Returns:
+            float: Result
+        """
+        
+        c_minus: float = np.sqrt(1 - x * s_minus**2)
+        
+        c_plus: float = np.sqrt(1 - x * s_plus**2)
+        
+        u_: float = x * (s_plus * c_minus - s_minus * c_plus)**2
+        
+        L: float = 0 # ? Universal L-function
+        
+        if np.abs(u_) < 1e-12: # ? Parabola
+            
+            L = 1
+            
+        elif u_ >= 0 and u_ <= 1: # ? Ellipse
+            
+            L = np.arcsin(np.sqrt(u_)) / np.sqrt(u_)
+        
+        elif u_ < 0: # ? Hyperbola
+            
+            L = np.arcsinh(np.sqrt(-u_)) / np.sqrt(-u_)
+        
+        return 0.5 * dtau * x + s_plus * c_plus - s_minus * c_minus - (s_plus * c_minus - s_minus * c_plus) * L

@@ -74,6 +74,25 @@ def test_perifocal_to_geocentric_equatorial():
     assert np.allclose(v_GEF.to_value(u.km / u.s)[1], -4.772, atol=1e-3)
     assert np.allclose(v_GEF.to_value(u.km / u.s)[2], 1.744, atol=1e-3)
     
+def test_keplerian_to_equinoctial():
+    """EXAMPLE 7.3.5 - BOOK 4"""
+
+    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=8350 * u.km,
+                                                  eccentricity=0.19760 * u.one,
+                                                  inclination=60 * u.deg,
+                                                  right_ascension_of_ascending_node=270 * u.deg,
+                                                  argument_of_periapsis=45 * u.deg,
+                                                  true_anomaly=230 * u.deg)
+
+    eq = o3d.Orbit3D.keplerian_to_equinoctial(oe)
+
+    assert np.isclose(eq.semimajor_axis.to_value(u.km), 8350, atol=1e-6)
+    assert np.isclose(eq.eccentricity_vector_h.to_value(u.one), -0.139685, atol=1e-4)
+    assert np.isclose(eq.eccentricity_vector_k.to_value(u.one), 0.139685, atol=1e-4)
+    assert np.isclose(eq.ascending_node_vector_p.to_value(u.one), -0.577350, atol=1e-4)
+    assert np.isclose(eq.ascending_node_vector_q.to_value(u.one), 0.0, atol=1e-6)
+    assert np.isclose(eq.periapsis_locaton.to_value(u.deg), 545.0, atol=1e-6)
+
 def test_planet_oblateness_effect():
     """EXAMPLE 4.8"""
     

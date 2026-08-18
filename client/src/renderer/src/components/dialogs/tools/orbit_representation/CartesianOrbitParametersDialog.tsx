@@ -20,12 +20,18 @@ interface IFormOut
     conicType: string
     specificAngularMomentum: number
     specificMechanicalEnergy: number
+    semiLatusRectum: number
+    transverseVelocity: number
     eccentricity: number
+    periapsisVelocity: number
+    apoapsisVelocity: number
     orbitalPeriod: number
     apoapsisRadius: number
     periapsisRadius: number
     semiMajorAxis: number
     semiMinorAxis: number
+    firstCosmicVelocity: number
+    secondCosmicVelocity: number
     escapeVelocity: number
     infiniteTrueAnomaly: number
     hyperbolaAsymptoteAngle: number
@@ -33,6 +39,7 @@ interface IFormOut
     aimingRadius: number
     hyperbolicExcessSpeed: number
     characteristicEnergy: number
+    oberthManeuverVelocity: number
     rightAscension: number
     declination: number
 }
@@ -49,12 +56,18 @@ const defaultOut: IFormOut =
     conicType: "",
     specificAngularMomentum: 0,
     specificMechanicalEnergy: 0,
+    semiLatusRectum: 0,
+    transverseVelocity: 0,
     eccentricity: 0,
+    periapsisVelocity: 0,
+    apoapsisVelocity: 0,
     orbitalPeriod: 0,
     apoapsisRadius: 0,
     periapsisRadius: 0,
     semiMajorAxis: 0,
     semiMinorAxis: 0,
+    firstCosmicVelocity: 0,
+    secondCosmicVelocity: 0,
     escapeVelocity: 0,
     infiniteTrueAnomaly: 0,
     hyperbolaAsymptoteAngle: 0,
@@ -62,6 +75,7 @@ const defaultOut: IFormOut =
     aimingRadius: 0,
     hyperbolicExcessSpeed: 0,
     characteristicEnergy: 0,
+    oberthManeuverVelocity: 0,
     rightAscension: 0,
     declination: 0
 }
@@ -280,9 +294,37 @@ export default function CartesianOrbitParametersDialog(props: Readonly<Props>): 
                 />
 
                 <OutputField
+                    label="Semilatus Rectum"
+                    symbol="p"
+                    unit="km"
+                    value={formOut.semiLatusRectum}
+                />
+
+                <OutputField
+                    label="Transverse Velocity"
+                    symbol="v_t"
+                    unit="km / s"
+                    value={formOut.transverseVelocity}
+                />
+
+                <OutputField
                     label="Eccentricity"
                     symbol="e"
                     value={formOut.eccentricity}
+                />
+
+                <OutputField
+                    label="Periapsis Velocity"
+                    symbol="v_p"
+                    unit="km / s"
+                    value={formOut.periapsisVelocity}
+                />
+
+                <OutputField
+                    label="Apoapsis Velocity"
+                    symbol="v_a"
+                    unit="km / s"
+                    value={formOut.apoapsisVelocity}
                 />
 
                 <OutputField
@@ -318,6 +360,20 @@ export default function CartesianOrbitParametersDialog(props: Readonly<Props>): 
                     symbol="b"
                     unit="km"
                     value={formOut.semiMinorAxis}
+                />
+
+                <OutputField
+                    label="First Cosmic Velocity"
+                    symbol="v_{\triangleright}"
+                    unit="km / s"
+                    value={formOut.firstCosmicVelocity}
+                />
+
+                <OutputField
+                    label="Second Cosmic Velocity"
+                    symbol="v_{\triangleright\triangleright}"
+                    unit="km / s"
+                    value={formOut.secondCosmicVelocity}
                 />
 
                 <OutputField
@@ -373,6 +429,14 @@ export default function CartesianOrbitParametersDialog(props: Readonly<Props>): 
                     symbol="C_3"
                     unit="km^2 / s^2"
                     value={formOut.characteristicEnergy}
+                    disabled={formOut.eccentricity <= 1}
+                />
+
+                <OutputField
+                    label="Oberth Maneuver Velocity"
+                    symbol="v_{O}"
+                    unit="km / s"
+                    value={formOut.oberthManeuverVelocity}
                     disabled={formOut.eccentricity <= 1}
                 />
 

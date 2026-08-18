@@ -15,15 +15,20 @@ class OrbitParameters:
     eccentricity                : u.Quantity = 0.0 * u.one
     periapsis_radius            : u.Quantity = 0.0 * u.km
     apoapsis_radius             : u.Quantity = 0.0 * u.km
+    periapsis_velocity          : u.Quantity = 0.0 * u.km / u.s
+    apoapsis_velocity           : u.Quantity = 0.0 * u.km / u.s
     semiminor_axis              : u.Quantity = 0.0 * u.km
     period                      : u.Quantity = 0.0 * u.s # ? Orbital Period
+    first_cosmic_velocity       : u.Quantity = 0.0 * u.km / u.s
+    second_cosmic_velocity      : u.Quantity = 0.0 * u.km / u.s
     escape_velocity             : u.Quantity = 0.0 * u.km / u.s
     hyperbolic_excess_speed     : u.Quantity = 0.0 * u.km / u.s
+    oberth_maneuver_velocity    : u.Quantity = 0.0 * u.km / u.s
     turning_angle               : u.Quantity = 0.0 * u.deg
     asymptotic_true_anomaly     : u.Quantity = 0.0 * u.deg # ? Infinite True Anomaly
     asymptote_angle             : u.Quantity = 0.0 * u.deg # ? Hyperbola Asymptote Angle
-    aiming_radius               : u.Quantity = 0.0 * u.km
-    characteristic_energy       : u.Quantity = 0.0 * u.km**2 / u.s**2
+    aiming_radius               : u.Quantity = 0.0 * u.km # ? Impact Parameter
+    characteristic_energy       : u.Quantity = 0.0 * u.km**2 / u.s**2 # ? C_3
 
 @dc.dataclass
 class OrbitParametersCR3BP:

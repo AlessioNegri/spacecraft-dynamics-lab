@@ -10,6 +10,7 @@ import schemas.orbital_maneuvers_schema as schema
 import routers.utility as utility
 
 import astro.bodies as bodies
+import astro.physical_constants as constants
 import astro.enums as ae
 import astro.orbit_3d as o3d
 import astro.orbital_maneuvers as om
@@ -267,6 +268,8 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
 router: fastapi.APIRouter = fastapi.APIRouter(prefix='/orbital-maneuvers', tags=['Orbital Maneuvers'])
 
 # >>> PUT
+
+# * Impulsive Maneuvers
 
 @router.put("/hohmann", response_model=schema.OrbitalManeuverOutModelInfo)
 async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSONResponse:
@@ -953,6 +956,8 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
+# * Non-impulsive Maneuvers
+
 @router.put("/coplanar-circle-circle", response_model=schema.OrbitalManeuverOutModelInfo)
 async def put_coplanar_circle_circle(data: schema.CoplanarCircleCircleInModelInfo) -> fastapi.responses.JSONResponse:
     """HTTP PUT Execute a coplanar circle-to-circle maneuver."""
@@ -1119,6 +1124,65 @@ async def put_inclination_change_non_impulsive(data: schema.InclinationChangeNon
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
 
 # * Tools
+
+@router.put("/tools/super-synchronous-transfer", response_model=schema.ToolsSSTOOutModelInfo)
+async def put_tools_super_synchronous_transfer(data: schema.ToolsSSTOInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute a parametric super-synchronous transfer family
+    
+    The x-axis is the SSTO apoapsis ratio with respect to GEO radius and the y-axis is the sum of the second and third
+    delta-v terms.
+
+    Args:
+        data (schema.ToolsSSTOInModelInfo): Data
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    if data.samples < 2:
+        
+        raise fastapi.HTTPException(status_code=fastapi.status.HTTP_400_BAD_REQUEST,
+                                    detail="'samples' must be at least 2.")
+
+    ratios: np.ndarray = np.linspace(1, 5, int(data.samples))
+    
+    series: typing.List[schema.SSTOSeries] = []
+    
+    # * Cycle SSTO inclination values
+
+    for inc_deg in np.arange(start=0, stop=65, step=5):
+        
+        x_values: typing.List[float] = []
+        y_values: typing.List[float] = []
+        
+        # * Cycle SSTO apoapsis radius
+
+        for ratio in ratios:
+            
+            apoapsis_radius: float = ratio * constants.geocentric_equatorial_radius
+            
+            ssto: om.OrbitalElements = om.OrbitalElements(inclination=inc_deg * u.deg)
+            
+            ssto.update_from_perigee_apogee(periapsis_radius=data.sstoPeriapsisRadius * u.km,
+                                            apoapsis_radius=apoapsis_radius * u.km)
+
+            # ! Same inclination between SSTO and LEO
+            
+            _, dv_2, dv_3 = om.OrbitalManeuvers.super_synchronous_transfer(attractor=bodies.Attractor.EARTH,
+                                                                          leo_inclination=inc_deg * u.deg,
+                                                                          geo_inclination=0 * u.deg,
+                                                                          ssto=ssto)
+            
+            x_values.append(float(ratio))
+            y_values.append(float((dv_2 + dv_3).to_value(u.km / u.s)))
+
+        series.append(schema.SSTOSeries(label=f"Δi = {inc_deg:g}°", x=x_values, y=y_values))
+
+    result_model: schema.ToolsSSTOOutModelInfo = schema.ToolsSSTOOutModelInfo(
+        series=series
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result_model.model_dump())
 
 @router.put("/tools/coplanar-circle-circle", response_model=schema.NonImpulsiveOutModelInfo)
 async def put_tools_coplanar_circle_circle(data: schema.ToolsCoplanarCircleCircleInModelInfo)\

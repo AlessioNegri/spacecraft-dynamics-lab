@@ -6,6 +6,7 @@ import DialogRUI from "./DialogRUI"
 import omes from "@renderer/assets/references/orbital-mechanics-for-engineering-students.png"
 import sfd from "@renderer/assets/references/space-flight-dynamics.png"
 import msdp from "@renderer/assets/references/manned-spacecraft-design-principles.png"
+import apsf from "@renderer/assets/references/astronautics-the-physics-of-space-flight.jpg"
 // import iar from "@renderer/assets/references/introduction-to-astrodynamic-reentry.png"
 
 interface Reference {
@@ -52,6 +53,16 @@ const references: Reference[] =
         isbn: "978-0128044254",
         cover: msdp,
         link: "https://shop.elsevier.com/books/manned-spacecraft-design-principles/sforza/978-0-12-804425-4"
+    },
+    {
+        title: "Astronautics - The Physics of Space Flight",
+        authors: "Ulrich Walter",
+        year: 2018,
+        publisher: "Springer",
+        series: "None",
+        isbn: "978-3319743721",
+        cover: apsf,
+        link: "https://link.springer.com/book/10.1007/978-3-319-74373-8"
     },
     // {
     //     title: "Introduction To Astrodynamic Reentry",

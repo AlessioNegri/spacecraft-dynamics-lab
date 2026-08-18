@@ -37,12 +37,18 @@ class OrbitParametersOutModelInfo(pydantic.BaseModel):
     conicType: str
     specificAngularMomentum: float
     specificMechanicalEnergy: float
+    semiLatusRectum: float
+    transverseVelocity: float
     eccentricity: float
+    periapsisVelocity: float
+    apoapsisVelocity: float
     orbitalPeriod: float
     apoapsisRadius: float
     periapsisRadius: float
     semiMajorAxis: float
     semiMinorAxis: float
+    firstCosmicVelocity: float
+    secondCosmicVelocity: float
     escapeVelocity: float
     infiniteTrueAnomaly: float
     hyperbolaAsymptoteAngle: float
@@ -50,6 +56,7 @@ class OrbitParametersOutModelInfo(pydantic.BaseModel):
     aimingRadius: float
     hyperbolicExcessSpeed: float
     characteristicEnergy: float
+    oberthManeuverVelocity: float
     rightAscension: float
     declination: float
 
@@ -68,6 +75,19 @@ class CartesianOutModelInfo(pydantic.BaseModel):
     
     position: Vector3D
     velocity: Vector3D
+
+class EquinoctialInModelInfo(pydantic.BaseModel):
+    
+    orbitalElements: OrbitalElements
+    
+class EquinoctialOutModelInfo(pydantic.BaseModel):
+    
+    semimajorAxis: float
+    eccentricityVectorH: float
+    eccentricityVectorK: float
+    ascendingNodeVectorP: float
+    ascendingNodeVectorQ: float
+    periapsisLocation: float
     
 class GroundTrackInModelInfo(pydantic.BaseModel):
     attractor: str

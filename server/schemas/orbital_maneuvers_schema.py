@@ -192,6 +192,23 @@ class InclinationChangeNonImpulsiveInModelInfo(BaseInModelInfo):
 
     maneuver: ManeuverInfo
 
+# * Super-synchronous transfer plot
+
+class ToolsSSTOInModelInfo(pydantic.BaseModel):
+    
+    sstoPeriapsisRadius: float
+    samples: int = 200
+
+class SSTOSeries(pydantic.BaseModel):
+    
+    label: str
+    x: typing.List[float]
+    y: typing.List[float]
+
+class ToolsSSTOOutModelInfo(pydantic.BaseModel):
+    
+    series: typing.List[SSTOSeries]
+
 # * Coplanar Circle-to-Circle
 
 class ToolsCoplanarCircleCircleInModelInfo(pydantic.BaseModel):
