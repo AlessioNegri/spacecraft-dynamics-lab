@@ -107,6 +107,8 @@ export default function CentralPanel(props: Readonly<Props>): react.JSX.Element
 
         const linearized: plotly.Data = makeOrbitTrace(props.solutions.linearizedSolution, "Linearized", "#00ccff", 10)
 
+        const nearCircular: plotly.Data = makeOrbitTrace(props.solutions.nearCircularSolution, "Near-Circular", "#ffff00", 10)
+
         const clohessyWiltshire: plotly.Data = makeOrbitTrace(props.solutions.clohessyWiltshireSolution,
             "Clohessy Wiltshire", "#ff00ff", 10)
 
@@ -117,7 +119,7 @@ export default function CentralPanel(props: Readonly<Props>): react.JSX.Element
 
         const finish: plotly.Data = makeMarker(props.solutions.twoImpulsiveManeuver[-1], "Finish", "#ffff00", 10)
 
-        setSolutions([axisX, axisY, axisZ, linearized, clohessyWiltshire, twoImpulsiveManeuver, start, finish])
+        setSolutions([axisX, axisY, axisZ, linearized, nearCircular, clohessyWiltshire, twoImpulsiveManeuver, start, finish])
     }, [props.solutions])
 
     // --- CONST ---

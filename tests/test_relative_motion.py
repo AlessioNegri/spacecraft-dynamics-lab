@@ -221,3 +221,30 @@ def test_clohessy_wiltshire_equations_2():
     assert np.isclose(dr[1].to_value(u.km), 0, atol=1e-0)
     assert np.isclose(dv[0].to_value(u.km / u.s), 0.04, atol=1e-2)
     assert np.isclose(dv[1].to_value(u.km / u.s), 0, atol=1e-0)
+
+def test_rendezvous():
+    """EXAMPLE 8.6 - BOOK 4"""
+    
+    dtheta, dx = rm.RelativeMotion.phasing(semimajor_axis_chaser=(6378 + 340) * u.km,
+                                           semimajor_axis_target=(6378 + 350) * u.km)
+    
+    theta_i, dv = rm.RelativeMotion.homing_phase(semimajor_axis_chaser=(6378 + 340) * u.km,
+                                                 semimajor_axis_target=(6378 + 350) * u.km)
+    
+    assert np.isclose(theta_i.to_value(u.rad) * (6378 + 350), 33.6, atol=1e-1)
+    assert np.isclose(theta_i.to_value(u.deg), 0.286, atol=1e-3)
+    assert np.isclose(dv.to_value(u.m / u.s), 5.72, atol=1e-2)
+    
+    dv: u.Quantity = rm.RelativeMotion.closing_phase(semimajor_axis_target=(6378 + 350) * u.km,
+                                                     distance=1 * u.km,
+                                                     strategy=rm.ClosingApproachStrategy.V_BAR_POS,
+                                                     trajectory=rm.ClosingApproachTrajectory.ELLIPTIC)
+    
+    assert np.isclose(dv.to_value(u.m / u.s) * 0.5, 0.286, atol=1e-3)
+    
+    dv: u.Quantity = rm.RelativeMotion.closing_phase(semimajor_axis_target=(6378 + 350) * u.km,
+                                                         distance=1 * u.km,
+                                                         strategy=rm.ClosingApproachStrategy.V_BAR_POS,
+                                                         trajectory=rm.ClosingApproachTrajectory.CYCLOIDAL)
+
+    assert np.isclose(dv.to_value(u.m / u.s) * 0.5, 0.286 / 4.7, atol=1e-3)

@@ -243,6 +243,19 @@ Geocentric Equatorial frames.
 
 </div>
 
+<div class="side-view">
+
+  <div>
+    <h3>Rendezvous and Docking</h3>
+    <p>
+      Compute the launch, phasing, homing, closing, and final approach phases of a rendezvous sequence.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/rendezvous-and-docking.png" alt="image">
+
+</div>
+
 ## 🎯 Interplanetary Trajectory
 
 The `Interplanetary Trajectory` dialogs furnishes different utilities used in interplanetary mission design and analysis, under the assumption of circular, coplanar orbits.

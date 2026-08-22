@@ -26,6 +26,7 @@ import astro.bodies as bodies
 import astro.common as common
 import astro.orbital_position as orbital_position
 import astro.two_body_problem as two_body_problem
+import astro.orbit_determination as orbit_determination
 
 from astro.enums import Hemisphere, AngleHemisphere
 from astro.models.orbital_elements import OrbitalElements, EquinoctialOrbitalElements
@@ -493,12 +494,14 @@ class Orbit3D():
     @staticmethod
     def longitude(orbital_elements: OrbitalElements,
                   latitude: AngleHemisphere,
+                  epoch: time.Time,
                   orbit_time: u.Quantity) -> AngleHemisphere:
         """Calculate the spacecraft longitude
 
         Args:
             orbital_elements (u.Quantity): Orbital elements
             latitude (AngleHemisphere): Spacecraft latitude
+            epoch (time.Time): Epoch time
             orbit_time (u.Quantity): Spacecraft orbit time
 
         Returns:
@@ -516,7 +519,7 @@ class Orbit3D():
             
             lat: float = -latitude.angle.to_value(u.rad)
         
-        t: float = orbit_time.to_value(u.s)
+        t_since_epoch: float = orbit_time.to_value(u.s)
         
         sma: float = orbital_elements.semimajor_axis.to_value(u.km)
         ecc: float = orbital_elements.eccentricity.to_value(u.one)
@@ -526,6 +529,14 @@ class Orbit3D():
         ta: float = orbital_elements.true_anomaly.to_value(u.rad)
         
         r_p: float = orbital_elements.calc_perigee_radius().to_value(u.km)
+        
+        # * Calculate reference time in Julian days since J2000
+        
+        jd_epoch: float = orbit_determination.OrbitDetermination.timestamp_2_julian_day(timestamp=epoch)
+        
+        dt_epoch_j2000: float = (jd_epoch - orbit_determination.OrbitDetermination.J2000) * 86_400 # ? JD -> seconds
+        
+        t: float = dt_epoch_j2000 + t_since_epoch
         
         # * Longitudinal angle (not the conventional earth-based longitude)
         
@@ -564,11 +575,11 @@ class Orbit3D():
         
         r: float = r_p * (1 + ecc) / (1 + ecc * np.cos(ta))
         
-        lambda_o: u.Quantity = (- 2.3963e9 * np.cos(inc) * (r ** (-3.5)) * t) * u.deg
+        lambda_o: u.Quantity = (- 2.3963e9 * np.cos(inc) * (r ** (-3.5)) * t_since_epoch) * u.deg
         
         # * Effect of rotation of apsides
         
-        lambda_a: u.Quantity = (1.1943e10 * (4 - 5 * np.sin(inc)**2) / (sma**3.5 * (1 - ecc**2)**2) * t) * u.deg
+        lambda_a: u.Quantity = (1.1943e10 * (4 - 5 * np.sin(inc)**2) / (sma**3.5 * (1 - ecc**2)**2) * t_since_epoch) * u.deg
         
         # * Earth-based longitude
         

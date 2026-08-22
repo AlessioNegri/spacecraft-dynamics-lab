@@ -9,6 +9,9 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 3: Orbit Determination
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 8: Orbital Maneuvering
 """
 
 import astropy.time as time
@@ -388,7 +391,7 @@ class OrbitDetermination():
     @staticmethod
     def local_sidereal_time(timestamp: time.Time, longitude: u.Quantity) -> u.Quantity:
         """
-        Calculate the local sidereal time from given timestamp and longitude
+        Calculate the local sidereal time from given timestamp and longitude (Astronomical Almanac)
 
         Args:
             timestamp (time.Time): Timestamp
@@ -422,7 +425,7 @@ class OrbitDetermination():
         
         T0: float = (J0 - OrbitDetermination.J2000) / 36_525
         
-        # >>> 3. Greenwich sideral time at 0 h UT [deg]
+        # >>> 3. Greenwich sideral time at 0 h UT [deg] (Greenwich Mean Sidereal Time - GMST)
         
         theta_g0: float = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 2.583e-8 * T0**3 # ? theta_G0
         

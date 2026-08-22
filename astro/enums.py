@@ -76,3 +76,17 @@ class AngleHemisphere(typing.NamedTuple):
         else:
             
             return 0 * u.deg
+
+class ClosingApproachStrategy(enum.Enum):
+    """Closing approach strategy"""
+    
+    R_BAR_POS = 0
+    R_BAR_NEG = 1
+    V_BAR_POS = 2
+    V_BAR_NEG = 3
+
+class ClosingApproachTrajectory(enum.Enum):
+    """Closing approach trajectory"""
+    
+    ELLIPTIC    = 0
+    CYCLOIDAL   = 1

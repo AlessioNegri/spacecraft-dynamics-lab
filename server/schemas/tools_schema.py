@@ -92,6 +92,7 @@ class EquinoctialOutModelInfo(pydantic.BaseModel):
 class GroundTrackInModelInfo(pydantic.BaseModel):
     attractor: str
     oe: OrbitalElements
+    timestamp: str
     duration: float | None = None
     samples: int | None = None
 

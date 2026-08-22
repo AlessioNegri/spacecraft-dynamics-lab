@@ -11,7 +11,7 @@ const newFeatures: string[] =
     representation`,
     `Non-Impulsive maneuvers (Coplanar Circle-to-Circle and Inclination Change) in Orbital Maneuvers page`,
     `Non-Impulsive maneuvers dialog (Coplanar Circle-to-Circle, Inclination Change, and Inclined Circular Orbits) in
-    Orbital Maneuvers Tool menu`,
+    Orbital Maneuvers Tools menu`,
     `References dialog in Help menu`,
     `GitHub Issues dialog in Help menu`,
     `What's New dialog in Help menu`,
@@ -21,7 +21,9 @@ const newFeatures: string[] =
     `Conversion between Keplerian to Equinoctial Orbital Elements`,
     `New output parameters in Cartesian to Orbit Parameters dialog`,
     `New algorithms in astro Orbital Maneuvers`,
-    `Super-Synchronous Transfer dialog in Orbital Maneuvers Tool menu`,
+    `Super-Synchronous Transfer dialog in Orbital Maneuvers Tools menu`,
+    `New algorithms in astro Relative Motion`,
+    `Rendezvous and Docking dialog in Relative Motion Tools menu`,
 ]
 
 interface Props

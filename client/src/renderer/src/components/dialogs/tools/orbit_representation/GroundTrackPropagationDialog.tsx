@@ -13,6 +13,7 @@ interface IFormIn
 {
     attractor: string
     oe: IOrbitalElements
+    timestamp: string
     duration: number
     samples: number
 }
@@ -44,6 +45,7 @@ const defaultIn: IFormIn =
         aop: 45,
         ta: 230
     },
+    timestamp: '2026-01-01T00:00:00',
     duration: 45 * 60,
     samples: 100
 }
@@ -78,6 +80,8 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
     const [formOut, setFormOut] = react.useState<IFormOut>(defaultOut)
 
     const [data, setData] = react.useState<plotly.Data[]>([])
+
+    const [showFootprints, setShowFootprints] = react.useState<boolean>(true)
 
     // --- USE REF ---
 
@@ -247,8 +251,8 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
             }
         })
 
-        setData([trace, ...footprintTraces])
-    }, [formOut])
+        setData(showFootprints ? [trace, ...footprintTraces] : [trace])
+    }, [formOut, showFootprints])
 
     // --- RENDERING ---
 
@@ -275,7 +279,7 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
             <Form.Root
                 ref={formRef}
                 onSubmit={handleSubmit}
-                className="grid grid-cols-3 gap-4 border-b pb-4 mb-4 items-end">
+                className="grid grid-cols-3 gap-4 border-b pb-4 mb-4">
 
                 <InputField
                     name="attractor"
@@ -294,6 +298,15 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                             { label: "Uranus", value: "uranus" },
                             { label: "Neptune", value: "neptune" }
                         ]}
+                />
+
+                <InputField
+                    name="timestamp"
+                    label="UTC Timestamp"
+                    symbol="t"
+                    type="datetime-local"
+                    value={formIn.timestamp}
+                    onChange={handleChange}
                 />
 
                 <InputField
@@ -318,7 +331,17 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     max={1000}
                 />
 
-                <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span>
+                <InputField
+                    name="showFootprints"
+                    label="Show Horizon Footprints"
+                    type="checkbox"
+                    value={Number(showFootprints)}
+                    onChange={(e) => setShowFootprints((e.target as unknown as { value: boolean }).value)}
+                />
+
+                <span className="col-span-full"></span>
+
+                {/* <span className="col-span-3 text-center uppercase font-semibold">Orbital Elements</span> */}
 
                 <InputField
                     name="oe.sma"

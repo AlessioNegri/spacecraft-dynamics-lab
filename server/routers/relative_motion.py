@@ -92,6 +92,21 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
         
         linearized_solution.append(schema.Vector3D(x=x, y=y, z=z))
     
+    # * Near-Circular orbit
+    
+    near_circular_result: rm.ResultRM = relavive_motion.propagate_near_circular_orbit_for(
+        delta=time.TimeDelta(data.integrationTime * u.hour),
+        eccentricity=oe_target.eccentricity
+    )
+    
+    near_circular_solution: typing.List[schema.Vector3D] = []
+    
+    for x, y, z in zip(near_circular_result.relative_position_x.to_value(),
+                       near_circular_result.relative_position_y.to_value(),
+                       near_circular_result.relative_position_z.to_value()):
+        
+        near_circular_solution.append(schema.Vector3D(x=x, y=y, z=z))
+    
     # * Clohessy-Wiltshire
     
     n: u.Quantity = np.linalg.norm(omega_lvlh.to_value(u.rad / u.s)) * u.rad / u.s
@@ -126,6 +141,7 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     
     result: schema.ComparisonOutModelInfo = schema.ComparisonOutModelInfo(
         linearizedSolution=linearized_solution,
+        nearCircularSolution=near_circular_solution,
         clohessyWiltshireSolution=clohessy_wiltshire_solution,
         twoImpulsiveManeuver=two_impulsive_maneuver,
         twoImpulsiveManeuverCost=dv_tot.to_value(u.m / u.s)
@@ -224,4 +240,65 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
         )
     )
     
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/rendezvous-and-docking", response_model=schema.RendezvousAndDockingOutModelInfo)
+async def put_rendezvous_and_docking(data: schema.RendezvousAndDockingInModelInfo)\
+    -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute the rendezvous and docking phases
+    
+    Args:
+        data (schema.RendezvousAndDockingInModelInfo): Rendezvous and docking input data
+        
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    timestamp: time.Time = time.Time(data.timestamp, scale="utc")
+
+    launch_phase_ascending, launch_phase_descending = rm.RelativeMotion.launch_phase(
+        timestamp=timestamp,
+        launch_site_latitude=data.launchSiteLatitude * u.deg,
+        launch_site_longitude=data.launchSiteLongitude * u.deg,
+        target_inclination=data.targetInclination * u.deg,
+        target_right_ascension_ascending_node=data.targetRaan * u.deg
+    )
+
+    phasing_angle, phasing_distance = rm.RelativeMotion.phasing(
+        semimajor_axis_chaser=data.chaserSemimajorAxis * u.km,
+        semimajor_axis_target=data.targetSemimajorAxis * u.km
+    )
+
+    homing_angle, homing_delta_velocity = rm.RelativeMotion.homing_phase(
+        semimajor_axis_chaser=data.chaserSemimajorAxis * u.km,
+        semimajor_axis_target=data.targetSemimajorAxis * u.km
+    )
+
+    closing_delta_velocity = rm.RelativeMotion.closing_phase(
+        semimajor_axis_target=data.targetSemimajorAxis * u.km,
+        distance=data.closingDistance * u.km,
+        strategy=rm.ClosingApproachStrategy[data.closingStrategy],
+        trajectory=rm.ClosingApproachTrajectory[data.closingTrajectory],
+        cycloidal_revolutions=data.cycloidalRevolutions,
+        initial_velocity=data.closingInitialVelocity * u.km / u.s
+    )
+
+    final_approach_delta_velocity = rm.RelativeMotion.final_approach(
+        semimajor_axis_target=data.targetSemimajorAxis * u.km,
+        distance=data.finalApproachDistance * u.km,
+        time=data.finalApproachTime * u.s,
+        strategy=rm.ClosingApproachStrategy[data.finalApproachStrategy]
+    )
+
+    result: schema.RendezvousAndDockingOutModelInfo = schema.RendezvousAndDockingOutModelInfo(
+        launchPhaseAscending=launch_phase_ascending.to_value(u.s),
+        launchPhaseDescending=launch_phase_descending.to_value(u.s),
+        phasingAngle=phasing_angle.to_value(u.deg),
+        phasingDistance=phasing_distance.to_value(u.km),
+        homingAngle=homing_angle.to_value(u.deg),
+        homingDeltaVelocity=homing_delta_velocity.to_value(u.m / u.s),
+        closingDeltaVelocity=closing_delta_velocity.to_value(u.m / u.s),
+        finalApproachDeltaVelocity=final_approach_delta_velocity.to_value(u.m / u.s)
+    )
+
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

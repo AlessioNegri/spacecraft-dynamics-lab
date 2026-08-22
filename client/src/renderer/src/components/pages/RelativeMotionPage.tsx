@@ -13,6 +13,7 @@ export default function RelativeMotionPage(): react.JSX.Element
 
     const [solutions, setSolutions] = react.useState<IRelativeMotionFormOutput>({
         linearizedSolution: [],
+        nearCircularSolution: [],
         clohessyWiltshireSolution: [],
         twoImpulsiveManeuver: [],
         twoImpulsiveManeuverCost: 0

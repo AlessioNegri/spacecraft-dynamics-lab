@@ -185,8 +185,11 @@ def test_longitude():
     
     latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=59.04 * u.deg)
     
+    epoch: time.Time = time.Time("2000-01-01 12:00:00", scale="utc")
+    
     longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=oe,
                                                            latitude=latitude,
+                                                           epoch=epoch,
                                                            orbit_time=488.5 * u.minute)
     
     assert np.isclose(longitude.angle.to_value(u.deg), 154.3, atol=1e-1)
@@ -202,8 +205,9 @@ def test_longitude():
     latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=30 * u.deg, true_anomaly=287 * u.deg)
     
     longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=oe,
-                                                            latitude=latitude,
-                                                            orbit_time=613.2 * u.minute)
+                                                           latitude=latitude,
+                                                           epoch=epoch,
+                                                           orbit_time=613.2 * u.minute)
     
     assert np.isclose(longitude.angle.to_value(u.deg), 0.5, atol=1e-1)
     assert longitude.hemisphere == o3d.Hemisphere.EAST

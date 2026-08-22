@@ -203,6 +203,8 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
     R_E: u.Quantity = bodies.BODIES[attractor].R_E
+    
+    epoch: time.Time = time.Time(data.timestamp)
 
     duration: u.Quantity = data.duration * u.s if data.duration is not None else 0 * u.s
     
@@ -287,6 +289,7 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
 
         longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=copy.deepcopy(oe),
                                                                latitude=latitude,
+                                                               epoch=epoch,
                                                                orbit_time=t_i)
         
         longitudes.append(longitude.to_signed_angle().to_value(u.deg))

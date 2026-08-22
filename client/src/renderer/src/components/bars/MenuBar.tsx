@@ -29,11 +29,12 @@ import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/Topocen
 import AngleRangeDialog from "../dialogs/tools/orbit_determination/AngleRangeDialog"
 import GaussMethodDialog from "../dialogs/tools/orbit_determination/GaussMethod"
 
-import SuperSynchronousTransferDialog from "../dialogs/tools/orbital_maneuvers/SuperSynchronousTransferDialog"
 import NonImpulsiveManeuversDialog from "../dialogs/tools/orbital_maneuvers/NonImpulsiveManeuversDialog"
+import SuperSynchronousTransferDialog from "../dialogs/tools/orbital_maneuvers/SuperSynchronousTransferDialog"
 
 import LvlhKinematicsDialog from "../dialogs/tools/relative_motion/LvlhKinematicsDialog"
 import GeocentricEquatorialKinematicsDialog from "../dialogs/tools/relative_motion/GeocentricEquatorialKinematicsDialog"
+import RendezvousAndDockingDialog from "../dialogs/tools/relative_motion/RendezvousAndDockingDialog"
 
 import SynodicPeriodDialog from "../dialogs/tools/interplanetary_trajectory/SynodicPeriodDialog"
 import SphereOfInfluenceDialog from "../dialogs/tools/interplanetary_trajectory/SphereOfInfluenceDialog"
@@ -74,6 +75,7 @@ const DIALOGS =
 
     lvlhKinematicsDialog: LvlhKinematicsDialog,
     geocentricEquatorialKinematicsDialog: GeocentricEquatorialKinematicsDialog,
+    rendezvousAndDockingDialog: RendezvousAndDockingDialog,
 
     synodicPeriodDialog: SynodicPeriodDialog,
     sphereOfInfluenceDialog: SphereOfInfluenceDialog,
@@ -202,7 +204,8 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
             children:
             [
                 { label: "LVLH Kinematics", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("lvlhKinematicsDialog") },
-                { label: "Geocentric Equatorial Kinematics", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") }
+                { label: "Geocentric Equatorial Kinematics", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("geocentricEquatorialKinematicsDialog") },
+                { label: "Rendezvous and Docking", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("rendezvousAndDockingDialog") }
             ]
         },
         {
