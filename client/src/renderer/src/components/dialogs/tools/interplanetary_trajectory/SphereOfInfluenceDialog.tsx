@@ -17,6 +17,7 @@ interface IFormIn
 interface IFormOut
 {
     sphereOfInfluence: number
+    sphereOfInfluenceApproximated: number
 }
 
 const defaultIn: IFormIn =
@@ -27,7 +28,8 @@ const defaultIn: IFormIn =
 
 const defaultOut: IFormOut =
 {
-    sphereOfInfluence: 0
+    sphereOfInfluence: 0,
+    sphereOfInfluenceApproximated: 0
 }
 
 interface Props
@@ -122,7 +124,8 @@ export default function SphereOfInfluenceDialog(props: Readonly<Props>): react.J
                     title: "Sphere of Influence",
                     content:
                         `The sphere of influence is the region around a celestial body where its gravitational field
-                        dominates over the gravitational field of other bodies.`
+                        dominates over the gravitational field of other bodies. The approximation considers the mass of
+                        the body far less than the main attractor.`
                 }
             }>
 
@@ -184,6 +187,13 @@ export default function SphereOfInfluenceDialog(props: Readonly<Props>): react.J
                     symbol="r_{SOI}"
                     unit="km"
                     value={formOut.sphereOfInfluence}
+                />
+
+                <OutputField
+                    label="Sphere of Influence (Approximated)"
+                    symbol="r_{SOI}"
+                    unit="km"
+                    value={formOut.sphereOfInfluenceApproximated}
                 />
 
             </Form.Root>

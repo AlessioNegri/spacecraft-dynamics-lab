@@ -24,6 +24,9 @@ const newFeatures: string[] =
     `Super-Synchronous Transfer dialog in Orbital Maneuvers Tools menu`,
     `New algorithms in astro Relative Motion`,
     `Rendezvous and Docking dialog in Relative Motion Tools menu`,
+    `Non-approximated Sphere of Influence calculation in Interplanetary Trajectory Tools menu`,
+    `Non-Hohmann Transfer dialog in Interplanetary Trajectory Tools menu`,
+    `New flyby scheme algorithm in astro Interplanetary Trajectories`,
 ]
 
 interface Props

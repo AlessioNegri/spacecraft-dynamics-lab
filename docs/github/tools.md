@@ -299,6 +299,19 @@ The `Interplanetary Trajectory` dialogs furnishes different utilities used in in
 
 </div>
 
+<div class="side-view">
+
+  <div>
+    <h3>Non-Hohmann Transfer</h3>
+    <p>
+      Compute the family of non-Hohmann interplanetary transfers as a function of hyperbolic excess velocity. The result is plotted as the transfer time and true anomaly versus v_infinity.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/non-hohmann-transfer.png" alt="image">
+
+</div>
+
 ## 🌀 Orbital Perturbations
 
 The `Orbital Perturbations` dialogs furnishes different utilities to analyse the effects of various forces on orbital

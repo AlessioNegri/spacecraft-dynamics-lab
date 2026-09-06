@@ -14,5 +14,7 @@
     "workbench.editor.enablePreview": true,
     "workbench.editor.enablePreviewFromQuickOpen": true,
     "workbench.editor.enablePreviewFromCodeNavigation": true,
-    "workbench.list.openMode": "singleClick"
+    "workbench.list.openMode": "singleClick",
+    "python.analysis.include": [ "astro/**", "server/**", "tests/**" ],
+    "python.analysis.typeCheckingMode": "off"
 }

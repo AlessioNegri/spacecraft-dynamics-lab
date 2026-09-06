@@ -1,4 +1,5 @@
 import pydantic
+import typing
 
 # * Simulation
     
@@ -58,6 +59,7 @@ class SphereOfInfluenceInModelInfo(pydantic.BaseModel):
 class SphereOfInfluenceOutModelInfo(pydantic.BaseModel):
     
     sphereOfInfluence: float
+    sphereOfInfluenceApproximated: float
 
 # * Transfer
 
@@ -87,3 +89,17 @@ class TransferOutModelInfo(pydantic.BaseModel):
     departureHyperbola: Hyperbola
     arrivalDeltaV: float
     arrivalHyperbola: Hyperbola
+
+# * Non-Hohmann Transfer
+
+class NonHohmannTransferInModelInfo(pydantic.BaseModel):
+    
+    departurePlanet: str
+    arrivalPlanet: str
+    numPoints: int = 200
+
+class NonHohmannTransferOutModelInfo(pydantic.BaseModel):
+
+    hyperbolicExcessVelocities: typing.List[float]
+    timeOfFlights: typing.List[float]
+    trueAnomalies: typing.List[float]

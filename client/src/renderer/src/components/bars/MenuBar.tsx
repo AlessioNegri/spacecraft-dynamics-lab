@@ -39,6 +39,7 @@ import RendezvousAndDockingDialog from "../dialogs/tools/relative_motion/Rendezv
 import SynodicPeriodDialog from "../dialogs/tools/interplanetary_trajectory/SynodicPeriodDialog"
 import SphereOfInfluenceDialog from "../dialogs/tools/interplanetary_trajectory/SphereOfInfluenceDialog"
 import TransferDialog from "../dialogs/tools/interplanetary_trajectory/TransferDialog"
+import NonHohmannTransferDialog from "../dialogs/tools/interplanetary_trajectory/NonHohmannTransferDialog"
 
 import NodalRegressionDialog from "../dialogs/tools/orbital_perturbations/NodalRegressionDialog"
 import ApsidalRotationDialog from "../dialogs/tools/orbital_perturbations/ApsidalRotationDialog"
@@ -80,6 +81,7 @@ const DIALOGS =
     synodicPeriodDialog: SynodicPeriodDialog,
     sphereOfInfluenceDialog: SphereOfInfluenceDialog,
     transferDialog: TransferDialog,
+    nonHohmannTransferDialog: NonHohmannTransferDialog,
 
     nodalRegressionDialog: NodalRegressionDialog,
     apsidalRotationDialog: ApsidalRotationDialog,
@@ -100,6 +102,10 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
     // --- SHORTCUT ---
     
     Shortcut("Ctrl+A", () => setOpenDialog("aboutDialog"))
+    Shortcut("Ctrl+R", () => setOpenDialog("referencesDialog"))
+    Shortcut("Ctrl+G", () => setOpenDialog("gitHubIssuesDialog"))
+    Shortcut("Ctrl+N", () => setOpenDialog("newFeaturesDialog"))
+    Shortcut("Ctrl+D", () => setOpenDialog("disclaimerDialog"))
     
     // --- USE STATE ---
 
@@ -215,7 +221,8 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
             [
                 { label: "Synodic Period", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("synodicPeriodDialog") },
                 { label: "Sphere of Influence", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("sphereOfInfluenceDialog") },
-                { label: "Transfer", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("transferDialog") }
+                { label: "Transfer", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("transferDialog") },
+                { label: "Non-Hohmann Transfer", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("nonHohmannTransferDialog") }
             ]
         },
         {
@@ -243,10 +250,10 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
     [
         { label: "About", shortcut: "Ctrl+A", icon: "streamline-flex-color:information-circle-flat", action: () => setOpenDialog("aboutDialog") },
         { label: "References", shortcut: "Ctrl+R", icon: "noto:books", action: () => setOpenDialog("referencesDialog") },
-        { label: "GitHub Issues", icon: "line-md:github", action: () => setOpenDialog("gitHubIssuesDialog") },
-        { label: "What's new", icon: "fxemoji:loudspeaker", action: () => setOpenDialog("newFeaturesDialog") },
+        { label: "GitHub Issues", shortcut: "Ctrl+G", icon: "line-md:github", action: () => setOpenDialog("gitHubIssuesDialog") },
+        { label: "What's new", shortcut: "Ctrl+N", icon: "fxemoji:loudspeaker", action: () => setOpenDialog("newFeaturesDialog") },
         { label: "Sep-1", separator: true },
-        { label: "Disclaimer", icon: "flat-color-icons:disclaimer", action: () => setOpenDialog("disclaimerDialog") }
+        { label: "Disclaimer", shortcut: "Ctrl+D", icon: "flat-color-icons:disclaimer", action: () => setOpenDialog("disclaimerDialog") }
     ]
 
     // --- RENDERING ---

@@ -17,6 +17,7 @@ def test_synodic_period_1():
                                                                    arrival_planet=arrival_planet)
     
     assert np.isclose(T_S.to_value(u.day), 779.9, atol=1e-1)
+    assert np.isclose(T_S.to_value(u.year), 2.135, atol=1e-1)
 
 def test_synodic_period_2():
     """EXAMPLE 10.2 - BOOK 2"""
@@ -61,54 +62,64 @@ def test_sphere_of_influence():
     """EXAMPLE 8.3"""
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MERCURY,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 112_409, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 112_191, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.VENUS,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 616_279, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 612_789, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.EARTH,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 924_635, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 918_955, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MOON,
-                                                                        main_attractor=bd.Attractor.EARTH)
+                                                                        main_attractor=bd.Attractor.EARTH,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 66_200, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 56_476, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.MARS,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 577_227, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 575_769, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.JUPITER,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 48_214_223, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 45_402_278, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.SATURN,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 54_808_061, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 52_789_763, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.URANUS,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 51_839_753, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 50_921_585, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.NEPTUNE,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 86_770_197, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 85_130_292, atol=1e0)
     
     soi: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=bd.Attractor.PLUTO,
-                                                                        main_attractor=bd.Attractor.SUN)
+                                                                        main_attractor=bd.Attractor.SUN,
+                                                                        approximation=False)
     
-    assert np.isclose(soi.to_value(u.km), 3_146_985, atol=1e0)
+    assert np.isclose(soi.to_value(u.km), 3_145_309, atol=1e0)
 
 def test_departure_1():
     """EXAMPLE 8.4"""
@@ -121,13 +132,13 @@ def test_departure_1():
     assert np.isclose(hyperbola.asymptote_angle.to_value(u.deg), 29.17, atol=1e-2)
 
 def test_departure_2():
-    """EXAMPLE 10.1"""
+    """EXAMPLE 10.1 - BOOK 2"""
     
     dv, hyperbola = it.InterplanetaryTrajectories.departure(departure_planet=bd.Attractor.EARTH,
                                                             arrival_planet=bd.Attractor.MARS,
                                                             periapse_radius=(6378 + 185) * u.km)
     
-    assert np.isclose(dv.to_value(u.km / u.s), 3.6147, atol=1e-4)    
+    assert np.isclose(dv.to_value(u.km / u.s), 3.6147, atol=1e-4)
     assert np.isclose(hyperbola.hyperbolic_excess_speed.to_value(u.km / u.s), 2.9448, atol=1e-4)
     assert np.isclose(hyperbola.characteristic_energy.to_value(u.km**2 / u.s**2), 8.6712, atol=1e-4)
     assert np.isclose(hyperbola.specific_energy.to_value(u.km**2 / u.s**2), 4.3356, atol=1e-4)
@@ -137,12 +148,25 @@ def test_departure_2():
                                                             arrival_planet=bd.Attractor.VENUS,
                                                             periapse_radius=(6378 + 185) * u.km)
     
-    assert np.isclose(dv.to_value(u.km / u.s), 3.5070, atol=1e-4)    
-    assert np.isclose(hyperbola.hyperbolic_excess_speed.to_value(u.km / u.s), -2.4954, atol=1e-4)
+    assert np.isclose(dv.to_value(u.km / u.s), 3.5070, atol=1e-4)
+    assert np.isclose(hyperbola.hyperbolic_excess_speed.to_value(u.km / u.s), 2.4954, atol=1e-4)
     assert np.isclose(hyperbola.characteristic_energy.to_value(u.km**2 / u.s**2), 6.2271, atol=1e-4)
     assert np.isclose(hyperbola.specific_energy.to_value(u.km**2 / u.s**2), 3.1135, atol=1e-4)
 
-def test_rendezvous_with_optimal_periapsis_radius():
+def test_non_hohmann_transfer():
+    """EXAMPLE 9.3.2 - BOOK 4"""
+    
+    tof, ta, tof_approx, ta_approx =\
+        it.InterplanetaryTrajectories.non_hohmann_transfer(departure_planet=bd.Attractor.EARTH,
+                                                           arrival_planet=bd.Attractor.MARS,
+                                                           hyperbolic_excess_velocity=2.944696 * u.km / u.s)
+    
+    assert np.isclose(tof.to_value(u.day), 258.8, atol=1e-1)
+    assert np.isclose(ta.to_value(u.deg), 180.0, atol=1e-1)
+    assert np.isclose(tof_approx.to_value(u.day), 258.8, atol=1e-1)
+    assert np.isclose(ta_approx.to_value(u.deg), 180.0, atol=1e-1)
+
+def test_rendezvous_with_optimal_periapsis_radius_1():
     """EXAMPLE 8.5"""
     
     dv, hyperbola, oe = it.InterplanetaryTrajectories.rendezvous_with_optimal_periapsis_radius(departure_planet=bd.Attractor.EARTH,
@@ -156,7 +180,7 @@ def test_rendezvous_with_optimal_periapsis_radius():
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 8832, atol=1e0)
     assert np.isclose(oe.eccentricity.to_value(), 0.3822, atol=1e-4)
 
-def test_rendezvous_with_optimal_periapsis_radius():
+def test_rendezvous_with_optimal_periapsis_radius_2():
     """EXAMPLE 8.5"""
     
     dv, hyperbola, _ = it.InterplanetaryTrajectories.rendezvous_with_circular_orbit(departure_planet=bd.Attractor.EARTH,

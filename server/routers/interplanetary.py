@@ -1,7 +1,9 @@
 import astropy.time as time
 import astropy.units as u
 import fastapi
+import numpy as np
 import routers.utility as utility
+import typing
 
 import tasks.pork_chop as pork_chop
 import schemas.common as common
@@ -167,11 +169,15 @@ async def put_sphere_of_influence(data: schema.SphereOfInfluenceInModelInfo) -> 
 
     body: bd.Attractor = bd.Attractor(data.body.lower())
 
-    sphere_of_influence: u.Quantity = it.InterplanetaryTrajectories.sphere_of_influence(body=body,
-                                                                                        main_attractor=main_attractor)
+    sphere_of_influence: u.Quantity =\
+        it.InterplanetaryTrajectories.sphere_of_influence(body=body, main_attractor=main_attractor, approximation=False)
+    
+    sphere_of_influence_approximated: u.Quantity =\
+        it.InterplanetaryTrajectories.sphere_of_influence(body=body, main_attractor=main_attractor, approximation=True)
 
     result: schema.SphereOfInfluenceOutModelInfo = schema.SphereOfInfluenceOutModelInfo(
-        sphereOfInfluence=sphere_of_influence.to_value(u.km)
+        sphereOfInfluence=sphere_of_influence.to_value(u.km),
+        sphereOfInfluenceApproximated=sphere_of_influence_approximated.to_value(u.km)
     )
 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
@@ -237,4 +243,53 @@ async def put_transfer(data: schema.TransferInModelInfo) -> fastapi.responses.JS
         )
     )
 
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
+@router.put("/non-hohmann-transfer", response_model=schema.NonHohmannTransferOutModelInfo)
+async def put_non_hohmann_transfer(data: schema.NonHohmannTransferInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Simple transfer calculation using Hohmann transfer as approximation
+
+    Args:
+        data (schema.NonHohmannTransferInModelInfo): Non-Hohmann Transfer parameters
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+    
+    departure_planet: bd.Attractor = bd.Attractor(data.departurePlanet.lower())
+
+    arrival_planet: bd.Attractor = bd.Attractor(data.arrivalPlanet.lower())
+    
+    mu_sun: float = bd.BODIES[bd.Attractor.SUN].mu.to_value(u.km**3 / u.s**2)
+    
+    R_1: float = bd.BODIES[departure_planet].semi_major_axis.to_value(u.km)
+    
+    R_2: float = bd.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
+    
+    v_inf_H: float = np.sqrt(mu_sun / R_1) * np.abs((np.sqrt(2 * R_2 / (R_1 + R_2)) - 1))
+    
+    v_inf_values: np.ndarray = np.linspace(v_inf_H, v_inf_H * 2, data.numPoints)
+    
+    tof_list: typing.List[float] = []
+    
+    ta_list: typing.List[float] = []
+
+    for v_inf in v_inf_values:
+        
+        tof, ta, _, _ = it.InterplanetaryTrajectories.non_hohmann_transfer(
+            departure_planet=departure_planet,
+            arrival_planet=arrival_planet,
+            hyperbolic_excess_velocity=v_inf * u.km / u.s
+        )
+
+        tof_list.append(tof.to_value(u.day))
+        
+        ta_list.append(ta.to_value(u.deg))
+    
+    result: schema.NonHohmannTransferOutModelInfo = schema.NonHohmannTransferOutModelInfo(
+        hyperbolicExcessVelocities=v_inf_values.tolist(),
+        timeOfFlights=tof_list,
+        trueAnomalies=ta_list
+    )
+    
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

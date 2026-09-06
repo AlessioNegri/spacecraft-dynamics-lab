@@ -9,6 +9,9 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 10: Interplanetary Trajectories
+
+- Ulrich Walter, "Astronautics - The Physics of Space Flight"
+    - Chapter 9: Interplanetary Flight
 """
 
 import astropy.time as time
@@ -83,6 +86,8 @@ class InterplanetaryTrajectories():
         
         common.check_attractor(attractor=arrival_planet)
         
+        T_1: float = bodies.BODIES[departure_planet].T_S.to_value(u.s)
+        
         R_1: float = bodies.BODIES[departure_planet].semi_major_axis.to_value(u.km)
         
         R_2: float = bodies.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
@@ -130,16 +135,34 @@ class InterplanetaryTrajectories():
             
             N += 1
         
+        # * Alternative formula
+        
+        t_wait_2: float = -1
+        
+        k: int = 0
+        
+        T_syn: u.Quantity = InterplanetaryTrajectories.synodic_period(departure_planet=departure_planet,
+                                                                      arrival_planet=arrival_planet)
+        
+        while t_wait_2 < 0:
+            
+            t_wait_2 = T_syn.to_value(u.s) * (k - np.abs(1 - 2 * t_12 / T_1))
+            
+            k += 1
+        
         return [phi_0 * u.rad, phi_f * u.rad, t_wait * u.s]
     
     @staticmethod
-    def sphere_of_influence(body: bodies.Attractor, main_attractor: bodies.Attractor) -> u.Quantity:
+    def sphere_of_influence(body: bodies.Attractor,
+                            main_attractor: bodies.Attractor,
+                            approximation: bool = True) -> u.Quantity:
         """
         Calculate the Sphere Of Influence (SOI) of the given body w.r.t. the main attractor
 
         Args:
             body (bodies.Attractor): Planet / Moon
             main_attractor (bodies.Attractor): Main attractor
+            approximation (bool, optional): Use the approximated formula. Defaults to True.
 
         Returns:
             u.Quantity: Sphere Of Influence
@@ -155,7 +178,13 @@ class InterplanetaryTrajectories():
         
         m_main_attractor: float = bodies.BODIES[main_attractor].M.to_value(u.kg)
         
-        return R * (m_body / m_main_attractor)**(2/5) * u.km
+        if approximation:
+            
+            return R * (m_body / m_main_attractor)**(2/5) * u.km
+        
+        else:
+            
+            return R / ((m_body / m_main_attractor)**(-2/5) + 1) * u.km
     
     @staticmethod
     def departure(departure_planet: bodies.Attractor,
@@ -191,7 +220,7 @@ class InterplanetaryTrajectories():
         
         # >>> 1. Hyperbolic excess speed of the departure hyperbola (ΔV_DEP = V_SC_DEP - V_PLANET_DEP)
         
-        v_inf: float = np.sqrt(mu_sun / R_1) * (np.sqrt(2 * R_2 / (R_1 + R_2)) - 1)
+        v_inf: float = np.sqrt(mu_sun / R_1) * np.abs((np.sqrt(2 * R_2 / (R_1 + R_2)) - 1))
         
         # >>> 2. Hyperbolic trajectory
         
@@ -239,6 +268,97 @@ class InterplanetaryTrajectories():
                                                                     time_of_flight=tof)
         
         return dv * u.km / u.s, hyperbola_params
+    
+    @staticmethod
+    def non_hohmann_transfer(departure_planet: bodies.Attractor,
+                             arrival_planet: bodies.Attractor,
+                             hyperbolic_excess_velocity: u.Quantity)\
+                                 -> typing.Tuple[u.Quantity, u.Quantity, u.Quantity, u.Quantity]:
+        """
+        Calculate the time of flight and true anomaly at arrival for a non-Hohmann transfer.
+        
+        Hohmann orbits may be the most favorable transfer orbits from an energetic point o view, but they are very
+        sensitive to initial thrust errors, and take the longest time. So just a little more thrust would make sure that,
+        with small thrust errors, the transfer orbit still intersects the target orbit, while transition time drastically
+        decreases.
+        
+        But how does the crossing point and with it the transition time change with some transfer excess velocity in the
+        initial parking orbit?
+
+        Args:
+            departure_planet (bodies.Attractor): Departure planet
+            arrival_planet (bodies.Attractor): Arrival planet
+            hyperbolic_excess_velocity (u.Quantity): Hyperbolic excess velocity
+
+        Returns:
+            typing.Tuple[u.Quantity, u.Quantity, u.Quantity, u.Quantity]: [time of flight, true anomaly at arrival, approximate time of flight, approximate true anomaly at arrival]
+        """
+        
+        common.check_attractor(attractor=departure_planet)
+        common.check_attractor(attractor=arrival_planet)
+        
+        mu_sun: float = bodies.BODIES[bodies.Attractor.SUN].mu.to_value(u.km**3 / u.s**2)
+        
+        R_1: float = bodies.BODIES[departure_planet].semi_major_axis.to_value(u.km)
+        
+        R_2: float = bodies.BODIES[arrival_planet].semi_major_axis.to_value(u.km)
+        
+        v_inf: float = hyperbolic_excess_velocity.to_value(u.km / u.s)
+        
+        # >>> 1. Parking orbit velocity
+        
+        v_planet: float = np.sqrt(mu_sun / R_1)
+        
+        # >>> 2. Hyperbolic excess velocity and TOF for an Hohmann transfer
+        
+        v_inf_H: float = np.sqrt(mu_sun / R_1) * np.abs((np.sqrt(2 * R_2 / (R_1 + R_2)) - 1))
+        
+        tof_H: float = np.pi / np.sqrt(mu_sun) * ((R_1 + R_2) / 2)**(3/2)
+        
+        # >>> 3. Alpha parameter (inner / outer)
+        
+        alpha: float = R_1 / R_2 if R_1 <= R_2 else R_2 / R_1
+        
+        # >>> 4. Time of flight (always first intersection point of the transfer ellipse => -)
+        
+        sign: float = +1 if R_1 <= R_2 else -1
+        
+        tof_approx: float = (tof_H * u.s).to_value(u.day) * ( 1 -\
+            4 * np.sqrt(2) / (np.pi * np.sqrt(alpha * (1 - alpha**2))) *\
+            np.sqrt(np.abs(v_inf_H - v_inf) / (v_planet + sign * v_inf)) )
+        
+        # >>> 5. True anomaly (always first intersection point of the transfer ellipse => -)
+        
+        ta_approx: float = 180 * ( 1 -\
+            2 * np.sqrt(2) / np.pi * np.sqrt((1 + alpha) / (1 - alpha)) *\
+            np.sqrt(np.abs(v_inf_H - v_inf) / (v_planet + sign * v_inf)) )
+        
+        # >>> 6. Exact solution
+        
+        v_inf_prime: float = v_planet + v_inf
+        
+        e: float = R_1 * v_inf_prime**2 / mu_sun - 1 # ? Eccentricity
+        
+        if e < 0 or e > 1:
+            
+            print(f"e = {e} is not valid!")
+            
+            return 0 * u.s, 0 * u.rad, 0 * u.day, 0 * u.deg
+        
+        a: float = R_1 / (1 - e) # ? Semimajor axis
+        
+        factor: float = 1 / e * (alpha * (1 + e) - 1)
+        
+        factor = np.min([np.max([-1, factor]), 1])
+        
+        ta_exact: float = np.arccos(factor)
+        
+        # ? Eccentric anomaly for elliptical orbit
+        E: float = 2 * np.arctan2(np.sqrt(1 - e) * np.sin(ta_exact / 2), np.sqrt(1 + e) * np.cos(ta_exact / 2))
+        
+        tof_exact: float = np.sqrt(a**3 / mu_sun) * (E - e * np.sin(E))
+        
+        return tof_exact * u.s, ta_exact * u.rad, tof_approx * u.day, ta_approx * u.deg
     
     @staticmethod
     def rendezvous_with_optimal_periapsis_radius(departure_planet: bodies.Attractor,
@@ -312,6 +432,8 @@ class InterplanetaryTrajectories():
         asymptote_angle: float = np.arccos(1 / e_hyp) # ? Angle to periapsis
         
         aiming_radius: float = h_hyp**2 / mu_2 * 1 / np.sqrt(e_hyp**2 - 1)
+        
+        # aiming_radius: float = 2 * np.sqrt(2) * np.sqrt(1 - e) / (1 + e) * mu_2 / v_inf**2
         
         p: float = h_hyp**2 / mu_2
         
@@ -630,6 +752,84 @@ class InterplanetaryTrajectories():
         # >>> 5. Maneuver
         
         return oe_1, hyperbola_params, oe_2
+    
+    @staticmethod
+    def flyby_scheme(planet: bodies.Attractor,
+                     planet_position_vector: u.Quantity,
+                     planet_velocity_vector: u.Quantity,
+                     spacecraft_position_vector: u.Quantity,
+                     spacecraft_velocity_vector: u.Quantity) -> u.Quantity:
+        """
+        Planetary flyby scheme with generalized calculations for output velocity to a flyby that does not take place in
+        the planet's orbital plane.
+
+        Args:
+            planet (bodies.Attractor): Planet
+            planet_position_vector (u.Quantity): Position vector of the planet in the heliocentric frame
+            planet_velocity_vector (u.Quantity): Velocity vector of the planet in the heliocentric frame
+            spacecraft_position_vector (u.Quantity): Position vector of the spacecraft in the heliocentric frame
+            spacecraft_velocity_vector (u.Quantity): Velocity vector of the spacecraft in the heliocentric frame
+
+        Returns:
+            u.Quantity: Outgoing velocity vector of the spacecraft after the flyby maneuver in the heliocentric frame
+        """
+        
+        common.check_attractor(planet)
+        common.check_position_vector(planet_position_vector.to_value(u.km))
+        common.check_position_vector(spacecraft_position_vector.to_value(u.km))
+        common.check_velocity_vector(planet_velocity_vector.to_value(u.km / u.s))
+        common.check_velocity_vector(spacecraft_velocity_vector.to_value(u.km / u.s))
+        
+        mu_p: float = bodies.BODIES[planet].mu.to_value(u.km**3 / u.s**2)
+        
+        r_p: np.ndarray = planet_position_vector.to_value(u.km)
+        v_p: np.ndarray = planet_velocity_vector.to_value(u.km)
+        
+        r_sc: np.ndarray = spacecraft_position_vector.to_value(u.km / u.s)
+        v_in: np.ndarray = spacecraft_velocity_vector.to_value(u.km / u.s)
+        
+        # >>> 1. Hyperbolic excess velocity
+        
+        r_inf_minus: np.ndarray = r_sc - r_p
+        v_inf_minus: np.ndarray = v_in - v_p
+        
+        v_inf_norm: float = np.linalg.vector_norm(v_inf_minus)
+        
+        v_inf_minus_hat: np.ndarray = v_inf_minus / v_inf_norm
+        
+        # >>> 2. Impact parameter
+        
+        delta: np.ndarray = r_inf_minus - v_inf_minus_hat * np.dot(v_inf_minus_hat, r_inf_minus)
+        
+        delta_norm: float = np.linalg.vector_norm(delta)
+        
+        delta_hat: np.ndarray = delta / delta_norm
+        
+        # ? Normal vector to the flyby plane
+        n: np.ndarray = np.cross(v_inf_minus_hat, delta_hat) / np.linalg.vector_norm(np.cross(v_inf_minus_hat, delta_hat))
+        
+        delta_p: float = np.sign(np.dot(np.cross(r_inf_minus, delta), n)) * v_p**2 / mu_p * np.sqrt(np.dot(delta, delta))
+        
+        # >>> 3. Rotation matrix
+        
+        csi: float = delta_p * v_inf_norm**2 / np.linalg.vector_norm(v_p)**2
+        
+        R_delta: np.ndarray = 1 / (1 + csi**2) *\
+            np.array([
+                [ csi**2 - 1, - 2 * csi , 0          ],
+                [ 2 * csi   , csi**2 - 1, 0          ],
+                [ 0         , 0         , 1 + csi**2 ]
+            ])
+        
+        # >>> 4. Transformation matrix (planetocentric system -> flyby plane)
+
+        T_P_F = np.vstack((v_inf_minus_hat, delta_hat, n))
+        
+        # >>> 5. Outgoing velocity
+        
+        v_out: np.ndarray = T_P_F.T @ (R_delta @ (T_P_F @ (v_in - v_p))) + v_p
+        
+        return v_out * u.km / u.s
     
     @staticmethod
     def ephemeris(planet: bodies.Attractor, timestamp: time.Time) -> typing.List[u.Quantity]:
