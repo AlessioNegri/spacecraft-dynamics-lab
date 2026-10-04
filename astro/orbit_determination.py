@@ -12,6 +12,8 @@ References:
 
 - Ulrich Walter, "Astronautics - The Physics of Space Flight"
     - Chapter 8: Orbital Maneuvering
+    - Chapter 13: Reference Frames
+    - Chapter 14: Orbit Geometry and Determination
 """
 
 import astropy.time as time
@@ -35,6 +37,67 @@ class OrbitDetermination():
     # --- STATIC ---
     
     @staticmethod
+    def herrick_gibbs_method(attractor: bodies.Attractor,
+                             position_1 : u.Quantity,
+                             time_1: u.Quantity,
+                             position_2 : u.Quantity,
+                             time_2: u.Quantity,
+                             position_3 : u.Quantity,
+                             time_3: u.Quantity) -> o3d.OrbitalElements:
+        """
+        Herrick-Gibbs method of orbit determination from tree position vectors with associated times
+        
+        The three vectors must lie in the same plane. Useful when the geocentric angles of the three subsequent
+        measurements are less apart than 15° for LEO and 6° for GSO.
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            position_1 (u.Quantity): Position vector 1
+            time_1 (u.Quantity): Time for position vector 1
+            position_2 (u.Quantity): Position vector 2
+            time_2 (u.Quantity): Time for position vector 2
+            position_3 (u.Quantity): Position vector 3
+            time_3 (u.Quantity): Time for position vector 3
+
+        Returns:
+            o3d.OrbitalElements: Orbital elements
+        """
+        
+        r_1: np.ndarray = position_1.to_value(u.km)
+        r_2: np.ndarray = position_2.to_value(u.km)
+        r_3: np.ndarray = position_3.to_value(u.km)
+        
+        t_1: np.ndarray = time_1.to_value(u.s)
+        t_2: np.ndarray = time_2.to_value(u.s)
+        t_3: np.ndarray = time_3.to_value(u.s)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        common.check_attractor(attractor)
+        common.check_position_vector(r_1)
+        common.check_position_vector(r_2)
+        common.check_position_vector(r_3)
+        
+        r_1_m: float = np.linalg.vector_norm(r_1)
+        r_2_m: float = np.linalg.vector_norm(r_2)
+        r_3_m: float = np.linalg.vector_norm(r_3)
+        
+        dt_21: float = t_2 - t_1
+        dt_32: float = t_3 - t_2
+        dt_31: float = t_3 - t_1
+        
+        v_2: np.ndarray =\
+                      dt_32 * (mu / (12 * r_1_m**3) - 1 / (dt_21 * dt_31)) * r_1 +\
+            (dt_32 - dt_21) * (mu / (12 * r_2_m**3) + 1 / (dt_21 * dt_32)) * r_2 +\
+                      dt_21 * (mu / (12 * r_3_m**3) + 1 / (dt_31 * dt_32)) * r_3
+        print(v_2)
+        oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
+                                                                     position=r_2 * u.km,
+                                                                     velocity=v_2 * u.km / u.s)
+    
+        return oe
+    
+    @staticmethod
     def gibbs_method(attractor: bodies.Attractor,
                      position_1 : u.Quantity,
                      position_2 : u.Quantity,
@@ -42,7 +105,8 @@ class OrbitDetermination():
         """
         Gibbs method of orbit determination from tree position vectors
         
-        The three vectors must lie in the same plane.
+        The three vectors must lie in the same plane. Useful when the geocentric angles of the three subsequent
+        measurements are more apart than 15° for LEO and 6° for GSO.
 
         Args:
             attractor (bodies.Attractor): Main attractor

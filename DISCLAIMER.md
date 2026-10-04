@@ -1,4 +1,4 @@
-## Disclaimer
+# Disclaimer
 
 SpacecraftDynamicsLab is provided for educational, research, and simulation purposes only.
 It is not intended for use in real spacecraft operations, mission planning, navigation,

@@ -22,6 +22,7 @@ interface IFormOut
     gravitationalParameter2: number
     bodyPosition1: number
     bodyPosition2: number
+    bodyDistance: number
     lagrangianPoint1: number[]
     lagrangianPoint2: number[]
     lagrangianPoint3: number[]
@@ -44,6 +45,7 @@ const defaultOut: IFormOut =
     gravitationalParameter2: 0,
     bodyPosition1: 0,
     bodyPosition2: 0,
+    bodyDistance: 0,
     lagrangianPoint1: [0, 0, 0],
     lagrangianPoint2: [0, 0, 0],
     lagrangianPoint3: [0, 0, 0],
@@ -190,7 +192,12 @@ export default function OrbitParametersDialog(props: Readonly<Props>): react.JSX
                     value={formOut.inertialAngularVelocity}
                 />
 
-                <span></span>
+                <OutputField
+                    label="Body Distance"
+                    symbol="x_{12}"
+                    unit="km"
+                    value={formOut.bodyDistance}
+                />
 
                 <OutputField
                     label="Mass Ratio 1"

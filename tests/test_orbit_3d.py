@@ -215,7 +215,7 @@ def test_longitude():
 def test_horizon_footprint():
     """EXAMPLE 5.5 - BOOK 3"""
     
-    c_f, beta, delta = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=400 * u.km)
+    c_f, beta, delta, _ = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=400 * u.km)
     
     assert np.isclose(c_f.to_value(u.km), 4404, atol=1e-0)
     assert np.isclose(beta.to_value(u.deg), 19.78, atol=1e-2)
@@ -240,3 +240,17 @@ def test_ground_track_propagation():
     
     assert np.isclose(alpha.to_value(u.deg), 313.7 - 180, atol=1e-1)
     assert np.isclose(delta.to_value(u.deg), 54.84, atol=1e-2)
+
+def test_ground_track_propagation():
+    """EXAMPLE 14.1.1 - BOOK 4"""
+    
+    beta, eclipse, t_e, hot_case = o3d.Orbit3D.eclipse_duration(attractor=bodies.Attractor.EARTH,
+                                                                circular_orbit_radius=42166 * u.km,
+                                                                inclination=0 * u.deg,
+                                                                right_ascension_ascending_node=0 * u.deg,
+                                                                right_ascension_sun=0 * u.deg)
+    
+    assert np.isclose(beta.to_value(u.deg), 0, atol=1e-1)
+    assert eclipse
+    assert np.isclose(t_e.to_value(u.minute), 69.4, atol=1e-1)
+    assert hot_case

@@ -27,6 +27,10 @@ const newFeatures: string[] =
     `Non-approximated Sphere of Influence calculation in Interplanetary Trajectory Tools menu`,
     `Non-Hohmann Transfer dialog in Interplanetary Trajectory Tools menu`,
     `New flyby scheme algorithm in astro Interplanetary Trajectories`,
+    `Circular Restricted 3-Body Problem page linearizations around the libration points`,
+    `Vector representations dialog, for different reference frames, in Orbit Representation Tools menu`,
+    `Instantaneous access area added to ground track visualization`,
+    `Herrick-Gibbs method added to Orbit Determination Tools menu`,
 ]
 
 interface Props

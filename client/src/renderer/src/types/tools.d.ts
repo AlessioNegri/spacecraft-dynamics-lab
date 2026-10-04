@@ -78,3 +78,23 @@ interface IOrbitalElements
     aop: number // ? Argument Of Periapsis
     ta: number // ? True Anomaly
 }
+
+interface IVectorRepresentationsFormInput
+{
+    orbitalElements: IOrbitalElements
+    flightPathAngle: number
+    positionMagnitude: number
+    velocityMagnitude: number
+}
+
+interface IVectorRepresentationsFormOutput
+{
+    positionIJK: IVector3D
+    positionPQW: IVector3D
+    positionNTW: IVector3D
+    positionRSW: IVector3D
+    velocityIJK: IVector3D
+    velocityPQW: IVector3D
+    velocityNTW: IVector3D
+    velocityRSW: IVector3D
+}

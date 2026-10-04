@@ -4,6 +4,7 @@ import copy
 import fastapi
 import numpy as np
 import schemas.tools_schema as schema
+import typing
 
 import astro.bodies as bodies
 import astro.two_body_problem as tbp
@@ -187,6 +188,65 @@ async def put_convert_keplerian_to_equinoctial(data: schema.EquinoctialInModelIn
 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
+@router.put("/vector-representations", response_model=schema.VectorRepresentationsOutModelInfo)
+async def put_vector_representations(data: schema.VectorRepresentationsInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Calculate position and velocity components in standard orbit frames
+
+    Args:
+        data (schema.EquinoctialInModelInfo): Keplerian orbital elements + flight path angle + position/velocity
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    orbital_elements: o3d.OrbitalElements = o3d.OrbitalElements(
+        inclination=data.orbitalElements.inc * u.deg,
+        right_ascension_of_ascending_node=data.orbitalElements.raan * u.deg,
+        argument_of_periapsis=data.orbitalElements.aop * u.deg,
+        true_anomaly=data.orbitalElements.ta * u.deg
+    )
+
+    position_vectors: typing.List[u.Quantity] = o3d.Orbit3D.position_vector_representations(
+        orbital_elements=orbital_elements,
+        flight_path_angle=data.flightPathAngle * u.deg,
+        position_magnitude=data.positionMagnitude * u.km
+    )
+    
+    velocity_vectors: typing.List[u.Quantity] = o3d.Orbit3D.velocity_vector_representations(
+        orbital_elements=orbital_elements,
+        flight_path_angle=data.flightPathAngle * u.deg,
+        velocity_magnitude=data.velocityMagnitude * u.km / u.s
+    )
+
+    result: schema.VectorRepresentationsOutModelInfo = schema.VectorRepresentationsOutModelInfo(
+        positionIJK=schema.Vector3D(x=position_vectors[0][0].to_value(u.km),
+                                    y=position_vectors[0][1].to_value(u.km),
+                                    z=position_vectors[0][2].to_value(u.km)),
+        positionPQW=schema.Vector3D(x=position_vectors[1][0].to_value(u.km),
+                                    y=position_vectors[1][1].to_value(u.km),
+                                    z=position_vectors[1][2].to_value(u.km)),
+        positionNTW=schema.Vector3D(x=position_vectors[2][0].to_value(u.km),
+                                    y=position_vectors[2][1].to_value(u.km),
+                                    z=position_vectors[2][2].to_value(u.km)),
+        positionRSW=schema.Vector3D(x=position_vectors[3][0].to_value(u.km),
+                                    y=position_vectors[3][1].to_value(u.km),
+                                    z=position_vectors[3][2].to_value(u.km)),
+        velocityIJK=schema.Vector3D(x=velocity_vectors[0][0].to_value(u.km / u.s),
+                                    y=velocity_vectors[0][1].to_value(u.km / u.s),
+                                    z=velocity_vectors[0][2].to_value(u.km / u.s)),
+        velocityPQW=schema.Vector3D(x=velocity_vectors[1][0].to_value(u.km / u.s),
+                                    y=velocity_vectors[1][1].to_value(u.km / u.s),
+                                    z=velocity_vectors[1][2].to_value(u.km / u.s)),
+        velocityNTW=schema.Vector3D(x=velocity_vectors[3][0].to_value(u.km / u.s),
+                                    y=velocity_vectors[3][1].to_value(u.km / u.s),
+                                    z=velocity_vectors[3][2].to_value(u.km / u.s)),
+        velocityRSW=schema.Vector3D(x=velocity_vectors[2][0].to_value(u.km / u.s),
+                                    y=velocity_vectors[2][1].to_value(u.km / u.s),
+                                    z=velocity_vectors[2][2].to_value(u.km / u.s))
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
 @router.put("/propagate-ground-track", response_model=schema.GroundTrackOutModelInfo)
 async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fastapi.responses.JSONResponse:
     """HTTP PUT Propagate Ground Track
@@ -231,7 +291,7 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
     
     r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
-    c_f, beta, delta_hf = o3d.Orbit3D.horizon_footprint(attractor=attractor, altitude=np.linalg.norm(r) - R_E)
+    c_f, beta, delta_hf, omega_iaa = o3d.Orbit3D.horizon_footprint(attractor=attractor, altitude=np.linalg.norm(r) - R_E)
     
     # * Earth ground track
     
@@ -283,7 +343,7 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
         
         r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
         
-        c_f_e, _, _ = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=np.linalg.norm(r) - R_E)
+        c_f_e, _, _, _ = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=np.linalg.norm(r) - R_E)
         
         latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=oe.inclination, true_anomaly=ta_i)
 
@@ -304,6 +364,7 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
         tangentPointAngle=beta.to_value(u.deg),
         lineOfSightAngle=delta_hf.to_value(u.deg),
         horizonFootprintArcLengthAttractor=c_f.to_value(u.km),
+        instantaneousAccessArea=omega_iaa.to_value(u.deg),
         longitude = longitudes,
         latitude = latitudes,
         horizonFootprintArcLengthEarth=footprint,
@@ -311,7 +372,77 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
+@router.put("/eclipse-duration", response_model=schema.EclipseDurationOutModelInfo)
+async def put_eclipse_duration(data: schema.EclipseDurationInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Compute eclipse duration and orbit beta angle
+    
+    Args:
+        data (schema.GroundTrackPathInModelInfo): Data
+
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+
+    beta, eclipse, duration, hot_case = o3d.Orbit3D.eclipse_duration(
+        attractor=attractor,
+        circular_orbit_radius=bodies.BODIES[attractor].R_E + data.altitude * u.km,
+        inclination=data.inclination * u.deg,
+        right_ascension_ascending_node=data.rightAscensionAscendingNode * u.deg,
+        right_ascension_sun=data.rightAscensionSun * u.deg
+    )
+
+    result: schema.EclipseDurationOutModelInfo = schema.EclipseDurationOutModelInfo(
+        beta=beta.to_value(u.deg),
+        eclipse=eclipse,
+        eclipseDuration=duration.to_value(u.minute),
+        hotCase=hot_case
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
+
 # ? Orbit Determination
+
+@router.put("/herrick-gibbs-method", response_model=schema.OrbitalElements)
+async def put_herrick_gibbs_method(data: schema.HerrickGibbsMethodInModelInfo) -> fastapi.responses.JSONResponse:
+    """HTTP PUT Herrick-Gibbs method
+    
+    Args:
+        data (schema.GibbsMethodInModelInfo): Three positions vectors + times
+        
+    Returns:
+        fastapi.responses.JSONResponse: JSON response
+    """
+
+    attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
+    positions: list[u.Quantity] = [
+        np.array([position.x, position.y, position.z]) * u.km
+        for position in data.positions
+    ]
+    times: list[u.Quantity] = [value * u.s for value in data.times]
+
+    oe: o3d.OrbitalElements = od.OrbitDetermination.herrick_gibbs_method(
+        attractor=attractor,
+        position_1=positions[0],
+        time_1=times[0],
+        position_2=positions[1],
+        time_2=times[1],
+        position_3=positions[2],
+        time_3=times[2]
+    )
+
+    result: schema.OrbitalElements = schema.OrbitalElements(
+        sam=oe.specific_angular_momentum.to_value(),
+        sma=oe.semimajor_axis.to_value(),
+        ecc=oe.eccentricity.to_value(),
+        inc=oe.inclination.to_value(),
+        raan=oe.right_ascension_of_ascending_node.to_value(),
+        aop=oe.argument_of_periapsis.to_value(),
+        ta=oe.true_anomaly.to_value()
+    )
+
+    return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())
 
 @router.put("/gibbs-method", response_model=schema.OrbitalElements)
 async def put_gibbs_method(data: schema.GibbsMethodInModelInfo) -> fastapi.responses.JSONResponse:

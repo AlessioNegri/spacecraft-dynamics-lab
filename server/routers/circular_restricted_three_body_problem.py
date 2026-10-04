@@ -85,6 +85,7 @@ async def put_cr3bp_orbit_parameters(data: schema.OrbitParametersInModelInfo) ->
         gravitationalParameter2=parameters.gravitational_parameter_2.to_value(u.km**3 / u.s**2),
         bodyPosition1=parameters.body_position_1.to_value(u.km),
         bodyPosition2=parameters.body_position_2.to_value(u.km),
+        bodyDistance=parameters.body_distance.to_value(u.km),
         lagrangianPoint1=parameters.lagrangian_equilibrium_point_1.to_value(u.km).tolist(),
         lagrangianPoint2=parameters.lagrangian_equilibrium_point_2.to_value(u.km).tolist(),
         lagrangianPoint3=parameters.lagrangian_equilibrium_point_3.to_value(u.km).tolist(),

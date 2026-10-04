@@ -21,8 +21,11 @@ import CartesianKeplerianDialog from "../dialogs/tools/orbit_representation/Cart
 import CartesianPerifocalDialog from "../dialogs/tools/orbit_representation/CartesianPerifocalDialog"
 import KeplerianCartesianDialog from "../dialogs/tools/orbit_representation/KeplerianCartesianDialog"
 import KeplerianEquinoctialDialog from "../dialogs/tools/orbit_representation/KeplerianEquinoctialDialog"
+import VectorRepresentationsDialog from "../dialogs/tools/orbit_representation/VectorRepresentationsDialog"
 import GroundTrackPropagationDialog from "../dialogs/tools/orbit_representation/GroundTrackPropagationDialog"
+import EclipseDurationDialog from "../dialogs/tools/orbit_representation/EclipseDurationDialog"
 
+import HerrickGibbsMethodDialog from "../dialogs/tools/orbit_determination/HerrickGibbsMethodDialog"
 import GibbsMethodDialog from "../dialogs/tools/orbit_determination/GibbsMethodDialog"
 import JulianDayDialog from "../dialogs/tools/orbit_determination/JulianDayDialog"
 import TopocentricFrameDialog from "../dialogs/tools/orbit_determination/TopocentricFrameDialog"
@@ -63,8 +66,11 @@ const DIALOGS =
     cartesianPerifocalDialog: CartesianPerifocalDialog,
     keplerianCartesianDialog: KeplerianCartesianDialog,
     keplerianEquinoctialDialog: KeplerianEquinoctialDialog,
+    vectorRepresentationsDialog: VectorRepresentationsDialog,
     groundTrackPropagationDialog: GroundTrackPropagationDialog,
+    eclipseDurationDialog: EclipseDurationDialog,
 
+    herrickGibbsMethodDialog: HerrickGibbsMethodDialog,
     gibbsMethodDialog: GibbsMethodDialog,
     julianDayDialog: JulianDayDialog,
     topocentricFrameDialog: TopocentricFrameDialog,
@@ -180,7 +186,9 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
                 { label: "Cartesian → Perifocal", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("cartesianPerifocalDialog") },
                 { label: "Keplerian → Cartesian", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("keplerianCartesianDialog") },
                 { label: "Keplerian → Equinoctial", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("keplerianEquinoctialDialog") },
-                { label: "Ground Track Propagation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("groundTrackPropagationDialog") }
+                { label: "Vector Representations", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("vectorRepresentationsDialog") },
+                { label: "Ground Track Propagation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("groundTrackPropagationDialog") },
+                { label: "Eclipse Duration", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("eclipseDurationDialog") }
             ]
         },
         {
@@ -188,6 +196,7 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
             icon: "mdi:telescope",
             children:
             [
+                { label: "Herrick-Gibbs Method", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("herrickGibbsMethodDialog") },
                 { label: "Gibbs Method", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("gibbsMethodDialog") },
                 { label: "Julian Day", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("julianDayDialog") },
                 { label: "Topocentric Frame", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("topocentricFrameDialog") },

@@ -29,6 +29,7 @@ class OrbitParametersOutModelInfo(pydantic.BaseModel):
     gravitationalParameter2: float
     bodyPosition1: float
     bodyPosition2: float
+    bodyDistance: float
     lagrangianPoint1: list[float]
     lagrangianPoint2: list[float]
     lagrangianPoint3: list[float]

@@ -46,6 +46,7 @@ class OrbitParametersCR3BP:
     gravitational_parameter_2       : u.Quantity = 0.0 * u.km**3 / u.s**2
     body_position_1                 : u.Quantity = 0.0 * u.km
     body_position_2                 : u.Quantity = 0.0 * u.km
+    body_distance                   : u.Quantity = 0.0 * u.km
 
 @dc.dataclass
 class HyperbolaParameters():

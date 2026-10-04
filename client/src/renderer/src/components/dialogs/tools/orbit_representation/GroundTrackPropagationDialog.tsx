@@ -27,6 +27,7 @@ interface IFormOut
     tangentPointAngle: number
     lineOfSightAngle: number
     horizonFootprintArcLengthAttractor: number
+    instantaneousAccessArea: number
     longitude: number[]
     latitude: number[]
     horizonFootprintArcLengthEarth: number[]
@@ -59,6 +60,7 @@ const defaultOut: IFormOut =
     tangentPointAngle: 0,
     lineOfSightAngle: 0,
     horizonFootprintArcLengthAttractor: 0,
+    instantaneousAccessArea: 0,
     longitude: [],
     latitude: [],
     horizonFootprintArcLengthEarth: []
@@ -432,21 +434,21 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                     value={formOut.daop_dt}
                 />
 
-                <OutputField
-                    label="Right Ascension"
-                    symbol="\alpha"
-                    unit="deg"
-                    value={formOut.alpha}
-                />
-
-                <OutputField
-                    label="Declination"
-                    symbol="\delta"
-                    unit="deg"
-                    value={formOut.delta}
-                />
-
                 <div className="col-span-full flex gap-4">
+                    
+                    <OutputField
+                        label="Right Ascension"
+                        symbol="\alpha"
+                        unit="deg"
+                        value={formOut.alpha}
+                    />
+
+                    <OutputField
+                        label="Declination"
+                        symbol="\delta"
+                        unit="deg"
+                        value={formOut.delta}
+                    />
 
                     <OutputField
                         label="Tangent point angle"
@@ -462,14 +464,21 @@ export default function GroundTrackPropagationDialog(props: Readonly<Props>): re
                         value={formOut.lineOfSightAngle}
                     />
 
-                    <OutputField
-                        label="Horizon footprint arc length"
-                        symbol="C_f"
-                        unit="km"
-                        value={formOut.horizonFootprintArcLengthAttractor}
-                    />
-
                 </div>
+
+                <OutputField
+                    label="Horizon footprint arc length"
+                    symbol="C_f"
+                    unit="km"
+                    value={formOut.horizonFootprintArcLengthAttractor}
+                />
+
+                <OutputField
+                    label="Instantaneous access area (IAA)"
+                    symbol="\Omega_{IAA}"
+                    unit="deg"
+                    value={formOut.instantaneousAccessArea}
+                />
 
             </Form.Root>
 

@@ -88,6 +88,24 @@ class EquinoctialOutModelInfo(pydantic.BaseModel):
     ascendingNodeVectorP: float
     ascendingNodeVectorQ: float
     periapsisLocation: float
+
+class VectorRepresentationsInModelInfo(pydantic.BaseModel):
+    
+    orbitalElements: OrbitalElements
+    flightPathAngle: float
+    positionMagnitude: float
+    velocityMagnitude: float
+
+class VectorRepresentationsOutModelInfo(pydantic.BaseModel):
+    
+    positionIJK: Vector3D
+    positionPQW: Vector3D
+    positionNTW: Vector3D
+    positionRSW: Vector3D
+    velocityIJK: Vector3D
+    velocityPQW: Vector3D
+    velocityNTW: Vector3D
+    velocityRSW: Vector3D
     
 class GroundTrackInModelInfo(pydantic.BaseModel):
     attractor: str
@@ -104,11 +122,31 @@ class GroundTrackOutModelInfo(pydantic.BaseModel):
     tangentPointAngle: float
     lineOfSightAngle: float
     horizonFootprintArcLengthAttractor: float
+    instantaneousAccessArea: float
     longitude: list[float]
     latitude: list[float]
     horizonFootprintArcLengthEarth: list[float]
+
+class EclipseDurationInModelInfo(pydantic.BaseModel):
+    attractor: str
+    altitude: float = pydantic.Field(ge=0)
+    inclination: float
+    rightAscensionAscendingNode: float
+    rightAscensionSun: float
+
+class EclipseDurationOutModelInfo(pydantic.BaseModel):
+    beta: float
+    eclipse: bool
+    eclipseDuration: float
+    hotCase: bool
     
 # * Orbit Determination
+
+class HerrickGibbsMethodInModelInfo(pydantic.BaseModel):
+
+    attractor: str
+    positions: tuple[Vector3D, Vector3D, Vector3D]
+    times: tuple[float, float, float]
 
 class GibbsMethodInModelInfo(pydantic.BaseModel):
     

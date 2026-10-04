@@ -15,6 +15,8 @@ References:
 
 - Ulrich Walter, "Astronautics - The Physics of Space Flight"
     - Chapter 7: Orbits
+    - Chapter 13: Reference Frames
+    - Chapter 14: Orbit Geometry and Determination
 """
 
 import astropy.units as u
@@ -414,6 +416,126 @@ class Orbit3D():
         return r_gef
     
     @staticmethod
+    def position_vector_representations(orbital_elements: OrbitalElements,
+                                        flight_path_angle: u.Quantity,
+                                        position_magnitude: u.Quantity) -> typing.List[u.Quantity]:
+        """
+        Given the orbital elements, flight path angle, and the absolute value of the position vector, calculates all the
+        position vector representations in the following reference frames:
+        
+        - Equatorial Coordinate System (IJK)
+        - Perifocal Coordinate System (PQW)
+        - Satellite Coordinate System (NTW)
+        - Satellite Coordinate System (RSW)
+
+        Args:
+            orbital_elements (OrbitalElements): Orbital Elements
+            flight_path_angle (u.Quantity): Flight path angle
+            position_magnitude (u.Quantity): Position vector magnitude
+
+        Returns:
+            typing.List[u.Quantity]: Position vector representations
+        """
+        
+        common.check_orbital_elements(orbital_elements=orbital_elements)
+        
+        common.check_angle(angle=flight_path_angle)
+        
+        inc: float = orbital_elements.inclination.to_value(u.rad)
+        raan: float = orbital_elements.right_ascension_of_ascending_node.to_value(u.rad)
+        aop: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
+        ta: float = orbital_elements.true_anomaly.to_value(u.rad)
+        
+        aol: float = aop + ta # ? Argument of latitude
+        
+        fpa: float = flight_path_angle.to_value(u.rad)
+        
+        r: float = position_magnitude
+        
+        # * Equatorial Coordinate System (IJK)
+        
+        r_ijk: np.ndarray = r * np.array(
+            [
+                + np.cos(raan) * np.cos(aol) - np.sin(raan) * np.sin(aol) * np.cos(inc),
+                + np.sin(raan) * np.cos(aol) + np.cos(raan) * np.sin(aol) * np.cos(inc),
+                + np.sin(aol) * np.sin(inc)
+            ])
+        
+        # * Perifocal Coordinate System (PQW)
+        
+        r_pqw: np.ndarray = r * np.array([ np.cos(ta), np.sin(ta), 0 ])
+        
+        # * Satellite Coordinate System (NTW)
+        
+        r_ntw: np.ndarray = r * np.array([ np.cos(fpa), np.sin(fpa), 0 ])
+        
+        # * Satellite Coordinate System (RSW)
+        
+        r_rsw: np.ndarray = r * np.array([ 1, 0, 0 ])
+        
+        return [r_ijk, r_pqw, r_ntw, r_rsw]
+    
+    @staticmethod
+    def velocity_vector_representations(orbital_elements: OrbitalElements,
+                                        flight_path_angle: u.Quantity,
+                                        velocity_magnitude: u.Quantity) -> typing.List[u.Quantity]:
+        """
+        Given the orbital elements, flight path angle, and the absolute value of the velocity vector, calculates all the
+        velocity vector representations in the following reference frames:
+        
+        - Equatorial Coordinate System (IJK)
+        - Perifocal Coordinate System (PQW)
+        - Satellite Coordinate System (NTW)
+        - Satellite Coordinate System (RSW)
+
+        Args:
+            orbital_elements (OrbitalElements): Orbital Elements
+            flight_path_angle (u.Quantity): Flight path angle
+            velocity_magnitude (u.Quantity): Velocity vector magnitude
+
+        Returns:
+            typing.List[u.Quantity]: Velocity vector representations
+        """
+        
+        common.check_orbital_elements(orbital_elements=orbital_elements)
+        
+        common.check_angle(angle=flight_path_angle)
+        
+        inc: float = orbital_elements.inclination.to_value(u.rad)
+        raan: float = orbital_elements.right_ascension_of_ascending_node.to_value(u.rad)
+        aop: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
+        ta: float = orbital_elements.true_anomaly.to_value(u.rad)
+        
+        aol: float = aop + ta # ? Argument of latitude
+        
+        fpa: float = flight_path_angle.to_value(u.rad)
+        
+        v: float = velocity_magnitude
+        
+        # * Equatorial Coordinate System (IJK)
+        
+        v_ijk: np.ndarray = v * np.array(
+            [
+                + np.cos(raan) * np.sin(fpa - aol) - np.sin(raan) * np.cos(fpa - aol) * np.cos(inc),
+                + np.sin(raan) * np.sin(fpa - aol) + np.cos(raan) * np.cos(fpa - aol) * np.cos(inc),
+                + np.cos(fpa - aol) * np.sin(inc)
+            ])
+        
+        # * Perifocal Coordinate System (PQW)
+        
+        v_pqw: np.ndarray = v * np.array([ np.cos(fpa - ta), np.sin(fpa - ta), 0 ])
+        
+        # * Satellite Coordinate System (RSW)
+        
+        v_rsw: np.ndarray = v * np.array([ np.sin(fpa), np.cos(fpa), 0 ])
+        
+        # * Satellite Coordinate System (NTW)
+        
+        v_ntw: np.ndarray = v * np.array([ 0, 1, 0 ])
+        
+        return [v_ijk, v_pqw, v_rsw, v_ntw]
+    
+    @staticmethod
     def planet_oblateness_effect(attractor: bodies.Attractor,
                                  orbital_elements: OrbitalElements) -> typing.List[u.Quantity, u.Quantity]:
         """Calculates the planet oblateness effect
@@ -609,7 +731,7 @@ class Orbit3D():
 
     @staticmethod
     def horizon_footprint(attractor: bodies.Attractor,
-                          altitude: u.Quantity) -> typing.Tuple[u.Quantity, u.Quantity, u.Quantity]:
+                          altitude: u.Quantity) -> typing.Tuple[u.Quantity, u.Quantity, u.Quantity, u.Quantity]:
         """Calculates the horizon footprint for maximum line of sight
 
         Args:
@@ -617,20 +739,23 @@ class Orbit3D():
             altitude (u.Quantity): Altitude of the spacecraft
 
         Returns:
-            typing.Tuple[u.Quantity, u.Quantity, u.Quantity]: (horizon footprint, tangent point angle, line of sight angle)
+            typing.Tuple[u.Quantity, u.Quantity, u.Quantity]:
+                (horizon footprint, tangent point angle, line of sight angle, instantaneous access area)
         """
         
         common.check_attractor(attractor)
         
         R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        if altitude.to_value(u.km) <= 0:
+        h: float = altitude.to_value(u.km)
+        
+        if h <= 0:
             
-            return (0 * u.km, 0 * u.rad, 0 * u.rad)
+            return (0 * u.km, 0 * u.rad, 0 * u.rad, 0 * u.rad)
         
         # * Tangent point angle
         
-        beta: float = np.arccos(1 / (1 + altitude.to_value(u.km) / R_E))
+        beta: float = np.arccos(1 / (1 + h / R_E))
         
         # * Line of sight angle
         
@@ -640,7 +765,11 @@ class Orbit3D():
         
         c_f: float = 2 * beta * R_E
         
-        return (c_f * u.km, beta * u.rad, delta * u.rad)
+        # * Instantaneous access area (IAA) [Book 4 - 14.1.2]
+        
+        omega_iaa: float = 2 * np.pi * h / (R_E + h)
+        
+        return (c_f * u.km, beta * u.rad, delta * u.rad, omega_iaa * u.rad)
     
     @staticmethod
     def ground_track_propagation(attractor: bodies.Attractor,
@@ -749,3 +878,51 @@ class Orbit3D():
         alpha, delta = Orbit3D.right_ascension_declination(position=np.matmul(r_3_ta, r_gef.to_value(u.km)) * u.km)
         
         return [alpha - 180 * u.deg, delta]
+    
+    @staticmethod
+    def eclipse_duration(attractor: bodies.Attractor,
+                         circular_orbit_radius: u.Quantity,
+                         inclination: u.Quantity,
+                         right_ascension_ascending_node: u.Quantity,
+                         right_ascension_sun: u.Quantity) -> typing.Tuple[u.Quantity, bool, u.Quantity, bool]:
+        
+        common.check_attractor(attractor)
+        common.check_angle(inclination)
+        common.check_angle(right_ascension_ascending_node)
+        common.check_angle(right_ascension_sun)
+        
+        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        R: float = bodies.BODIES[attractor].R_E.to_value(u.km)
+        r: float = circular_orbit_radius.to_value(u.km)
+        inc: float = inclination.to_value(u.rad)
+        raan: float = right_ascension_ascending_node.to_value(u.rad)
+        raan_s: float = right_ascension_sun.to_value(u.rad)
+        
+        phi: float = np.deg2rad(23.44) # ? Ecliptic angle
+        delta_s: float = np.arcsin(np.sin(phi) * np.sin(raan_s))
+        
+        # >>> 1. Beta angle (a.k.a. orbit bera angle)
+        
+        beta: float = np.arcsin(np.sin(inc) * np.cos(delta_s) * np.sin(raan - raan_s) + np.cos(inc) * np.sin(delta_s))
+        
+        # >>> 2. Eclipse condition
+        
+        eclipse: bool = abs(np.sin(beta)) <= (R / r)
+        
+        # >>> 3. Eclipse duration
+        
+        T: float = 2 * np.pi / np.sqrt(mu) * r**(3/2) # ? Period
+        
+        if eclipse:
+            
+            t_e: float = T / np.pi * np.arccos(np.sqrt(r**2 - R**2) / (r * np.cos(beta)))
+        
+        else:
+            
+            t_e: float = 0.0
+        
+        # >>> 4. Hot case
+        
+        hot_case: bool = np.sin(inc + phi) > (R / r)
+        
+        return (beta * u.rad, eclipse, t_e * u.s, hot_case)

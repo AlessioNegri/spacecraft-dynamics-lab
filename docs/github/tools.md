@@ -87,12 +87,27 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
   <div>
     <h3>Keplerian → Equinoctial</h3>
     <p>
+      Calculate position and velocity vectors in the <strong>Equatorial Coordinate System (IJK)</strong>,
+      <strong>Perifocal Coordinate System (PQW)</strong>, <strong>Satellite Coordinate System (NTW)</strong>, and
+      <strong>Satellite Coordinate System (RSW)</strong> reference frames.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/keplerian-equinoctial.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Vector Representations</h3>
+    <p>
       Convert the <strong>Keplerian orbital</strong> elements to the standard <strong>equinoctial</strong> elements.
       This representation avoids the singularity of classical elements for circular or equatorial orbits.
     </p>
   </div>
 
-  <img src="../images/tools-page/keplerian-equinoctial.png" alt="image">
+  <img src="../images/tools-page/vector-representations.png" alt="image">
 
 </div>
 
@@ -109,9 +124,36 @@ The `Orbit Representation` dialog furnishes different utilities to convert orbit
 
 </div>
 
+<div class="side-view">
+
+  <div>
+    <h3>Eclipse Duration</h3>
+    <p>
+      Given a <strong>circular orbit</strong>, the <strong>attractor</strong>, and the orbit and Sun angles, compute the
+      orbit beta angle, whether an eclipse occurs, its duration, and the hot-case status.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/eclipse-duration.png" alt="image">
+
+</div>
+
 ## 🔭 Orbit Determination
 
 The `Orbit Determination` dialogs furnishes different utilities to convert predict an orbit from available data.
+
+<div class="side-view">
+
+  <div>
+    <h3>Herrick-Gibbs Method</h3>
+    <p>
+      Given 3 position vectors in the <strong>Inertial Reference Frame</strong>, with associated times, compute the orbital elements.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/herrick-gibbs-method.png" alt="image">
+
+</div>
 
 <div class="side-view">
 

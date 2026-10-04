@@ -114,12 +114,38 @@ export default function RightPanel(props: Readonly<Props>): react.JSX.Element
             if (sim.source === "circular-restricted-three-body-problem" &&
                 sim.data && typeof sim.data === "object" && Object.keys(sim.data).length > 0)
             {
-                const linearized: plotly.Data = makeOrbitTrace(sim.data['position_x'],
-                    sim.data['position_y'], sim.data['position_z'], "Linearized", "#00ccff", 10)
+                const linearized: plotly.Data = makeOrbitTrace(sim.data['absolute']['position_x'],
+                    sim.data['absolute']['position_y'], sim.data['absolute']['position_z'], "Linearized", "#00ccff", 10)
+                
+                const relative: plotly.Data = makeOrbitTrace(sim.data['relative']['position_x'],
+                    sim.data['relative']['position_y'], sim.data['relative']['position_z'], "Relative", "#cc00ff", 10)
+
+                let eulerian_lagrangian: plotly.Data = makeOrbitTrace([0], [0], [0], "", "#ccff00", 10)
+
+                if (sim.data['eulerian'])
+                {
+                    eulerian_lagrangian = makeOrbitTrace(
+                        sim.data['eulerian']['position_x'],
+                        sim.data['eulerian']['position_y'],
+                        sim.data['eulerian']['position_z'],
+                        "Eulerian",
+                        "#ccff00",
+                        10)
+                }
+                else if (sim.data['lagrangian'])
+                {
+                    eulerian_lagrangian = makeOrbitTrace(
+                        sim.data['lagrangian']['position_x'],
+                        sim.data['lagrangian']['position_y'],
+                        sim.data['lagrangian']['position_z'],
+                        "Lagrangian",
+                        "#ccff00",
+                        10)
+                }
                 
                 const start: plotly.Data = makeMarker({ x: 0, y: 0, z: 0 }, lagrangePointRef.current ?? "", "#00ff00", 10)
 
-                setSolution([axisX, axisY, axisZ, linearized, start])
+                setSolution([axisX, axisY, axisZ, linearized, relative, eulerian_lagrangian, start])
             }
             else if (sim.source === "circular-restricted-three-body-problem" &&
                 (!sim.data || typeof sim.data !== "object" || Object.keys(sim.data).length === 0))

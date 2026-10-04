@@ -90,3 +90,12 @@ class ClosingApproachTrajectory(enum.Enum):
     
     ELLIPTIC    = 0
     CYCLOIDAL   = 1
+
+class LibrationPoint(enum.Enum):
+    """Libration point number"""
+    
+    L1 = 0
+    L2 = 1
+    L3 = 2
+    L4 = 3
+    L5 = 4
