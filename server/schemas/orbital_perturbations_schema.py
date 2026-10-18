@@ -49,3 +49,45 @@ class SunSynchronousInModelInfo(pydantic.BaseModel):
 
 class SunSynchronousOutModelInfo(pydantic.BaseModel):
     inclination: float
+
+
+class FrozenOrbitType2OutModelInfo(pydantic.BaseModel):
+    inclination: list[float]
+    semimajorAxis: list[float]
+    firstOrderEccentricity: list[list[float | None]]
+    eccentricity: list[list[float | None]]
+    type1Inclination: float
+
+
+class FrozenSunSynchronousOrbitOutModelInfo(pydantic.BaseModel):
+    semimajorAxis: list[float]
+    sunSynchronousEccentricity: list[float | None]
+
+
+class CommensurateOrbitOutModelInfo(pydantic.BaseModel):
+    altitude: list[float]
+    repeatCycle: list[int]
+    orbitalRevolutions: list[int]
+
+
+class GPSOrbitOutModelInfo(pydantic.BaseModel):
+    longitudeAscendingNode: list[float]
+    driftHarmonics32: list[float]
+    driftHarmonics3244: list[float]
+    driftHarmonics324452: list[float]
+    geoDriftHarmonics22: list[float]
+    geoDriftHarmonics2231: list[float]
+    geoDriftHarmonics223133: list[float]
+
+
+class DragOrbitTimesInModelInfo(pydantic.BaseModel):
+    semimajorAxis: float = pydantic.Field(gt=0)
+    eccentricity: float = pydantic.Field(ge=0, lt=1)
+    ballisticCoefficient: float = pydantic.Field(gt=0)
+
+
+class DragOrbitTimesOutModelInfo(pydantic.BaseModel):
+    circularizationTimeDays: float
+    circularizationTimeYears: float
+    orbitLifetimeDays: float
+    orbitLifetimeYears: float

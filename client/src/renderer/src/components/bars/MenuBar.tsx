@@ -47,6 +47,11 @@ import NonHohmannTransferDialog from "../dialogs/tools/interplanetary_trajectory
 import NodalRegressionDialog from "../dialogs/tools/orbital_perturbations/NodalRegressionDialog"
 import ApsidalRotationDialog from "../dialogs/tools/orbital_perturbations/ApsidalRotationDialog"
 import SunSynchronousDialog from "../dialogs/tools/orbital_perturbations/SunSynchronousDialog"
+import FrozenOrbitDialog from "../dialogs/tools/orbital_perturbations/FrozenOrbitDialog"
+import FrozenSunSynchronousOrbitDialog from "../dialogs/tools/orbital_perturbations/FrozenSunSynchronousOrbitDialog"
+import CommensurateOrbitDialog from "../dialogs/tools/orbital_perturbations/CommensurateOrbitDialog"
+import GPSGEOOrbitsDialog from "../dialogs/tools/orbital_perturbations/GPSGEOOrbitsDialog"
+import DragOrbitTimesDialog from "../dialogs/tools/orbital_perturbations/DragOrbitTimesDialog"
 
 import OrbitParametersDialog from "../dialogs/tools/circular_restricted_three_body_problem/OrbitParametersDialog"
 import ZeroVelocityCurvesDialog from "../dialogs/tools/circular_restricted_three_body_problem/ZeroVelocityCurvesDialog"
@@ -92,6 +97,11 @@ const DIALOGS =
     nodalRegressionDialog: NodalRegressionDialog,
     apsidalRotationDialog: ApsidalRotationDialog,
     sunSynchronousDialog: SunSynchronousDialog,
+    frozenOrbitDialog: FrozenOrbitDialog,
+    frozenSunSynchronousOrbitDialog: FrozenSunSynchronousOrbitDialog,
+    commensurateOrbitDialog: CommensurateOrbitDialog,
+    gpsGeoOrbitsDialog: GPSGEOOrbitsDialog,
+    dragOrbitTimesDialog: DragOrbitTimesDialog,
 
     OrbitParametersDialog: OrbitParametersDialog,
     ZeroVelocityCurvesDialog: ZeroVelocityCurvesDialog,
@@ -241,7 +251,12 @@ export default function MenuBar(props: Readonly<Props>): react.JSX.Element
             [
                 { label: "Nodal Regression", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("nodalRegressionDialog") },
                 { label: "Apsidal Rotation", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("apsidalRotationDialog") },
-                { label: "Sun-Synchronous Orbit", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("sunSynchronousDialog") }
+                { label: "Sun-Synchronous Orbit", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("sunSynchronousDialog") },
+                { label: "Frozen Orbit", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("frozenOrbitDialog") },
+                { label: "Sun-Synchronous Frozen Orbit", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("frozenSunSynchronousOrbitDialog") },
+                { label: "Commensurate Orbits", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("commensurateOrbitDialog") },
+                { label: "GPS & GEO Orbits", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("gpsGeoOrbitsDialog") },
+                { label: "Drag Orbit Times", icon: "fluent:math-formula-16-filled", action: () => setOpenDialog("dragOrbitTimesDialog") }
             ]
         },
         {

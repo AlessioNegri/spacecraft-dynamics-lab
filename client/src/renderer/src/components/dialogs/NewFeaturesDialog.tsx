@@ -31,6 +31,12 @@ const newFeatures: string[] =
     `Vector representations dialog, for different reference frames, in Orbit Representation Tools menu`,
     `Instantaneous access area added to ground track visualization`,
     `Herrick-Gibbs method added to Orbit Determination Tools menu`,
+    `New algorithms in astro Orbital Perturbations`,
+    `Frozen Orbit & Frozen Sun Synchronous Orbit dialogs in Orbital Perturbations Tools menu`,
+    `CIRA72 model added to astro Orbital Perturbations`,
+    `Commensurate Orbits dialog in Orbital Perturbations Tools menu`,
+    `GPS and GEO Longitudinal Drift dialog in Orbital Perturbations Tools menu`,
+    `Drag Orbit Times dialog in Orbital Perturbations Tools menu`,
 ]
 
 interface Props

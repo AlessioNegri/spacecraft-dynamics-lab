@@ -99,3 +99,9 @@ class LibrationPoint(enum.Enum):
     L3 = 2
     L4 = 3
     L5 = 4
+
+class AtmosphereModel(enum.Enum):
+    """Atmosphere models"""
+    
+    USSA76 = "USSA76",
+    CIRA72 = "CIRA72"

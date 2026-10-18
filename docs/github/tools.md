@@ -400,6 +400,71 @@ motion.
 
 </div>
 
+<div class="side-view">
+
+  <div>
+    <h3>Frozen Orbit</h3>
+    <p>
+      Type-II frozen-orbit eccentricity contours versus semimajor axis and inclination, with the type-I critical inclination.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/frozen-orbit.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Frozen Sun-Synchronous Orbit</h3>
+    <p>
+      Sun-synchronous eccentricity as a function of semimajor axis, normalized by Earth's radius.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/frozen-sun-synchronous-orbit.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Commensurate Orbits</h3>
+    <p>
+      Approximate orbit altitude and repeat cycle for the orbital revolutions values in the reference chart.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/commensurate-orbits.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>GPS and GEO Longitudinal Drift</h3>
+    <p>
+      Longitudinal drift rate versus longitude of ascending node for GPS and GEO orbits, with successive gravity harmonics enabled.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/gps-geo-longitudinal_drift.png" alt="image">
+
+</div>
+
+<div class="side-view">
+
+  <div>
+    <h3>Drag Orbit Times</h3>
+    <p>
+      Estimate elliptical-orbit circularization time and circular-orbit lifetime due to atmospheric drag.
+    </p>
+  </div>
+
+  <img src="../images/tools-page/drag-orbit-times.png" alt="image">
+
+</div>
+
 ## 🔺 Circular Restricted Three-Body Problem
 
 The `Circular Restricted Three-Body Problem` dialog furnishes different utilities used in the analysis of the motion of a small body under the gravitational influence of two larger bodies (primaries) that are in circular orbits around their common center of mass.

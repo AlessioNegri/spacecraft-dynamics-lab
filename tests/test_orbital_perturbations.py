@@ -11,27 +11,27 @@ import astro.orbit_determination as od
 
 def test_density():
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=1 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=1 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 1.068, atol=1e-3)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=3.981 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=3.981 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 7.106e-1, atol=1e-4)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=15.849 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=15.849 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 1.401e-1, atol=1e-4)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=63.096 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=63.096 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 2.059e-4, atol=1e-7)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=251.189 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=251.189 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 5.909e-11, atol=1e-14)
     
-    rho: u.Quantity = op.OrbitalPerturbations.density(altitude=1001.0 * u.km)
+    rho, _ = op.OrbitalPerturbations.density(altitude=1001.0 * u.km)
     
     assert np.isclose(rho.to_value(u.kg / u.m**3), 3.561e-15, atol=1e-18)
 
@@ -422,3 +422,39 @@ def test_gauss_method_sun_gravity():
     
     assert np.isclose(delta_raan, -0.15, atol=1e-2)
     assert np.isclose(delta_argp, 0.2, atol=1e-2)
+
+def test_moon_position():
+    """EXAMPLE 12.4.1 - BOOK 4"""
+    
+    a_c_0, a_c = op.OrbitalPerturbations.commensurate_orbit(
+        inclination=98 * u.deg,
+        k_orbital_revolutions=233,
+        l_terrestrial_revolutions=16)
+    
+    assert np.isclose(a_c_0.to_value(u.km), 7070, atol=1e-0)
+    assert np.isclose(a_c.to_value(u.km), 7077.4, atol=1e-1)
+
+def test_drag_decay():
+    """EXAMPLE 12.7.4 - BOOK 4"""
+    
+    periapsis_altitude: u.Quantity = 249.2 * u.km
+    apoapsis_altitude: u.Quantity = 35_907 * u.km
+    ballistic_coefficient: u.Quantity = 0.015 * u.m**2 / u.kg
+    
+    r_p: u.Quantity = periapsis_altitude + bd.BODIES[bd.Attractor.EARTH].R_E
+    r_a: u.Quantity = apoapsis_altitude + bd.BODIES[bd.Attractor.EARTH].R_E
+    
+    sma: u.Quantity = (r_p + r_a) / 2
+    ecc: u.Quantity = (r_a - r_p) / (r_a + r_p) * u.one
+    print(sma)
+    t_c: u.Quantity = op.OrbitalPerturbations.drag_circularization_time(
+        semimajor_axis=sma,
+        eccentricity=ecc,
+        ballistic_coefficient=ballistic_coefficient)
+    
+    t_l: u.Quantity = op.OrbitalPerturbations.drag_orbit_lifetime(
+        semimajor_axis=r_p,
+        ballistic_coefficient=ballistic_coefficient)
+    
+    assert np.isclose(t_c.to_value(u.year), 26.2, atol=1e-1)
+    assert np.isclose(t_l.to_value(u.year), 0.02, atol=1e-2)

@@ -4,6 +4,8 @@ import * as dialog from "@radix-ui/react-dialog"
 import * as iconify from "@iconify/react"
 import * as popover from "@radix-ui/react-popover"
 
+import * as utility from "@renderer/common/utility"
+
 interface PopupProps
 {
     title: string
@@ -17,6 +19,7 @@ interface DialogRUIProps
     button?: string
     open: boolean
     onClose: () => void
+    onMaximized?: (maximized: boolean) => void
     onSubmit?: () => void
     popup?: PopupProps
 }
@@ -24,6 +27,14 @@ interface DialogRUIProps
 /** @function DialogRUI base class based on Radix UI */
 export default function DialogRUI(props: Readonly<DialogRUIProps>): react.JSX.Element
 {
+    // --- USE STATE ---
+
+    const [maximized, setMaximized] = react.useState<boolean>(false)
+
+    // --- USE EFFECT ---
+
+    react.useEffect(() => { if (props.onMaximized) props.onMaximized(maximized) }, [maximized])
+
     // --- RENDERING ---
 
     return (
@@ -38,18 +49,27 @@ export default function DialogRUI(props: Readonly<DialogRUIProps>): react.JSX.El
                     <dialog.Content
                         aria-description={props.title}
                         aria-describedby={props.title}
-                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                                    w-[80%] max-w-200 bg-neutral-800 text-white rounded-lg shadow-xl
-                                    border-2 border-orange-800/50 p-6 space-y-6"
+                        className={utility.cn(
+                            "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                            "bg-neutral-800 text-white rounded-lg shadow-xl",
+                            "border-2 border-orange-800/50 p-6 space-y-6",
+                            maximized ? "w-[95%] h-[95%]" : "w-[80%] max-w-200"
+                        )}
                     >
 
                         {/* HEADER */}
                         
-                        <div className="flex justify-between items-center border-b border-neutral-700 pb-4">
+                        <div className="flex justify-between items-center border-b border-neutral-700 pb-4 z-100">
 
                             <dialog.Title className="text-xl font-semibold flex-1">{props.title}</dialog.Title>
 
                             { props.popup && <Popup title={props.popup.title} content={props.popup.content} /> }
+
+                            <iconify.Icon
+                                icon={maximized ? "reicon:exit-fullscreen-square-filled" : "reicon:fullscreen-square-filled"}
+                                width={30}
+                                className="text-emerald-400/25 hover:text-emerald-400/75 hover:cursor-pointer"
+                                onClick={() => setMaximized((prev) => !prev)} />
 
                             <iconify.Icon
                                 icon="mdi:close-box"
