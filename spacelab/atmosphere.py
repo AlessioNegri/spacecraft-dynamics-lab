@@ -14,7 +14,7 @@ import numpy as np
 import scipy.interpolate as interpolate
 import typing
 
-import astro.physical_constants as physical_constants
+import spacelab.physical_constants as physical_constants
 
 class Atmosphere():
     """Atmosphere"""

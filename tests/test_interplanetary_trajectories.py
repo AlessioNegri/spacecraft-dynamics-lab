@@ -2,9 +2,9 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bd
-import astro.interplanetary_trajectories as it
-import astro.orbital_maneuvers as om
+import spacelab.bodies as bd
+import spacelab.interplanetary_trajectories as it
+import spacelab.orbital_maneuvers as om
 
 def test_synodic_period_1():
     """EXAMPLE 8.1"""

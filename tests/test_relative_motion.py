@@ -1,9 +1,9 @@
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bd
-import astro.orbit_3d as o3d
-import astro.relative_motion as rm
+import spacelab.bodies as bd
+import spacelab.orbit_3d as o3d
+import spacelab.relative_motion as rm
 
 def test_lvlh_kinematics_and_geocentric_equatorial_kinematics():
     """EXAMPLE 7.1"""

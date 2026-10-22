@@ -2,7 +2,7 @@ import astropy.units as u
 import dataclasses as dc
 import typing
 
-from astro.models.orbital_elements import OrbitalElements
+from spacelab.models.orbital_elements import OrbitalElements
 
 class Result:
     """Result of integration for 2-Body Problem"""

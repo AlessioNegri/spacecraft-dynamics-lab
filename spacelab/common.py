@@ -2,9 +2,9 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bodies
+import spacelab.bodies as bodies
 
-from astro.models.orbital_elements import OrbitalElements
+from spacelab.models.orbital_elements import OrbitalElements
 
 def check_attractor(attractor: bodies.Attractor) -> None:
     """Check the validity of the attractor
@@ -19,7 +19,7 @@ def check_attractor(attractor: bodies.Attractor) -> None:
     
     if not isinstance(attractor, bodies.Attractor):
         
-        raise TypeError("'attractor' must be of type 'astro.bodies.Attractor'")
+        raise TypeError("'attractor' must be of type 'spacelab.bodies.Attractor'")
         
     if attractor not in bodies.BODIES:
         

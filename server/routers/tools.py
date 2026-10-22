@@ -6,11 +6,11 @@ import numpy as np
 import schemas.tools_schema as schema
 import typing
 
-import astro.bodies as bodies
-import astro.two_body_problem as tbp
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
-import astro.orbital_position as op
+import spacelab.bodies as bodies
+import spacelab.two_body_problem as tbp
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
+import spacelab.orbital_position as op
 
 # --- HTTP ---
 

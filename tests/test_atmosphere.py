@@ -1,6 +1,6 @@
 import astropy.units as u
 
-import astro.atmosphere as atmosphere
+import spacelab.atmosphere as atmosphere
 
 def test_thermodynamic_properties_at_zero_altitude():
     

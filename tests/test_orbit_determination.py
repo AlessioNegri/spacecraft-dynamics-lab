@@ -2,11 +2,11 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bd
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
-import astro.orbital_position as op
-import astro.two_body_problem as tbp
+import spacelab.bodies as bd
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
+import spacelab.orbital_position as op
+import spacelab.two_body_problem as tbp
 
 def test_gibbs_method():
     """EXAMPLE 5.1"""

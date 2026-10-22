@@ -1,8 +1,8 @@
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bodies
-from astro.orbital_position import OrbitalPosition
+import spacelab.bodies as bodies
+from spacelab.orbital_position import OrbitalPosition
 
 def test_circular_orbit_time():
     

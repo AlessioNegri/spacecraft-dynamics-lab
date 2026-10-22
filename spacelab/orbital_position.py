@@ -21,8 +21,8 @@ import astropy.units as u
 import numpy as np
 import scipy.optimize as optimize
 
-import astro.bodies as bodies
-import astro.common as common
+import spacelab.bodies as bodies
+import spacelab.common as common
 
 error_period: str = "'period' must be positive"
 

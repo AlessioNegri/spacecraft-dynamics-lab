@@ -19,16 +19,16 @@ import astropy.units as u
 import numpy as np
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
-import astro.orbital_position as op
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
+import spacelab.orbital_position as op
 
-from astro.enums import FlybySide
+from spacelab.enums import FlybySide
 
-from astro.models.orbit_parameters import HyperbolaParameters
-from astro.models.orbital_elements import OrbitalElements
+from spacelab.models.orbit_parameters import HyperbolaParameters
+from spacelab.models.orbital_elements import OrbitalElements
 
 class InterplanetaryTrajectories():
     """Interplanetary Trajectories"""

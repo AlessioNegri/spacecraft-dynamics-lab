@@ -6,9 +6,9 @@ import typing
 
 import schemas.relative_motion_schema as schema
 
-import astro.relative_motion as rm
-import astro.bodies as bd
-import astro.orbit_3d as o3d
+import spacelab.relative_motion as rm
+import spacelab.bodies as bd
+import spacelab.orbit_3d as o3d
 
 # --- UTILITY ---
 

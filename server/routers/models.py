@@ -4,7 +4,7 @@ import numpy as np
 
 import schemas.models_schema as schema
 
-import astro.atmosphere as atmosphere
+import spacelab.atmosphere as atmosphere
 
 # --- HTTP ---
 

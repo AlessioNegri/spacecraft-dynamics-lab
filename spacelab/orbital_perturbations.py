@@ -20,18 +20,18 @@ import numpy as np
 import scipy.integrate as ode
 import typing
 
-import astro.physical_constants as physical_constants
-import astro.bodies as bodies
-import astro.common as common
-import astro.lagrange_coefficients as lc
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
+import spacelab.physical_constants as physical_constants
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.lagrange_coefficients as lc
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
 
-from astro.enums import AtmosphereModel
+from spacelab.enums import AtmosphereModel
 
-from astro.models.results import ResultOP
-from astro.models.orbital_elements import OrbitalElements
-from astro.models.gravity_harmonics import GravityHarmonics
+from spacelab.models.results import ResultOP
+from spacelab.models.orbital_elements import OrbitalElements
+from spacelab.models.gravity_harmonics import GravityHarmonics
 
 class OrbitalPerturbations():
     """Orbital Perturbations"""

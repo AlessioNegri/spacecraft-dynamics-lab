@@ -21,8 +21,8 @@ import numpy as np
 import scipy.optimize as optimize
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
+import spacelab.bodies as bodies
+import spacelab.common as common
 
 class LagrangeCoefficients():
     """Lagrange Coefficients - Universal Variable Formulation"""

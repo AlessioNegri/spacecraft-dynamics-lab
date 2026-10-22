@@ -24,14 +24,14 @@ import astropy.time as time
 import numpy as np
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.orbital_position as orbital_position
-import astro.two_body_problem as two_body_problem
-import astro.orbit_determination as orbit_determination
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.orbital_position as orbital_position
+import spacelab.two_body_problem as two_body_problem
+import spacelab.orbit_determination as orbit_determination
 
-from astro.enums import Hemisphere, AngleHemisphere
-from astro.models.orbital_elements import OrbitalElements, EquinoctialOrbitalElements
+from spacelab.enums import Hemisphere, AngleHemisphere
+from spacelab.models.orbital_elements import OrbitalElements, EquinoctialOrbitalElements
 
 class Orbit3D():
     """Orbit in Three Dimensions"""

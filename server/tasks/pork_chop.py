@@ -12,8 +12,8 @@ import schemas.interplanetary_schema as schema
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
-from astro.bodies import Attractor, BODIES
-from astro.orbit_determination import OrbitDetermination
+from spacelab.bodies import Attractor, BODIES
+from spacelab.orbit_determination import OrbitDetermination
 
 async def pork_chop_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of pork-chop analysis

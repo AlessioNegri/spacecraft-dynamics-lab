@@ -23,13 +23,13 @@ import scipy.integrate as ode
 import scipy.optimize as optimize
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.physical_constants as physical_constants
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.physical_constants as physical_constants
 
-from astro.enums import LibrationPoint
-from astro.models.orbit_parameters import OrbitParametersCR3BP
-from astro.models.results import ResultCR3BP
+from spacelab.enums import LibrationPoint
+from spacelab.models.orbit_parameters import OrbitParametersCR3BP
+from spacelab.models.results import ResultCR3BP
 
 class Orbit:
     """Generic orbit in circular restricted three-body problem"""

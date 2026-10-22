@@ -25,13 +25,13 @@ import numpy as np
 import scipy.integrate as ode
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.enums as astroenums
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.enums as astroenums
 
-from astro.models.results import Result
-from astro.models.orbit_parameters import OrbitParameters
-from astro.models.rocket_motor import RocketMotor
+from spacelab.models.results import Result
+from spacelab.models.orbit_parameters import OrbitParameters
+from spacelab.models.rocket_motor import RocketMotor
 
 class Orbit:
     """Generic orbit in two-body problem"""

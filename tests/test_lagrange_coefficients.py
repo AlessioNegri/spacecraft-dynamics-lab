@@ -2,8 +2,8 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bodies
-from astro.lagrange_coefficients import LagrangeCoefficients
+import spacelab.bodies as bodies
+from spacelab.lagrange_coefficients import LagrangeCoefficients
 
 def test_propagate_of_angle():
     """EXAMPLE 2.13"""

@@ -2,8 +2,8 @@ import astropy.units as u
 import dataclasses as dc
 import numpy as np
 
-import astro.bodies as bodies
-import astro.common as common
+import spacelab.bodies as bodies
+import spacelab.common as common
 
 @dc.dataclass
 class OrbitalElements:

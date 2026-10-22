@@ -22,12 +22,12 @@ import numpy as np
 import scipy.optimize as optimize
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.orbit_3d as o3d
-import astro.lagrange_coefficients as lc
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.orbit_3d as o3d
+import spacelab.lagrange_coefficients as lc
 
-from astro.enums import OrbitDirection
+from spacelab.enums import OrbitDirection
 
 class OrbitDetermination():
     """Orbit Determination"""

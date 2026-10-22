@@ -1,8 +1,8 @@
 import astropy.units as u
 import numpy as np
 
-from astro.bodies import Attractor
-from astro.two_body_problem import OrbitParameters, Orbit
+from spacelab.bodies import Attractor
+from spacelab.two_body_problem import OrbitParameters, Orbit
 
 def test_cartesian_to_orbit_parameters_circle():
     """EXAMPLE 2.5"""

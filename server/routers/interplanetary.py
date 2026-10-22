@@ -12,8 +12,8 @@ import schemas.interplanetary_schema as schema
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
-import astro.bodies as bd
-import astro.interplanetary_trajectories as it
+import spacelab.bodies as bd
+import spacelab.interplanetary_trajectories as it
 
 # --- HTTP ---
 

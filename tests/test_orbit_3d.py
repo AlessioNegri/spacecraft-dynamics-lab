@@ -2,10 +2,10 @@ import astropy.time as time
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bodies
-import astro.two_body_problem as tbp
-import astro.orbital_position as op
-import astro.orbit_3d as o3d
+import spacelab.bodies as bodies
+import spacelab.two_body_problem as tbp
+import spacelab.orbital_position as op
+import spacelab.orbit_3d as o3d
 
 def test_right_ascension_declination():
     """EXAMPLE 4.1"""

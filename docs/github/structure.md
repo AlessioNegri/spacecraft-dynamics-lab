@@ -3,7 +3,7 @@
 ⬅️ [HOME](../../README.md)
 
 - spacecraft-dynamics-lab/
-  - ├── astro/ # Orbital Mechanics library
+  - ├── spacelab/ # SpaceLab (Space Laboratory) library
   - ├── client/
     - ├── src/
     - ├── main/ # Electron main process

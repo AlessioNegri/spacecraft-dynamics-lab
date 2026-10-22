@@ -9,13 +9,13 @@ import schemas.orbital_maneuvers_schema as schema
 
 import routers.utility as utility
 
-import astro.bodies as bodies
-import astro.physical_constants as constants
-import astro.enums as ae
-import astro.orbit_3d as o3d
-import astro.orbital_maneuvers as om
-import astro.two_body_problem as tbp
-import astro.orbital_position as op
+import spacelab.bodies as bodies
+import spacelab.physical_constants as constants
+import spacelab.enums as ae
+import spacelab.orbit_3d as o3d
+import spacelab.orbital_maneuvers as om
+import spacelab.two_body_problem as tbp
+import spacelab.orbital_position as op
 
 # --- UTILITY ---
 

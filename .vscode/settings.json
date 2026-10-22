@@ -15,6 +15,6 @@
     "workbench.editor.enablePreviewFromQuickOpen": true,
     "workbench.editor.enablePreviewFromCodeNavigation": true,
     "workbench.list.openMode": "singleClick",
-    "python.analysis.include": [ "astro/**", "server/**", "tests/**" ],
+    "python.analysis.include": [ "spacelab/**", "server/**", "tests/**" ],
     "python.analysis.typeCheckingMode": "off"
 }

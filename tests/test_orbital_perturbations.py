@@ -4,10 +4,10 @@ import astropy.time as t
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bd
-import astro.orbital_perturbations as op
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
+import spacelab.bodies as bd
+import spacelab.orbital_perturbations as op
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
 
 def test_density():
     

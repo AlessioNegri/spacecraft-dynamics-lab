@@ -1,8 +1,8 @@
 import astropy.units as u
 import numpy as np
 
-import astro.bodies as bd
-import astro.circular_restricted_three_body_problem as cr3bp
+import spacelab.bodies as bd
+import spacelab.circular_restricted_three_body_problem as cr3bp
 
 def test_orbit_parameters_1():
     """EXAMPLE 2.16"""

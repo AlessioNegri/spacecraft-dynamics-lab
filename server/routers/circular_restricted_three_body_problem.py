@@ -1,3 +1,4 @@
+import astropy.units as u
 import fastapi
 import routers.utility as utility
 
@@ -5,9 +6,8 @@ import schemas.common as common
 import schemas.circular_restricted_three_body_problem_schema as schema
 import tasks.circular_restricted_three_body_problem_simulation as cr3bp_simulation
 
-import astropy.units as u
-import astro.bodies as bd
-import astro.circular_restricted_three_body_problem as cr3bp
+import spacelab.bodies as bd
+import spacelab.circular_restricted_three_body_problem as cr3bp
 
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager

@@ -20,16 +20,16 @@ import numpy as np
 import scipy.integrate as ode
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.orbit_3d as o3d
-import astro.orbital_position as op
-import astro.lagrange_coefficients as lc
-import astro.orbit_determination as od
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.orbit_3d as o3d
+import spacelab.orbital_position as op
+import spacelab.lagrange_coefficients as lc
+import spacelab.orbit_determination as od
 
-from astro.enums import ClosingApproachStrategy, ClosingApproachTrajectory
-from astro.models.results import ResultRM
-from astro.models.orbital_elements import OrbitalElements
+from spacelab.enums import ClosingApproachStrategy, ClosingApproachTrajectory
+from spacelab.models.results import ResultRM
+from spacelab.models.orbital_elements import OrbitalElements
 
 class RelativeMotion():
     """Relative Motion"""

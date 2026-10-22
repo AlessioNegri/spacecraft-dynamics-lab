@@ -10,8 +10,8 @@ import schemas.circular_restricted_three_body_problem_schema as schema
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
-import astro.bodies as bd
-import astro.circular_restricted_three_body_problem as cr3bp
+import spacelab.bodies as bd
+import spacelab.circular_restricted_three_body_problem as cr3bp
 
 async def cr3bp_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of CR3BP propagation.

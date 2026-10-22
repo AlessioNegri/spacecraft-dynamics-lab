@@ -1,16 +1,29 @@
 [project]
-name = "astro"
+name = "spacelab"
 version = "0.1.0"
-description = "Orbital mechanics utilities"
+description = "Spacecraft Dynamics Lab algorithms"
+readme = "PyPI-README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.14"
-authors = [{ name = "Alessio Negri"}]
-maintainers = [{ name = "Alessio Negri" }]
-dependencies = ["astropy", "numpy", "scipy"]
+authors = [
+    { name = "Alessio Negri"}
+]
+maintainers = [
+    { name = "Alessio Negri" }
+]
+dependencies = [
+    "astropy >= 7.2.0",
+    "numpy >= 2.3.5",
+    "scipy >= 1.17.0"
+]
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools >= 82.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["astro"]
+include = ["spacelab", "spacelab.*"]
+
+[tool.setuptools.package-data]
+spacelab = ["*.csv"]

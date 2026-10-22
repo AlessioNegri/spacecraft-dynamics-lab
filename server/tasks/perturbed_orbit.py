@@ -11,11 +11,11 @@ import schemas.orbital_perturbations_schema as schema
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
-import astro.bodies as bd
-import astro.common as cm
-import astro.orbital_perturbations as op
-import astro.orbit_3d as o3d
-import astro.orbit_determination as od
+import spacelab.bodies as bd
+import spacelab.common as cm
+import spacelab.orbital_perturbations as op
+import spacelab.orbit_3d as o3d
+import spacelab.orbit_determination as od
 
 async def orbital_perturbations_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of orbital perturbations analysis

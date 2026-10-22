@@ -8,9 +8,9 @@ import tasks.perturbed_orbit as perturbed_orbit
 
 import astropy.units as u
 
-import astro.orbital_perturbations as op
-import astro.orbit_3d as o3d
-import astro.bodies as bodies
+import spacelab.orbital_perturbations as op
+import spacelab.orbit_3d as o3d
+import spacelab.bodies as bodies
 
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager

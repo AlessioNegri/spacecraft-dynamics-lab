@@ -26,20 +26,20 @@ import numpy as np
 import scipy.optimize as optimize
 import typing
 
-import astro.bodies as bodies
-import astro.common as common
-import astro.physical_constants as constants
-import astro.orbit_3d as o3d
-import astro.orbital_position as op
-import astro.orbit_determination as od
-import astro.two_body_problem as tbp
-import astro.lagrange_coefficients as lc
+import spacelab.bodies as bodies
+import spacelab.common as common
+import spacelab.physical_constants as constants
+import spacelab.orbit_3d as o3d
+import spacelab.orbital_position as op
+import spacelab.orbit_determination as od
+import spacelab.two_body_problem as tbp
+import spacelab.lagrange_coefficients as lc
 
-from astro.enums import OrbitDirection, HohmannDirection, SpiralDirection, ThrustDirection
+from spacelab.enums import OrbitDirection, HohmannDirection, SpiralDirection, ThrustDirection
 
-from astro.models.results import Result, ManeuverResult, NonImpulsiveManeuverResult
-from astro.models.rocket_motor import RocketMotor
-from astro.models.orbital_elements import OrbitalElements
+from spacelab.models.results import Result, ManeuverResult, NonImpulsiveManeuverResult
+from spacelab.models.rocket_motor import RocketMotor
+from spacelab.models.orbital_elements import OrbitalElements
 
 class OrbitalManeuvers():
     """Orbital Maneuvers"""

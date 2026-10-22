@@ -1,5 +1,5 @@
 """
-Container for enums used in astro library
+Container for enums used in spacelab library
 """
 
 import astropy.units as u
