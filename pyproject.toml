@@ -1,9 +1,10 @@
 [project]
-name = "spacelab"
+name = "space-laboratory"
 version = "0.1.0"
 description = "Spacecraft Dynamics Lab algorithms"
 readme = "PyPI-README.md"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
 authors = [
     { name = "Alessio Negri"}
@@ -27,3 +28,8 @@ include = ["spacelab", "spacelab.*"]
 
 [tool.setuptools.package-data]
 spacelab = ["*.csv"]
+
+[project.urls]
+Homepage = "https://github.com/AlessioNegri/spacecraft-dynamics-lab"
+Repository = "https://github.com/AlessioNegri/spacecraft-dynamics-lab"
+Issues = "https://github.com/AlessioNegri/spacecraft-dynamics-lab/issues"

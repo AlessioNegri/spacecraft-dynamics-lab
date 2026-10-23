@@ -8,7 +8,7 @@
     style="border-radius: 50px;"
     />
 
-SpaceLab is an open-source Python library for astrodynamics, spacecraft dynamics, orbit determination, and mission analysis.
+Space Laboratory (SpaceLab) is an open-source Python library for astrodynamics, spacecraft dynamics, orbit determination, and mission analysis.
 
 The library provides algorithms commonly used in spacecraft engineering and orbital mechanics, including orbital maneuvers, relative motion, perturbation analysis, three-body dynamics, and interplanetary trajectory design.
 
@@ -27,7 +27,7 @@ The library provides algorithms commonly used in spacecraft engineering and orbi
 ## Installation
 
 ```bash
-pip install spacelab
+pip install space-laboratory
 ```
 
 ## Quick Start
@@ -48,7 +48,7 @@ SpaceLab is the computational core of the Spacecraft Dynamics Lab ecosystem.
 SpacecraftDynamicsLab
 ├── Desktop Application
 ├── Backend Service
-└── SpaceLab
+└── Space Laboratory
 ```
 
 ## Requirements

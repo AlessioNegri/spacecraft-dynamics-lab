@@ -1,7 +1,9 @@
 .backup/
 .pytest_cache/
-spacelab.egg-info/
+dist/
 docs/videos/*mp4
 htmlcov/
+space_laboratory.egg-info/
+spacelab_test.egg-info/
 tests/__pycache__/
 .coverage
