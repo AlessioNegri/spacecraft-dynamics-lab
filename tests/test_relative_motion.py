@@ -73,7 +73,7 @@ def test_two_impulsive_rendezvous_maneuver_1():
                                                          argument_of_periapsis=0 * u.deg,
                                                          true_anomaly=60 * u.deg)
     
-    oe_target.update_from_perigee_apogee(periapsis_radius=(radius + 300) * u.km,
+    oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 300) * u.km,
                                          apoapsis_radius=(radius + 300) * u.km)
     
     oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(inclination=40.130 * u.deg,
@@ -81,7 +81,7 @@ def test_two_impulsive_rendezvous_maneuver_1():
                                                          argument_of_periapsis=70.662 * u.deg,
                                                          true_anomaly=349.65 * u.deg)
     
-    oe_chaser.update_from_perigee_apogee(periapsis_radius=(radius + 320.06) * u.km,
+    oe_chaser.update_from_periapsis_apoapsis(periapsis_radius=(radius + 320.06) * u.km,
                                          apoapsis_radius=(radius + 513.86) * u.km)
     
     dv_tot, _, _, _ = rm.RelativeMotion.two_impulsive_rendezvous_maneuver(attractor=attractor,
@@ -100,7 +100,7 @@ def test_two_impulsive_rendezvous_maneuver_2():
     
     oe_target: o3d.OrbitalElements = o3d.OrbitalElements()
     
-    oe_target.update_from_perigee_apogee(periapsis_radius=(radius + 300) * u.km,
+    oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 300) * u.km,
                                          apoapsis_radius=(radius + 300) * u.km)
     
     r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
@@ -134,7 +134,7 @@ def test_two_impulsive_rendezvous_maneuver_3():
     
     oe_target: o3d.OrbitalElements = o3d.OrbitalElements()
     
-    oe_target.update_from_perigee_apogee(periapsis_radius=(radius + 350) * u.km,
+    oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 350) * u.km,
                                          apoapsis_radius=(radius + 350) * u.km)
     
     r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)

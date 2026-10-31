@@ -122,15 +122,13 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         # >>> 0. Pericenter/Apocenter radii
         
-        r_p_1: float = orbital_elements_1.calc_perigee_radius().to_value(u.km)
-        r_a_1: float = orbital_elements_1.calc_apogee_radius().to_value(u.km)
+        r_p_1: float = orbital_elements_1.calc_periapsis_radius().to_value(u.km)
+        r_a_1: float = orbital_elements_1.calc_apoapsis_radius().to_value(u.km)
         
-        r_p_2: float = orbital_elements_2.calc_perigee_radius().to_value(u.km)
-        r_a_2: float = orbital_elements_2.calc_apogee_radius().to_value(u.km)
+        r_p_2: float = orbital_elements_2.calc_periapsis_radius().to_value(u.km)
+        r_a_2: float = orbital_elements_2.calc_apoapsis_radius().to_value(u.km)
         
         # >>> 1. Orbit 1 (Specific Angular Momentum, Velocity at Pericenter and Apocenter)
         
@@ -216,16 +214,16 @@ class OrbitalManeuvers():
         
         # >>> 5. Result
         
-        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, sea_level_gravity=g_0)
+        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, attractor=attractor)
         
-        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, sea_level_gravity=g_0)
+        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_1
         
-        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, sea_level_gravity=g_0)
-        
-        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, sea_level_gravity=g_0)
-        
+        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, attractor=attractor)
+
+        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, attractor=attractor)
+
         rocket_motor.spacecraft_mass -= dm_2
         
         oe_t: OrbitalElements = OrbitalElements(specific_angular_momentum=h_t * u.km**2 / u.s,
@@ -290,8 +288,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         # >>> 0. Orbit radii
         
         r_1: float = orbital_elements_1.semimajor_axis.to_value(u.km)
@@ -352,9 +348,9 @@ class OrbitalManeuvers():
         
         # >>> 4. Result
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -409,7 +405,7 @@ class OrbitalManeuvers():
         
         oe_t_1: OrbitalElements = copy.deepcopy(orbital_elements_1)
         
-        oe_t_1.update_from_perigee_apogee(periapsis_radius=orbital_elements_1.calc_perigee_radius(),
+        oe_t_1.update_from_periapsis_apoapsis(periapsis_radius=orbital_elements_1.calc_periapsis_radius(),
                                           apoapsis_radius=apoapsis_radius)
         
         maneuver_1: ManeuverResult = OrbitalManeuvers.hohmann_transfer(attractor=attractor,
@@ -420,7 +416,7 @@ class OrbitalManeuvers():
         
         oe_t_2: OrbitalElements = copy.deepcopy(orbital_elements_2)
         
-        oe_t_2.update_from_perigee_apogee(periapsis_radius=orbital_elements_2.calc_perigee_radius(),
+        oe_t_2.update_from_periapsis_apoapsis(periapsis_radius=orbital_elements_2.calc_periapsis_radius(),
                                           apoapsis_radius=apoapsis_radius)
         
         maneuver_2: ManeuverResult = OrbitalManeuvers.hohmann_transfer(attractor=attractor,
@@ -500,15 +496,13 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         # >>> 1. Chaser Orbit period and velocity at pericenter
         
         orbital_elements.calc_specific_angular_momentum(attractor)
         
         T_1: float = orbital_elements.calc_orbital_period(attractor=attractor).to_value(u.s)
         
-        v_p_1: float = orbital_elements.specific_angular_momentum.to_value(u.km**2 / u.s) / orbital_elements.calc_perigee_radius().to_value(u.km)
+        v_p_1: float = orbital_elements.specific_angular_momentum.to_value(u.km**2 / u.s) / orbital_elements.calc_periapsis_radius().to_value(u.km)
         
         # >>> 2. Time from A (pericenter - chaser) to B (target) placed at true_anomaly_target w.r.t. A
         
@@ -522,7 +516,7 @@ class OrbitalManeuvers():
         
         a_2: float = (np.sqrt(mu) * T_2 / (2 * np.pi))**(2/3)
         
-        r_a: float = orbital_elements.calc_perigee_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
+        r_a: float = orbital_elements.calc_periapsis_radius().to_value(u.km) # ? Maneuver point is the pericenter of the chaser orbit
         
         r_d: float = 2 * a_2 - r_a # ? Opposite point of the phasing orbit
         
@@ -538,15 +532,15 @@ class OrbitalManeuvers():
         
         # >>> 5. Result
         
-        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, sea_level_gravity=g_0)
+        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, attractor=attractor)
         
-        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, sea_level_gravity=g_0)
+        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_1
         
-        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, sea_level_gravity=g_0)
+        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, attractor=attractor)
         
-        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, sea_level_gravity=g_0)
+        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_2
         
@@ -607,8 +601,6 @@ class OrbitalManeuvers():
         common.check_orbital_elements(orbital_elements_2)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        g_0: float = bodies.BODIES[attractor].g_0
         
         # >>> 1. Orbit 1 (Starting Orbit)
         
@@ -720,9 +712,9 @@ class OrbitalManeuvers():
                                                                        eccentricity=e_t * u.one,
                                                                        attractor=attractor)
         
-        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, sea_level_gravity=g_0)
+        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1 * u.km / u.s, attractor=attractor)
         
-        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, sea_level_gravity=g_0)
+        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_1
         
@@ -739,9 +731,9 @@ class OrbitalManeuvers():
                                                                        eccentricity=e_t * u.one,
                                                                        attractor=attractor)
         
-        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, sea_level_gravity=g_0)
+        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2 * u.km / u.s, attractor=attractor)
         
-        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, sea_level_gravity=g_0)
+        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, attractor=attractor)
         
         oe_t: OrbitalElements = OrbitalElements(specific_angular_momentum=h_t * u.km**2 / u.s,
                                                 semimajor_axis=a_t * u.km,
@@ -805,8 +797,6 @@ class OrbitalManeuvers():
         common.check_angle(eta)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        g_0: float = bodies.BODIES[attractor].g_0
         
         eta: float = eta.to_value(u.rad)
         
@@ -879,9 +869,9 @@ class OrbitalManeuvers():
             
             phi += np.pi
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -939,8 +929,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         # >>> 1. Orbit 1
         
         e_1: float = orbital_elements.eccentricity.to_value()
@@ -982,9 +970,9 @@ class OrbitalManeuvers():
         
         # >>> 4. Result
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=delta_velocity, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=delta_velocity, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -1041,8 +1029,6 @@ class OrbitalManeuvers():
         common.check_orbital_elements(orbital_elements)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        g_0: float = bodies.BODIES[attractor].g_0
         
         # >>> 1. Parameters of the chaser and target orbits
         
@@ -1108,15 +1094,15 @@ class OrbitalManeuvers():
         
         dv_2: u.Quantity = np.linalg.norm(v_t - v_t_t.to_value(u.km / u.s)) * u.km / u.s
         
-        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1, sea_level_gravity=g_0)
+        dm_1: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_1, attractor=attractor)
         
-        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, sea_level_gravity=g_0)
+        t_burn_1: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_1, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_1
         
-        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2, sea_level_gravity=g_0)
+        dm_2: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv_2, attractor=attractor)
         
-        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, sea_level_gravity=g_0)
+        t_burn_2: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm_2, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm_2
         
@@ -1154,8 +1140,6 @@ class OrbitalManeuvers():
         
         common.check_orbital_elements(orbital_elements_2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         # >>> 1. Orbit 1
         
         inc_1: float = orbital_elements_1.inclination.to_value(u.rad)
@@ -1182,10 +1166,10 @@ class OrbitalManeuvers():
         
         dv: float = np.sqrt( (v_1 - v_2)**2 + 4 * v_1 * v_2 * sin_phi_2 )
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
-        
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
-        
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
+
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
+
         rocket_motor.spacecraft_mass -= dm
         
         maneuver: ManeuverResult = ManeuverResult()
@@ -1226,8 +1210,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         delta_inc: float = (orbital_elements_2.inclination.to_value(u.rad) - orbital_elements_1.inclination.to_value(u.rad))
         
         # >>> 1. Orbit 1
@@ -1260,9 +1242,9 @@ class OrbitalManeuvers():
         
         dv: float = np.abs(2 * v_1 * np.cos(fpa_1) * np.sin(delta_inc / 2))
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -1301,8 +1283,6 @@ class OrbitalManeuvers():
         common.check_orbital_elements(orbital_elements_2)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        g_0: float = bodies.BODIES[attractor].g_0
         
         inc: float = orbital_elements_1.inclination.to_value(u.rad)
         
@@ -1346,9 +1326,9 @@ class OrbitalManeuvers():
         
         dv: float = np.abs(2 * v_1 * np.cos(fpa_1) * np.sin(inc) * np.sin(delta_raan / 2))
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -1401,8 +1381,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: float = bodies.BODIES[attractor].g_0
-        
         dihedral_angle: float = dihedral_angle.to_value(u.rad)
         
         # >>> 1. Orbit 1
@@ -1437,9 +1415,9 @@ class OrbitalManeuvers():
         
         dv: float = np.sqrt((v_r_2 - v_r_1)**2 + v_t_1**2 + v_t_2**2 - 2 * v_t_1 * v_t_2 * np.cos(dihedral_angle))
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -1483,8 +1461,6 @@ class OrbitalManeuvers():
         common.check_orbital_elements(orbital_elements_2)
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        g_0: float = bodies.BODIES[attractor].g_0
         
         inc_1: float = orbital_elements_1.inclination.to_value(u.rad)
         inc_2: float = orbital_elements_2.inclination.to_value(u.rad)
@@ -1549,9 +1525,9 @@ class OrbitalManeuvers():
         
         dv: float = 2 * v_t_1 * np.sin(delta / 2)
         
-        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, sea_level_gravity=g_0)
+        dm: u.Quantity = rocket_motor.calc_propellant_mass(delta_velocity=dv * u.km / u.s, attractor=attractor)
         
-        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, sea_level_gravity=g_0)
+        t_burn: u.Quantity = rocket_motor.calc_burn_time(propellant_mass=dm, attractor=attractor)
         
         rocket_motor.spacecraft_mass -= dm
         
@@ -1723,8 +1699,8 @@ class OrbitalManeuvers():
         
         h_ssto: float = ssto.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
-        r_per_ssto: float = ssto.calc_perigee_radius().to_value(u.km)
-        r_apo_ssto: float = ssto.calc_apogee_radius().to_value(u.km)
+        r_per_ssto: float = ssto.calc_periapsis_radius().to_value(u.km)
+        r_apo_ssto: float = ssto.calc_apoapsis_radius().to_value(u.km)
         
         inc_ssto: float = ssto.inclination.to_value(u.rad)
         
@@ -1794,8 +1770,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: u.Quantity = bodies.BODIES[attractor].g_0.to(u.m / u.s**2)
-        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
         r_0: float = initial_radius.to_value(u.km)
@@ -1806,9 +1780,9 @@ class OrbitalManeuvers():
         
         v_0: float = np.sqrt(mu / r_0) # ? Initial circular orbit velocity
         
-        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        c: float = rocket_motor.calc_effective_exhaust_velocity(attractor=attractor).to_value(u.km / u.s)
         
-        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(attractor=attractor).to_value(u.kg / u.s)
         
         sign: float = +1 if direction == SpiralDirection.OUTWARD else -1
         
@@ -1854,8 +1828,6 @@ class OrbitalManeuvers():
         
         R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
         
-        g_0: u.Quantity = bodies.BODIES[attractor].g_0.to(u.m / u.s**2)
-        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
         r_0: float = initial_radius.to_value(u.km)
@@ -1870,7 +1842,7 @@ class OrbitalManeuvers():
         
         dv: float = - np.abs(v_f - v_0)
         
-        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        c: float = rocket_motor.calc_effective_exhaust_velocity(attractor=attractor).to_value(u.km / u.s)
         
         c_tilde: float = dv
         
@@ -1880,7 +1852,7 @@ class OrbitalManeuvers():
             
             c_tilde = np.sqrt(coeff * mu) * (np.arctanh(np.sqrt(coeff * r_f) + 0j) - np.arctanh(np.sqrt(coeff * r_0) + 0j))
         
-        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(attractor=attractor).to_value(u.kg / u.s)
         
         tof: float = m_0 / m_dot * (1 - np.exp(c_tilde.real / c))
         
@@ -1944,8 +1916,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: u.Quantity = bodies.BODIES[attractor].g_0.to(u.m / u.s**2)
-        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
         r: float = radius.to_value(u.km)
@@ -1962,9 +1932,9 @@ class OrbitalManeuvers():
         
         dv: float = d_i * np.pi * v / 2
         
-        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        c: float = rocket_motor.calc_effective_exhaust_velocity(attractor=attractor).to_value(u.km / u.s)
         
-        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(attractor=attractor).to_value(u.kg / u.s)
         
         tof: float = m_0 / m_dot * (1 - np.exp(- dv / c))
         
@@ -2003,8 +1973,6 @@ class OrbitalManeuvers():
         
         mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
         
-        g_0: u.Quantity = bodies.BODIES[attractor].g_0.to(u.m / u.s**2)
-        
         m_0: float = rocket_motor.spacecraft_mass.to_value(u.kg)
         
         r_0: float = initial_radius.to_value(u.km)
@@ -2027,9 +1995,9 @@ class OrbitalManeuvers():
         
         dv: float = np.sqrt(v_0**2 + v_f**2 - 2 * v_0 * v_f * np.cos(d_i * np.pi / 2))
         
-        c: float = rocket_motor.calc_effective_exhaust_velocity(sea_level_gravity=g_0).to_value(u.km / u.s)
+        c: float = rocket_motor.calc_effective_exhaust_velocity(attractor=attractor).to_value(u.km / u.s)
         
-        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(sea_level_gravity=g_0).to_value(u.kg / u.s)
+        m_dot: float = rocket_motor.calc_propellant_mass_flow_rate(attractor=attractor).to_value(u.kg / u.s)
         
         tof: float = m_0 / m_dot * (1 - np.exp(- dv / c))
         

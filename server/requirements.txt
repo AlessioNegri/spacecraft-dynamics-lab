@@ -100,3 +100,6 @@ twine==7.0.0
 #requests-toolbelt-1.0.0
 #rfc3986-2.0.0
 #rich-15.0.0
+coloredlogs==15.0.1
+#humanfriendly-10.0
+#pyreadline3-3.5.6

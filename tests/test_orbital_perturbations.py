@@ -7,33 +7,6 @@ import numpy as np
 import spacelab.bodies as bd
 import spacelab.orbital_perturbations as op
 import spacelab.orbit_3d as o3d
-import spacelab.orbit_determination as od
-
-def test_density():
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=1 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 1.068, atol=1e-3)
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=3.981 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 7.106e-1, atol=1e-4)
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=15.849 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 1.401e-1, atol=1e-4)
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=63.096 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 2.059e-4, atol=1e-7)
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=251.189 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 5.909e-11, atol=1e-14)
-    
-    rho, _ = op.OrbitalPerturbations.density(altitude=1001.0 * u.km)
-    
-    assert np.isclose(rho.to_value(u.kg / u.m**3), 3.561e-15, atol=1e-18)
 
 @pytest.mark.skip(reason="Too long to run")
 def test_cowell_method_atmospheric_drag():
@@ -446,7 +419,7 @@ def test_drag_decay():
     
     sma: u.Quantity = (r_p + r_a) / 2
     ecc: u.Quantity = (r_a - r_p) / (r_a + r_p) * u.one
-    print(sma)
+    
     t_c: u.Quantity = op.OrbitalPerturbations.drag_circularization_time(
         semimajor_axis=sma,
         eccentricity=ecc,

@@ -30,12 +30,12 @@ def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> om.RocketMotor:
         om.RocketMotor: Rocket motor
     """
     
-    rocket_motor: om.RocketMotor = om.RocketMotor()
-    
-    rocket_motor.specific_impulse = spacecraft_schema.specificImpulse * u.s
-    rocket_motor.thrust = spacecraft_schema.thrust * u.N
-    rocket_motor.spacecraft_mass = spacecraft_schema.mass * u.kg
-    rocket_motor.propellant_mass = 0.0 * u.kg
+    rocket_motor = om.RocketMotor(    
+        specific_impulse=spacecraft_schema.specificImpulse * u.s,
+        thrust=spacecraft_schema.thrust * u.N,
+        spacecraft_mass=spacecraft_schema.mass * u.kg,
+        propellant_mass=0.0 * u.kg
+    )
     
     return rocket_motor
 
@@ -1163,7 +1163,7 @@ async def put_tools_super_synchronous_transfer(data: schema.ToolsSSTOInModelInfo
             
             ssto: om.OrbitalElements = om.OrbitalElements(inclination=inc_deg * u.deg)
             
-            ssto.update_from_perigee_apogee(periapsis_radius=data.sstoPeriapsisRadius * u.km,
+            ssto.update_from_periapsis_apoapsis(periapsis_radius=data.sstoPeriapsisRadius * u.km,
                                             apoapsis_radius=apoapsis_radius * u.km)
 
             # ! Same inclination between SSTO and LEO

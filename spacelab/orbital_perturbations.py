@@ -29,9 +29,10 @@ import spacelab.orbit_determination as od
 
 from spacelab.enums import AtmosphereModel
 
+from spacelab.models.atmosphere import Atmosphere
 from spacelab.models.results import ResultOP
 from spacelab.models.orbital_elements import OrbitalElements
-from spacelab.models.gravity_harmonics import GravityHarmonics
+from spacelab.models.gravitational_multipoles import GravitationalMultipoles
 
 class OrbitalPerturbations():
     """Orbital Perturbations"""
@@ -66,267 +67,6 @@ class OrbitalPerturbations():
         self.use_solar_gravity: bool = False
     
     # --- STATIC ---
-    
-    @staticmethod
-    def earth_harmonic_coefficients() -> GravityHarmonics:
-        """
-        Multipole coefficients of Earth's gravitational potential
-
-        Returns:
-            GravityHarmonics: Multipole coefficients
-        """
-        
-        earth_gravity_harmonics: GravityHarmonics = GravityHarmonics(
-            C={
-                (0,0): 1.0,
-                
-                (1,0): 0.0,
-                (1,1): 0.0,
-                
-                (2,0): -1.082627e-03,
-                (2,1): +0.0,
-                (2,2): +1.5745e-06,
-                
-                (3,0): +2.5326e-06,
-                (3,1): -2.1926e-06,
-                (3,2): +3.0899e-07,
-                (3,3): -1.0055e-07,
-                
-                (4,0): +1.6196e-06,
-                (4,1): +5.0880e-07,
-                (4,2): +7.8418e-08,
-                (4,3): -5.9210e-08,
-                (4,4): -3.9841e-09,
-                
-                (5,0): -2.2730e-07,
-                (5,1): +5.3180e-08,
-                (5,2): +1.0559e-07,
-                (5,3): +1.4930e-08,
-                (5,4): -2.2993e-09,
-                (5,5): -4.3082e-10,
-            },
-
-            S={
-                (0,0): 0.0,
-                
-                (1,0): 0.0,
-                (1,1): 0.0,
-                
-                (2,0): 0.0,
-                (2,1): 0.0,
-                (2,2): -9.0380e-07,
-                
-                (3,0): 0.0,
-                (3,1): -2.6843e-07,
-                (3,2): -2.1144e-07,
-                (3,3): -1.9722e-07,
-                
-                (4,0): 0.0,
-                (4,1): +4.4917e-07,
-                (4,2): +1.4818e-07,
-                (4,3): +1.2008e-08,
-                (4,4): +6.5257e-09,
-                
-                (5,0): 0,
-                (5,1): +8.0859e-08,
-                (5,2): -5.2329e-08,
-                (5,3): +7.0973e-09,
-                (5,4): +3.8671e-10,
-                (5,5): +1.6482e-09,
-            },
-
-            J={
-                (2,0): 1.0826266e-3,
-                (3,0): -2.5326e-6,
-                (4,0): -1.6196e-6,
-                (5,0): -2.2730e-7,
-                (6,0):  5.4068e-7,
-                (7,0): -3.5236e-7,
-                (9,0): -1.2062e-7,
-            },
-            
-            L={
-                (2, 2): np.deg2rad(-14.928),
-                
-                (3, 1): np.deg2rad(-173.01),
-                (3, 2): np.deg2rad(-17.192),
-                (3, 3): np.deg2rad(-39.005),
-                
-                (4, 1): np.deg2rad(+41.436),
-                (4, 2): np.deg2rad(+31.056),
-                (4, 3): np.deg2rad(+56.180),
-                (4, 4): np.deg2rad(+30.351),
-                
-                (5, 1): np.deg2rad(+56.667),
-                (5, 2): np.deg2rad(-13.182),
-                (5, 3): np.deg2rad(+8.4751),
-                (5, 4): np.deg2rad(+42.613),
-                (5, 5): np.deg2rad(+20.930),
-            }
-        )
-        
-        for (n, m) in earth_gravity_harmonics.C.keys():
-            
-            if (n, m) not in earth_gravity_harmonics.J:
-                
-                earth_gravity_harmonics.J[(n, m)] = np.sqrt(
-                    earth_gravity_harmonics.C[(n, m)]**2 +
-                    earth_gravity_harmonics.S[(n, m)]**2
-                )
-        
-        return earth_gravity_harmonics
-    
-    @staticmethod
-    def earth_reduced_harmonic_coefficients(semimajor_axis: u.Quantity,
-                                            eccentricity: u.Quantity) -> typing.Dict[typing.Tuple[int, int], float]:
-        """
-        Calculate the earth reduced harmonic coefficients j_nm for a given semimajor axis and eccentricity orbit
-
-        Args:
-            semimajor_axis (u.Quantity): Semimajor axis
-            eccentricity (u.Quantity): Eccentricity
-
-        Returns:
-            typing.Dict[typing.Tuple[int, int], float]: Reduced harmonic coefficients j_nm
-        """
-        
-        R_E: float = bodies.BODIES[bodies.Attractor.EARTH].R_E.to_value(u.km)
-        
-        sma: float = semimajor_axis.to_value(u.km)
-        
-        ecc: float = eccentricity.to_value(u.one)
-        
-        earth_harmonics: GravityHarmonics = OrbitalPerturbations.earth_harmonic_coefficients()
-
-        semilatus_rectum: float = sma * (1 - ecc**2)
-        
-        j_nm: typing.Dict[typing.Tuple[int, int], float] =\
-            {
-                (n, m):
-                    3 / 2 * earth_harmonics.J[(n, m)] * (R_E / semilatus_rectum)**n
-                    for (n, m) in earth_harmonics.J.keys()
-            }
-        
-        return j_nm
-    
-    @staticmethod
-    def density(altitude: u.Quantity, model: AtmosphereModel = AtmosphereModel.USSA76) -> typing.List[u.Quantity]:
-        """
-        Calculates the atmospheric density given the altitude above the Earth using one of the following models:
-        
-        - *USSA76* piecewise exponential model
-        - *CIRA-72* piecewise exponential model
-
-        Note
-        -----
-        The given altitude is located in the values of the altitude ranges. For example, and altitude of 249 km will be
-        located in the range 200-250 but uses the value of 200 km reference altitude.
-        
-        Args:
-            altitude (u.Quantity): Altitude
-            model (AtmosphereModel, optional): Atmosphere model. Defaults to AtmosphereModel.USSA76.
-
-        Returns:
-            typing.List[u.Quantity]: Density and scale height [rho_z, H_z]
-        """
-        
-        z: float = altitude.to_value(u.km)
-        
-        # >>> 1. Geometric altitudes [km] (1 x 28)
-        
-        h: np.ndarray = np.array(
-            [
-                0, 25, 30, 40, 50, 60, 70, 80, 90, 100,
-                110, 120, 130, 140, 150, 180, 200, 250, 300, 350,
-                400, 450, 500, 600, 700, 800, 900, 1000
-            ])
-        
-        # >>> 2. Corresponding densities [kg / m^3] from USSA76 (1 x 28)
-        
-        rho_USSA76: np.ndarray = np.array(
-            [
-                1.225, 4.008e-2, 1.841e-2, 3.996e-3, 1.027e-3,
-                3.097e-4, 8.283e-5, 1.846e-5, 3.416e-6, 5.606e-7,
-                9.708e-8, 2.222e-8, 8.152e-9, 3.831e-9, 2.076e-9,
-                5.194e-10, 2.541e-10, 6.073e-11, 1.916e-11, 7.014e-12,
-                2.803e-12, 1.184e-12, 5.215e-13, 1.137e-13, 3.070e-14,
-                1.136e-14, 5.759e-15, 3.561e-15
-            ])
-        
-        rho_CIRA: np.ndarray = np.array(
-            [
-                1.225, 3.899e-2, 1.774e-2, 3.972e-3, 1.057e-3,
-                3.206e-4, 8.770e-5, 1.905e-5, 3.396e-6, 5.297e-7,
-                9.661e-8, 2.438e-8, 8.484e-9, 3.845e-9, 2.070e-9,
-                5.464e-10, 2.789e-10, 7.248e-11, 2.418e-11, 9.518e-12,
-                3.725e-12, 1.585e-12, 6.967e-13, 1.454e-13, 3.614e-14,
-                1.170e-14, 5.245e-15, 3.019e-15
-            ])
-        
-        # >>> 3. Scale heights [km] (1 x 27)
-
-        H_USSA76: np.ndarray = np.array(
-            [
-                7.310, 6.427, 6.546, 7.360, 8.342,
-                7.583, 6.661, 5.927, 5.533, 5.703,
-                6.782, 9.973, 13.243, 16.322, 21.652,
-                27.974, 34.934, 43.342, 49.755, 54.513,
-                58.019, 60.980, 65.654, 76.377, 100.587,
-                147.203, 208.020
-            ])
-        
-        H_CIRA: np.ndarray = np.array(
-            [
-                7.249, 6.349, 6.682, 7.554, 8.382,
-                7.714, 6.549, 5.799, 5.382, 5.877,
-                7.263, 9.473, 12.636, 16.149, 22.523,
-                29.740, 37.105, 45.546, 53.628, 53.298,
-                58.515, 60.828, 63.822, 71.835, 88.667,
-                124.64, 181.05, 268.00
-            ])
-        
-        # >>> 4. Handle altitudes outside of the range
-        
-        if z > h[-1]:
-            
-            z = h[-1]
-            
-        elif z < h[0]:
-            
-            print(f"Warning: altitude is below {h[0]} km, using density at {h[0]} km")
-            
-            z = h[0]
-        
-        # >>> 5. Determine the interpolation interval
-        
-        rho: float = 0.0
-        H: float = 0.0
-        
-        if model == AtmosphereModel.USSA76:
-            
-            rho = rho_USSA76
-            H = H_USSA76
-        
-        elif model == AtmosphereModel.CIRA72:
-            
-            rho = rho_CIRA
-            H = H_CIRA
-        
-        else:
-            
-            print("Warning: model not available")
-            
-            return [0 * kg / m**3, 0 * u.km]
-        
-        idx: int = np.searchsorted(h, z) - 1
-        
-        idx = np.clip(idx, 0, len(H) - 1)
-        
-        # >>> 6. Exponential interpolation
-        
-        rho_z: u.Quantity = rho[idx] * np.exp(-(z - h[idx]) / H[idx]) * u.kg / u.m**3
-        
-        return rho_z, H[idx] * u.km
     
     @staticmethod
     def sun_position(timestamp: time.Time) -> typing.List[u.Quantity]:
@@ -711,7 +451,7 @@ class OrbitalPerturbations():
         
         # * Eccentricity for vanishing argument of periapsis
         
-        earth_harmonics: GravityHarmonics = OrbitalPerturbations.earth_harmonic_coefficients()
+        earth_harmonics = GravitationalMultipoles()
         
         J_2: float = earth_harmonics.J[(2, 0)]
         J_3: float = earth_harmonics.J[(3, 0)]
@@ -719,18 +459,16 @@ class OrbitalPerturbations():
         e_f_0: float = - 1 / 2 * (J_3 * R_E) / (J_2 * sma) * np.sin(inc)
         
         # * Eccentricity for vanishing argument of periapsis (higher order terms)
-
-        earth_reduced_harmonics: typing.Dict[typing.Tuple[int, int], float] =\
-            OrbitalPerturbations.earth_reduced_harmonic_coefficients(
-                semimajor_axis=semimajor_axis,
-                eccentricity=e_f_0 * u.one
-            )
         
-        j_2: float = earth_reduced_harmonics[(2, 0)]
-        j_3: float = earth_reduced_harmonics[(3, 0)]
-        j_5: float = earth_reduced_harmonics[(5, 0)]
-        j_7: float = earth_reduced_harmonics[(7, 0)]
-        j_9: float = earth_reduced_harmonics[(9, 0)]
+        earth_harmonics.calc_earth_reduced_harmonic_coefficients(
+            semimajor_axis=semimajor_axis,
+            eccentricity=e_f_0 * u.one)
+        
+        j_2: float = earth_harmonics.j[(2, 0)]
+        j_3: float = earth_harmonics.j[(3, 0)]
+        j_5: float = earth_harmonics.j[(5, 0)]
+        j_7: float = earth_harmonics.j[(7, 0)]
+        j_9: float = earth_harmonics.j[(9, 0)]
         
         e_f: float =\
             np.sin(inc) / (2 * j_2 * ( 1 - 5/4 * np.sin(inc)**2 )) *\
@@ -771,18 +509,18 @@ class OrbitalPerturbations():
         # * Eccentricity for vanishing argument of periapsis (higher order terms)
         
         epsilon: float = 0.00978457 * (sma / R_E)**7
-
-        earth_reduced_harmonics: typing.Dict[typing.Tuple[int, int], float] =\
-            OrbitalPerturbations.earth_reduced_harmonic_coefficients(
-                semimajor_axis=semimajor_axis,
-                eccentricity=0 * u.one
-            )
         
-        j_2: float = earth_reduced_harmonics[(2, 0)]
-        j_3: float = earth_reduced_harmonics[(3, 0)]
-        j_5: float = earth_reduced_harmonics[(5, 0)]
-        j_7: float = earth_reduced_harmonics[(7, 0)]
-        j_9: float = earth_reduced_harmonics[(9, 0)]
+        earth_harmonics = GravitationalMultipoles()
+        
+        earth_harmonics.calc_earth_reduced_harmonic_coefficients(
+                    semimajor_axis=semimajor_axis,
+                    eccentricity=0 * u.one)
+        
+        j_2: float = earth_harmonics.j[(2, 0)]
+        j_3: float = earth_harmonics.j[(3, 0)]
+        j_5: float = earth_harmonics.j[(5, 0)]
+        j_7: float = earth_harmonics.j[(7, 0)]
+        j_9: float = earth_harmonics.j[(9, 0)]
         
         e_f: float =\
             - np.sin(inc) / (2 * j_2) *\
@@ -842,13 +580,13 @@ class OrbitalPerturbations():
         
         n: float = np.sqrt(mu / sma) # ? Mean motion
         
-        earth_reduced_harmonics: typing.Dict[typing.Tuple[int, int], float] =\
-            OrbitalPerturbations.earth_reduced_harmonic_coefficients(
-                semimajor_axis=semimajor_axis,
-                eccentricity=0 * u.one
-            )
+        earth_harmonics = GravitationalMultipoles()
         
-        j_2: float = earth_reduced_harmonics[(2, 0)]
+        earth_harmonics.calc_earth_reduced_harmonic_coefficients(
+                    semimajor_axis=semimajor_axis,
+                    eccentricity=0 * u.one)
+        
+        j_2: float = earth_harmonics.j[(2, 0)]
         
         # >>> 1. Mean draconitic motion
         
@@ -893,7 +631,7 @@ class OrbitalPerturbations():
         k: int = k_orbital_revolutions
         l: int = l_terrestrial_revolutions
         
-        earth_harmonics: GravityHarmonics = OrbitalPerturbations.earth_harmonic_coefficients()
+        earth_harmonics = GravitationalMultipoles()
         
         J_2: float = earth_harmonics.J[(2, 0)]
         
@@ -945,7 +683,7 @@ class OrbitalPerturbations():
         mu: float = bodies.BODIES[bodies.Attractor.EARTH].mu.to_value(u.km**3 / u.s**2)
         R_E: float = bodies.BODIES[bodies.Attractor.EARTH].R_E.to_value(u.km)
         
-        earth_harmonics: GravityHarmonics = OrbitalPerturbations.earth_harmonic_coefficients()
+        earth_harmonics = GravitationalMultipoles()
         
         J_32: float = earth_harmonics.J[(3, 2)]
         J_44: float = earth_harmonics.J[(4, 4)]
@@ -1036,7 +774,7 @@ class OrbitalPerturbations():
         mu: float = bodies.BODIES[bodies.Attractor.EARTH].mu.to_value(u.km**3 / u.s**2)
         R_E: float = bodies.BODIES[bodies.Attractor.EARTH].R_E.to_value(u.km)
         
-        earth_harmonics: GravityHarmonics = OrbitalPerturbations.earth_harmonic_coefficients()
+        earth_harmonics = GravitationalMultipoles()
         
         J_22: float = earth_harmonics.J[(2, 2)]
         J_31: float = earth_harmonics.J[(3, 1)]
@@ -1109,7 +847,9 @@ class OrbitalPerturbations():
         
         r_p: u.Quantity = sma_0 * (1 - ecc_0)
         
-        rho_p, H_p = OrbitalPerturbations.density(altitude=r_p - R_E, model=AtmosphereModel.CIRA72)
+        atmosphere = Atmosphere()
+        
+        rho_p, H_p = atmosphere.density(altitude=r_p - R_E, model=AtmosphereModel.CIRA72)
         
         rho_p = rho_p.to(u.kg / u.km**3)
         
@@ -1140,7 +880,9 @@ class OrbitalPerturbations():
         mu: u.Quantity = bodies.BODIES[bodies.Attractor.EARTH].mu
         R_E: u.Quantity = bodies.BODIES[bodies.Attractor.EARTH].R_E
         
-        rho_0, H_0 = OrbitalPerturbations.density(altitude=sma_0 - R_E, model=AtmosphereModel.CIRA72)
+        atmosphere = Atmosphere()
+        
+        rho_0, H_0 = atmosphere.density(altitude=sma_0 - R_E, model=AtmosphereModel.CIRA72)
         
         rho_0 = rho_0.to(u.kg / u.km**3)
         
@@ -1506,7 +1248,9 @@ class OrbitalPerturbations():
             
             v_rel: np.ndarray = v_sc - v_atm # ? Relative velocity w.r.t. atmosphere
             
-            rho, _ = self.density((r - R_E) * u.km).to_value(u.kg / u.km**3)
+            atmosphere = Atmosphere()
+            
+            rho, _ = atmosphere.density((r - R_E) * u.km).to_value(u.kg / u.km**3)
             
             B: float = self.ballistic_coefficient.to_value(u.km**2 / u.kg)
         
@@ -1655,7 +1399,9 @@ class OrbitalPerturbations():
             
             v_rel: np.ndarray = v_sc - v_atm # ? Relative velocity w.r.t. atmosphere
             
-            rho, _ = self.density((r - R_E) * u.km).to_value(u.kg / u.km**3)
+            atmosphere = Atmosphere()
+            
+            rho, _ = atmosphere.density((r - R_E) * u.km).to_value(u.kg / u.km**3)
             
             B: float = self.ballistic_coefficient.to_value(u.km**2 / u.kg)
         
@@ -1823,7 +1569,9 @@ class OrbitalPerturbations():
             
             v_rel: np.ndarray = v_sc.to_value(u.km / u.s) - v_atm # ? Relative velocity w.r.t. atmosphere
             
-            rho, _ = self.density((r - R_E) * u.km)
+            atmosphere = Atmosphere()
+            
+            rho, _ = atmosphere.density((r - R_E) * u.km)
             
             rho = rho.to_value(u.kg / u.km**3)
             

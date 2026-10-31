@@ -15,8 +15,9 @@
             "icon": "python",
             "color": "terminal.ansiYellow",
             "cwd": "${workspaceFolder}\\server",
-            "shellPath": "C:\\Windows\\System32\\cmd.exe",
+            "shellPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "commands": [
+                "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
                 ".venv\\Scripts\\activate"
                 //uvicorn main:app --reload
             ]
@@ -26,10 +27,22 @@
             "icon": "zap",
             "color": "terminal.ansiGreen",
             "cwd": "${workspaceFolder}\\server",
-            "shellPath": "C:\\Windows\\System32\\cmd.exe",
+            "shellPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
             "commands": [
+                "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
                 ".venv\\Scripts\\activate"
                 //uvicorn main:app --reload
+            ]
+        },
+        {
+            "name": "spacelab",
+            "icon": "rocket",
+            "color": "terminal.ansiMagenta",
+            "cwd": "${workspaceFolder}\\spacelab",
+            "shellPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "commands": [
+                "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
+                "..\\server\\.venv\\Scripts\\activate"
             ]
         }
     ]

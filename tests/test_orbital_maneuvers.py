@@ -471,8 +471,8 @@ def test_apse_line_rotation_from_true_anomaly():
                                                                                            flight_path_angle=fpa)
     
     assert np.isclose(maneuver.orbital_elements_list[0].eccentricity.to_value(u.one), 0.80883, atol=1e-5)
-    assert np.isclose(maneuver.orbital_elements_list[0].calc_perigee_radius().to_value(u.km), 6771.1, atol=1e-1)
-    assert np.isclose(maneuver.orbital_elements_list[0].calc_apogee_radius().to_value(u.km), 64069, atol=1e-0)
+    assert np.isclose(maneuver.orbital_elements_list[0].calc_periapsis_radius().to_value(u.km), 6771.1, atol=1e-1)
+    assert np.isclose(maneuver.orbital_elements_list[0].calc_apoapsis_radius().to_value(u.km), 64069, atol=1e-0)
     assert np.isclose(maneuver.orbital_elements_list[0].argument_of_periapsis.to_value(u.deg), -22.05, atol=1e-2)
 
 def test_chase_maneuver():
@@ -753,7 +753,7 @@ def test_super_synchronous_transfer():
                                                   right_ascension_of_ascending_node=173.6 * u.deg,
                                                   argument_of_periapsis=179.98 * u.deg)
     
-    ssto.update_from_perigee_apogee(periapsis_radius=6563.1 * u.km, apoapsis_radius=129_885 * u.km)
+    ssto.update_from_periapsis_apoapsis(periapsis_radius=6563.1 * u.km, apoapsis_radius=129_885 * u.km)
     
     dv_1, dv_2, dv_3 = om.OrbitalManeuvers.super_synchronous_transfer(attractor=bd.Attractor.EARTH,
                                                                       leo_inclination=28.5 * u.deg,

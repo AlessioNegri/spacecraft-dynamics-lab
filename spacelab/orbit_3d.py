@@ -650,7 +650,7 @@ class Orbit3D():
         aop: float = orbital_elements.argument_of_periapsis.to_value(u.rad)
         ta: float = orbital_elements.true_anomaly.to_value(u.rad)
         
-        r_p: float = orbital_elements.calc_perigee_radius().to_value(u.km)
+        r_p: float = orbital_elements.calc_periapsis_radius().to_value(u.km)
         
         # * Calculate reference time in Julian days since J2000
         

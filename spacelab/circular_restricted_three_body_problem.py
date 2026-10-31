@@ -53,10 +53,6 @@ class Orbit:
     def orbit_parameters(body_1: bodies.Attractor, body_2: bodies.Attractor) -> OrbitParametersCR3BP:
         """
         Calculate the orbit parameters
-        
-        The *collinear equilibrium points* are also known as **Eulerian points** L1, L2, L3, and the *equilateral
-        equilibrium points* are also known as **Lagrangian points** L4 and L5. All five points together are the so-called
-        **libration points**, but quite frequently and confusingly they are also called Lagrangian points.
 
         Args:
             body_1 (bodies.Attractor): First body
@@ -149,14 +145,14 @@ class Orbit:
         
         # >>> Eulerian points
         
-        parameters.lagrangian_equilibrium_point_1 = np.array([csi_1 * r_12, 0, 0]) * u.km
-        parameters.lagrangian_equilibrium_point_2 = np.array([csi_2 * r_12, 0, 0]) * u.km
-        parameters.lagrangian_equilibrium_point_3 = np.array([csi_3 * r_12, 0, 0]) * u.km
+        parameters.libration_point_1 = np.array([csi_1 * r_12, 0, 0]) * u.km
+        parameters.libration_point_2 = np.array([csi_2 * r_12, 0, 0]) * u.km
+        parameters.libration_point_3 = np.array([csi_3 * r_12, 0, 0]) * u.km
         
         # >>> Lagrangian points
         
-        parameters.lagrangian_equilibrium_point_4 = np.array([0.5 * r_12 + x_1, + np.sqrt(3) / 2 * r_12, 0]) * u.km
-        parameters.lagrangian_equilibrium_point_5 = np.array([0.5 * r_12 + x_1, - np.sqrt(3) / 2 * r_12, 0]) * u.km
+        parameters.libration_point_4 = np.array([0.5 * r_12 + x_1, + np.sqrt(3) / 2 * r_12, 0]) * u.km
+        parameters.libration_point_5 = np.array([0.5 * r_12 + x_1, - np.sqrt(3) / 2 * r_12, 0]) * u.km
         
         return parameters
     
@@ -196,12 +192,12 @@ class Orbit:
         
         # * Create a grid using the Lagrange points as reference
         
-        x_arr: np.ndarray = np.linspace(start=op.lagrangian_equilibrium_point_3[0].to_value(u.km) * 1.5,
-                                        stop=op.lagrangian_equilibrium_point_2[0].to_value(u.km) * 1.5,
+        x_arr: np.ndarray = np.linspace(start=op.libration_point_3[0].to_value(u.km) * 1.5,
+                                        stop=op.libration_point_2[0].to_value(u.km) * 1.5,
                                         num=size)
         
-        y_arr: np.ndarray = np.linspace(start=op.lagrangian_equilibrium_point_5[1].to_value(u.km) * 2,
-                                        stop=op.lagrangian_equilibrium_point_4[1].to_value(u.km) * 2,
+        y_arr: np.ndarray = np.linspace(start=op.libration_point_5[1].to_value(u.km) * 2,
+                                        stop=op.libration_point_4[1].to_value(u.km) * 2,
                                         num=size)
         
         regions: np.ndarray = np.zeros(shape=(size, size))
@@ -523,7 +519,7 @@ class Orbit:
         Args:
             t (float): Time (included for ODE solver compatibility)
             X (np.ndarray): State vector [x, y, z, v_x, v_y, v_z]
-            orbit_parameters (OrbitParameters): Precomputed CR3BP parameters including μ₁, μ₂, Ω, x₁, x₂.
+            orbit_parameters (OrbitParametersCR3BP): Precomputed CR3BP parameters including μ₁, μ₂, Ω, x₁, x₂.
 
         Returns:
             np.ndarray: Time derivative dx_dt
@@ -601,7 +597,7 @@ class Orbit:
         Args:
             t (float): Dimensionless time (included for ODE solver compatibility)
             X (np.ndarray): State vector [ξ, η, ζ, v_ξ, v_η, v_ζ]
-            orbit_parameters (OrbitParameters): Precomputed CR3BP parameters including μ₂.
+            orbit_parameters (OrbitParametersCR3BP): Precomputed CR3BP parameters including μ₂.
 
         Returns:
             np.ndarray: Time derivative dx_dt
@@ -675,7 +671,7 @@ class Orbit:
         Args:
             t (float): Dimensionless time (included for ODE solver compatibility)
             X (np.ndarray): State vector [ξ, η, ζ, v_ξ, v_η, v_ζ]
-            orbit_parameters (OrbitParameters): Precomputed CR3BP parameters including μ₂, primaries and libration points
+            orbit_parameters (OrbitParametersCR3BP): Precomputed CR3BP parameters including μ₂, primaries and libration points
 
         Returns:
             np.ndarray: Time derivative dx_dt
@@ -691,28 +687,28 @@ class Orbit:
             
             case LibrationPoint.L1:
             
-                csi_L: float = orbit_parameters.lagrangian_equilibrium_point_1[0].to_value(u.km) / L
-                eta_L: float = orbit_parameters.lagrangian_equilibrium_point_1[1].to_value(u.km) / L
+                csi_L: float = orbit_parameters.libration_point_1[0].to_value(u.km) / L
+                eta_L: float = orbit_parameters.libration_point_1[1].to_value(u.km) / L
         
             case LibrationPoint.L2:
             
-                csi_L: float = orbit_parameters.lagrangian_equilibrium_point_2[0].to_value(u.km) / L
-                eta_L: float = orbit_parameters.lagrangian_equilibrium_point_2[1].to_value(u.km) / L
+                csi_L: float = orbit_parameters.libration_point_2[0].to_value(u.km) / L
+                eta_L: float = orbit_parameters.libration_point_2[1].to_value(u.km) / L
                 
             case LibrationPoint.L3:
             
-                csi_L: float = orbit_parameters.lagrangian_equilibrium_point_3[0].to_value(u.km) / L
-                eta_L: float = orbit_parameters.lagrangian_equilibrium_point_3[1].to_value(u.km) / L
+                csi_L: float = orbit_parameters.libration_point_3[0].to_value(u.km) / L
+                eta_L: float = orbit_parameters.libration_point_3[1].to_value(u.km) / L
                 
             case LibrationPoint.L4:
             
-                csi_L: float = orbit_parameters.lagrangian_equilibrium_point_4[0].to_value(u.km) / L
-                eta_L: float = orbit_parameters.lagrangian_equilibrium_point_4[1].to_value(u.km) / L
+                csi_L: float = orbit_parameters.libration_point_4[0].to_value(u.km) / L
+                eta_L: float = orbit_parameters.libration_point_4[1].to_value(u.km) / L
                 
             case LibrationPoint.L5:
             
-                csi_L: float = orbit_parameters.lagrangian_equilibrium_point_5[0].to_value(u.km) / L
-                eta_L: float = orbit_parameters.lagrangian_equilibrium_point_5[1].to_value(u.km) / L
+                csi_L: float = orbit_parameters.libration_point_5[0].to_value(u.km) / L
+                eta_L: float = orbit_parameters.libration_point_5[1].to_value(u.km) / L
                 
             case _:
                 
@@ -797,7 +793,7 @@ class Orbit:
         Args:
             t (float): Dimensionless time (included for ODE solver compatibility)
             X (np.ndarray): State vector [ξ, η, ζ, v_ξ, v_η, v_ζ]
-            orbit_parameters (OrbitParameters): Precomputed CR3BP parameters including μ and libration points
+            orbit_parameters (OrbitParametersCR3BP): Precomputed CR3BP parameters including μ and libration points
 
         Returns:
             np.ndarray: Time derivative dx_dt
@@ -888,7 +884,7 @@ class Orbit:
         Args:
             t (float): Dimensionless time (included for ODE solver compatibility)
             X (np.ndarray): State vector [ξ, η, ζ, v_ξ, v_η, v_ζ]
-            orbit_parameters (OrbitParameters): Precomputed CR3BP parameters including μ and libration points
+            orbit_parameters (OrbitParametersCR3BP): Precomputed CR3BP parameters including μ and libration points
 
         Returns:
             np.ndarray: Time derivative dx_dt

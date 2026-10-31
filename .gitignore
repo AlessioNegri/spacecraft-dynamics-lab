@@ -5,5 +5,5 @@ docs/videos/*mp4
 htmlcov/
 space_laboratory.egg-info/
 spacelab_test.egg-info/
-tests/__pycache__/
+__pycache__
 .coverage

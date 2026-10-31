@@ -1,8 +1,7 @@
-# backend.spec
+# server.spec
 
 # -*- mode: python ; coding: utf-8 -*-
 
-import sys
 from PyInstaller.utils.hooks import collect_submodules
 
 from PyInstaller.utils.win32.versioninfo import (
@@ -10,13 +9,15 @@ from PyInstaller.utils.win32.versioninfo import (
     StringStruct, VarFileInfo, VarStruct
 )
 
-# Collect FastAPI / Pydantic dynamic imports
+# * Collect dynamic imports
+
 hiddenimports = collect_submodules('astropy') + \
                 collect_submodules('motor') + \
                 collect_submodules('pymongo') + \
                 collect_submodules('fastapi') + \
                 collect_submodules('pydantic') + \
-                collect_submodules('uvicorn')
+                collect_submodules('uvicorn') + \
+                collect_submodules('coloredlogs')
 
 block_cipher = None
 

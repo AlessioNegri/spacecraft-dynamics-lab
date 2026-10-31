@@ -27,7 +27,7 @@ class Body:
     f       : u.Quantity | None  # ? Flattening []
     omega   : u.Quantity    # ? Rotation rate [rad/s]
     M       : u.Quantity    # ? Mass [kg]
-    g_0     : u.Quantity    # ? Standard gravity [m/s^2]
+    g_0     : u.Quantity    # ? Standard gravity (near sea level) [m/s^2]
     T_S     : u.Quantity    # ? Sidereal Orbital Period [terrestrial days]
     semi_major_axis: u.Quantity # ? Semi-Major Axis [km]
 
