@@ -6,7 +6,9 @@ import spacelab.bodies as bd
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
 import spacelab.orbital_position as op
-import spacelab.two_body_problem as tbp
+import spacelab.models.orbit_parameters as sl_orbit_parameters
+import spacelab.n_body_models.conversions as sl_conversions
+import spacelab.n_body_models.two_body_problem as tbp
 
 def test_gibbs_method():
     """EXAMPLE 5.1"""
@@ -42,7 +44,7 @@ def test_lambert():
                                                     arrival_position=r_2,
                                                     delta_time=time.TimeDelta(u.Quantity(1, u.hour)))
     
-    orb_par: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
+    orb_par: sl_orbit_parameters.OrbitParameters = sl_conversions.cartesian_to_orbit_parameters(attractor=attractor,
                                                                            position=r_1,
                                                                            velocity=v_1)
     

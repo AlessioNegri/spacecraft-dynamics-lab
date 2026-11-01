@@ -3,7 +3,9 @@ import astropy.units as u
 import numpy as np
 
 import spacelab.bodies as bodies
-import spacelab.two_body_problem as tbp
+import spacelab.models.orbit_parameters as sl_orbit_parameters
+import spacelab.n_body_models.conversions as sl_conversions
+import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbital_position as op
 import spacelab.orbit_3d as o3d
 
@@ -129,7 +131,7 @@ def test_example_4_11():
     assert np.isclose(oe.argument_of_periapsis.to_value(u.deg), 42.373, atol=1e-3)
     assert np.isclose(oe.true_anomaly.to_value(u.deg), 52.404, atol=1e-3)
     
-    parameters: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor, r_GEF, v_GEF)
+    parameters: sl_orbit_parameters.OrbitParameters = sl_conversions.cartesian_to_orbit_parameters(attractor, r_GEF, v_GEF)
     
     assert np.isclose(parameters.period.to_value(u.s), 10_928, atol=1e-0)
     

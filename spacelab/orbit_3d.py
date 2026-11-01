@@ -26,8 +26,10 @@ import typing
 
 import spacelab.bodies as bodies
 import spacelab.common as common
+import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.orbital_position as orbital_position
-import spacelab.two_body_problem as two_body_problem
+import spacelab.n_body_models.conversions as sl_conversions
+import spacelab.n_body_models.two_body_problem as two_body_problem
 import spacelab.orbit_determination as orbit_determination
 
 from spacelab.enums import Hemisphere, AngleHemisphere
@@ -809,7 +811,7 @@ class Orbit3D():
         
         r_gef, v_gef = Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
         
-        op: two_body_problem.OrbitParameters = two_body_problem.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
+        op: sl_orbit_parameters.OrbitParameters = sl_conversions.cartesian_to_orbit_parameters(attractor=attractor,
                                                                                                     position=r_gef,
                                                                                                     velocity=v_gef)
         

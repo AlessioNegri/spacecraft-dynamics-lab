@@ -9,6 +9,7 @@ import schemas.relative_motion_schema as schema
 import spacelab.relative_motion as rm
 import spacelab.bodies as bd
 import spacelab.orbit_3d as o3d
+import spacelab.models.results as sl_results
 
 # --- UTILITY ---
 
@@ -82,30 +83,34 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
                          relative_position=r_rel_lvlh,
                          relative_velocity=v_rel_lvlh)
     
-    linearized_result: rm.ResultRM = relavive_motion.propagate_for(delta=time.TimeDelta(data.integrationTime * u.hour))
+    linearized_result: sl_results.ResultRM = relavive_motion.propagate_for(delta=time.TimeDelta(data.integrationTime * u.hour))
     
     linearized_solution: typing.List[schema.Vector3D] = []
     
-    for x, y, z in zip(linearized_result.relative_position_x.to_value(),
-                       linearized_result.relative_position_y.to_value(),
-                       linearized_result.relative_position_z.to_value()):
-        
-        linearized_solution.append(schema.Vector3D(x=x, y=y, z=z))
+    if linearized_result.success:
+    
+        for x, y, z in zip(linearized_result.relative_position_x.to_value(),
+                        linearized_result.relative_position_y.to_value(),
+                        linearized_result.relative_position_z.to_value()):
+            
+            linearized_solution.append(schema.Vector3D(x=x, y=y, z=z))
     
     # * Near-Circular orbit
     
-    near_circular_result: rm.ResultRM = relavive_motion.propagate_near_circular_orbit_for(
+    near_circular_result: sl_results.ResultRM = relavive_motion.propagate_near_circular_orbit_for(
         delta=time.TimeDelta(data.integrationTime * u.hour),
         eccentricity=oe_target.eccentricity
     )
     
     near_circular_solution: typing.List[schema.Vector3D] = []
     
-    for x, y, z in zip(near_circular_result.relative_position_x.to_value(),
-                       near_circular_result.relative_position_y.to_value(),
-                       near_circular_result.relative_position_z.to_value()):
+    if near_circular_result.success:
         
-        near_circular_solution.append(schema.Vector3D(x=x, y=y, z=z))
+        for x, y, z in zip(near_circular_result.relative_position_x.to_value(),
+                           near_circular_result.relative_position_y.to_value(),
+                           near_circular_result.relative_position_z.to_value()):
+            
+            near_circular_solution.append(schema.Vector3D(x=x, y=y, z=z))
     
     # * Clohessy-Wiltshire
     

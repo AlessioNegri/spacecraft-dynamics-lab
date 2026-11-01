@@ -19,8 +19,8 @@ class GravitationalMultipoles(Singleton):
 
     📖 **References**
     
-    - :cite:`Astronautics - The Physics of Space Flight`
-        - :cite:`Chapter 12 "Orbit Perturbations"`
+    - cite`Astronautics - The Physics of Space Flight`
+        - cite`Chapter 12 "Orbit Perturbations"`
     
     <hr>
 
@@ -78,7 +78,7 @@ class GravitationalMultipoles(Singleton):
         
         📖 **References**
         
-        - :cite:`Section 12.2.2 "Gravitational Potential"`
+        - cite`Section 12.2.2 "Gravitational Potential"`
         """
         
         file: pl.Path = pl.Path(__file__).parent / "gravitational_multipoles.csv"
@@ -117,7 +117,7 @@ class GravitationalMultipoles(Singleton):
         
         📖 **References**
         
-        - :cite:`Section 12.3.2 "Removing Short-Periodic Effects"`
+        - cite`Section 12.3.2 "Removing Short-Periodic Effects"`
         
         📌 **Notes**
         

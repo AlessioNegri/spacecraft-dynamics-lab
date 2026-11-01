@@ -44,6 +44,17 @@
                 "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
                 "..\\server\\.venv\\Scripts\\activate"
             ]
+        },
+        {
+            "name": "sphinx",
+            "icon": "book",
+            "color": "terminal.ansiBlue",
+            "cwd": "${workspaceFolder}\\docs\\sphinx",
+            "shellPath": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "commands": [
+                "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass",
+                "..\\..\\server\\.venv\\Scripts\\activate"
+            ]
         }
     ]
 }

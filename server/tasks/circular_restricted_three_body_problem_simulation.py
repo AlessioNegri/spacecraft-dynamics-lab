@@ -12,6 +12,7 @@ from common.web_socket_manager import WebSocketManager
 
 import spacelab.bodies as bd
 import spacelab.circular_restricted_three_body_problem as cr3bp
+import spacelab.models.results as sl_results
 
 async def cr3bp_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of CR3BP propagation.
@@ -181,25 +182,25 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
         
         orbit.init(body_1=body_1, body_2=body_2, position=r_0, velocity=v_0)
         
-        result: cr3bp.ResultCR3BP = orbit.propagate_for(delta=t.TimeDelta(dt.to(u.s)))
+        result: sl_results.ResultCR3BP = orbit.propagate_for(delta=t.TimeDelta(dt.to(u.s)))
         
         orbit.init(body_1=body_1, body_2=body_2, position=r_0_libration, velocity=v_0_libration)
         
-        result_libration: cr3bp.ResultCR3BP = orbit.propagate_libration_for(delta=t.TimeDelta(dt.to(u.s)),
+        result_libration: sl_results.ResultCR3BP = orbit.propagate_libration_for(delta=t.TimeDelta(dt.to(u.s)),
                                                                             libration_point=libration_point)
         
         if is_eulerian:
             
             orbit.init(body_1=body_1, body_2=body_2, position=r_0_eulerian, velocity=v_0_eulerian)
             
-            result_eulerian: cr3bp.ResultCR3BP = orbit.propagate_eulerian_for(delta=t.TimeDelta(dt.to(u.s)),
+            result_eulerian: sl_results.ResultCR3BP = orbit.propagate_eulerian_for(delta=t.TimeDelta(dt.to(u.s)),
                                                                               libration_point=libration_point)
         
         if is_lagrangian:
             
             orbit.init(body_1=body_1, body_2=body_2, position=r_0_lagrangian, velocity=v_0_lagrangian)
             
-            result_lagrangian: cr3bp.ResultCR3BP = orbit.propagate_lagrangian_for(delta=t.TimeDelta(dt.to(u.s)),
+            result_lagrangian: sl_results.ResultCR3BP = orbit.propagate_lagrangian_for(delta=t.TimeDelta(dt.to(u.s)),
                                                                                   libration_point=libration_point)
         
         if not result.success:

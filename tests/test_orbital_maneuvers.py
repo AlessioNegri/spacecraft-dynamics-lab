@@ -8,7 +8,7 @@ import numpy as np
 import spacelab.bodies as bd
 import spacelab.orbit_3d as o3d
 import spacelab.orbital_maneuvers as om
-import spacelab.two_body_problem as tbp
+import spacelab.n_body_models.two_body_problem as tbp
 
 rocket_motor: om.RocketMotor = om.RocketMotor(specific_impulse=300 * u.s,
                                               thrust=400 * u.N,

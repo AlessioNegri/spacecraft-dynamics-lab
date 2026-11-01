@@ -32,7 +32,7 @@ import spacelab.physical_constants as constants
 import spacelab.orbit_3d as o3d
 import spacelab.orbital_position as op
 import spacelab.orbit_determination as od
-import spacelab.two_body_problem as tbp
+import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.lagrange_coefficients as lc
 
 from spacelab.enums import OrbitDirection, HohmannDirection, SpiralDirection, ThrustDirection
@@ -2091,10 +2091,10 @@ class OrbitalManeuvers():
             result = orbit.propagate_for(delta=t_burn,
                                          rocket_motor=rocket_motor,
                                          thrust_direction=thrust_direction,
-                                         initial_radius=initial_radius.to_value(u.km),
-                                         target_radius=final_radius.to_value(u.km),
-                                         initial_inclination=initial_inclination.to_value(u.rad),
-                                         target_inclination=final_inclination.to_value(u.rad))
+                                         initial_radius=initial_radius,
+                                         target_radius=final_radius,
+                                         initial_inclination=initial_inclination,
+                                         target_inclination=final_inclination)
             
             if not result.success:
                 

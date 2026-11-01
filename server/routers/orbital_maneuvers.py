@@ -14,8 +14,9 @@ import spacelab.physical_constants as constants
 import spacelab.enums as ae
 import spacelab.orbit_3d as o3d
 import spacelab.orbital_maneuvers as om
-import spacelab.two_body_problem as tbp
+import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbital_position as op
+import spacelab.models.results as sl_results
 
 # --- UTILITY ---
 
@@ -87,9 +88,13 @@ def propagate_orbit(attractor: bodies.Attractor,
     
     orbit.from_cartesian(attractor=attractor, position=r_gef, velocity=v_gef)
     
-    result: tbp.Result = orbit.propagate_for(delta_time)
+    result: sl_results.Result = orbit.propagate_for(delta_time)
     
     simulation_points: typing.List[schema.Vector3D] = []
+    
+    if not result.success:
+        
+        return simulation_points
     
     for x, y, z in zip(result.position_x.to_value(), result.position_y.to_value(), result.position_z.to_value()):
         
@@ -157,7 +162,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
                                             orbital_elements: o3d.OrbitalElements,
                                             target_semi_major_axis: u.Quantity,
                                             time_step: u.Quantity = 10 * u.s)\
-                                                -> typing.Tuple[om.NonImpulsiveManeuverResult, tbp.Result]:
+                                                -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
     """
     Compute a low-thrust coplanar circle-to-circle transfer
 
@@ -169,14 +174,14 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
 
     Returns:
-        typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]: Maneuver result & integration result
+        typing.Tuple[NonImpulsiveManeuverResult, sl_results.Result]: Maneuver result & integration result
     """
 
     if orbital_elements.eccentricity.to_value() != 0:
         
         print('The initial orbit must be circular for this maneuver.')
         
-        return om.NonImpulsiveManeuverResult(), tbp.Result()
+        return om.NonImpulsiveManeuverResult(), sl_results.Result()
 
     # * Estimation of the time of flight for the integration
 
@@ -211,7 +216,7 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
                                                      orbital_elements: o3d.OrbitalElements,
                                                      target_inclination: u.Quantity,
                                                      time_step: u.Quantity = 10 * u.s)\
-                                                         -> typing.Tuple[om.NonImpulsiveManeuverResult, tbp.Result]:
+                                                         -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
     """
     Compute a low-thrust coplanar circle-to-circle transfer
 
@@ -223,14 +228,14 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
 
     Returns:
-        typing.Tuple[NonImpulsiveManeuverResult, tbp.Result]: Maneuver result & integration result
+        typing.Tuple[NonImpulsiveManeuverResult, sl_results.Result]: Maneuver result & integration result
     """
 
     if orbital_elements.eccentricity.to_value() != 0:
         
         print('The initial orbit must be circular for this maneuver.')
         
-        return om.NonImpulsiveManeuverResult(), tbp.Result()
+        return om.NonImpulsiveManeuverResult(), sl_results.Result()
 
     # * Estimation of the time of flight for the integration
     

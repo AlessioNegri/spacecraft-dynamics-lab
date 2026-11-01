@@ -7,7 +7,9 @@ import schemas.tools_schema as schema
 import typing
 
 import spacelab.bodies as bodies
-import spacelab.two_body_problem as tbp
+import spacelab.models.orbit_parameters as sl_orbit_parameters
+import spacelab.n_body_models.conversions as sl_conversions
+import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
 import spacelab.orbital_position as op
@@ -36,9 +38,8 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    orbit_parameters: tbp.OrbitParameters = tbp.Orbit.cartesian_to_orbit_parameters(attractor=attractor,
-                                                                                    position=r,
-                                                                                    velocity=v)
+    orbit_parameters: sl_orbit_parameters.OrbitParameters =\
+        sl_conversions.cartesian_to_orbit_parameters(attractor=attractor, position=r, velocity=v)
     
     alpha, delta = o3d.Orbit3D.right_ascension_declination(position=r)
     

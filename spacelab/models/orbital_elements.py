@@ -17,17 +17,17 @@ class OrbitalElements:
         
     📖 **References**
     
-    - :cite:`(1) Orbital Mechanics for Engineering Students`
-        - :cite:`Chapter 2 "The Two-Body Problem"`
+    - cite`(1) Orbital Mechanics for Engineering Students`
+        - cite`Chapter 2 "The Two-Body Problem"`
         
-    - :cite:`(2) Space Flight Dynamics`
-        - :cite:`Chapter 2 "Two-Body Orbital Mechanics"`
+    - cite`(2) Space Flight Dynamics`
+        - cite`Chapter 2 "Two-Body Orbital Mechanics"`
         
-    - :cite:`(3) Manned Spacecraft - Design Principles`
-        - :cite:`Chapter 5 "ORBITAL MECHANICS"`
+    - cite`(3) Manned Spacecraft - Design Principles`
+        - cite`Chapter 5 "ORBITAL MECHANICS"`
     
-    - :cite:`(4) Astronautics - The Physics of Space Flight`
-        - :cite:`Chapter 7 "Orbits"`
+    - cite`(4) Astronautics - The Physics of Space Flight`
+        - cite`Chapter 7 "Orbits"`
     
     <hr>
     
@@ -88,8 +88,8 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - :cite:`(4) Section 7.3.1 "Orbit Equation"`
+        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
+        - cite`(4) Section 7.3.1 "Orbit Equation"`
         
         <hr>
 
@@ -121,9 +121,9 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - :cite:`(2) Section 2.4.1 "Trajectory Equation"`
-        - :cite:`(4) Section 7.4.2 "Elliptic Orbit"`
+        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
+        - cite`(2) Section 2.4.1 "Trajectory Equation"`
+        - cite`(4) Section 7.4.2 "Elliptic Orbit"`
         
         <hr>
         
@@ -148,9 +148,9 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - :cite:`(2) Section 2.4.1 "Trajectory Equation"`
-        - :cite:`(4) Section 7.4.2 "Elliptic Orbit"`
+        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
+        - cite`(2) Section 2.4.1 "Trajectory Equation"`
+        - cite`(4) Section 7.4.2 "Elliptic Orbit"`
         
         <hr>
         
@@ -212,10 +212,10 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - :cite:`(2) Section 2.5.3 "Period of an Elliptical Orbit"`
-        - :cite:`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
-        - :cite:`(4) Section 7.4.1 "Circular Orbit"`
+        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
+        - cite`(2) Section 2.5.3 "Period of an Elliptical Orbit"`
+        - cite`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
+        - cite`(4) Section 7.4.1 "Circular Orbit"`
         
         <hr>
 
@@ -262,10 +262,10 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.4 "Angular momentum and the orbit formulas"`
-        - :cite:`(2) Section 2.4.1 "Trajectory Equation"`
-        - :cite:`(3) Section 5.2.2 "CONSERVATION OF ANGULAR MOMENTUM"`
-        - :cite:`(4) Section 7.3.1 "Orbit Equation"`
+        - cite`(1) Section 2.4 "Angular momentum and the orbit formulas"`
+        - cite`(2) Section 2.4.1 "Trajectory Equation"`
+        - cite`(3) Section 5.2.2 "CONSERVATION OF ANGULAR MOMENTUM"`
+        - cite`(4) Section 7.3.1 "Orbit Equation"`
         
         <hr>
 
@@ -303,9 +303,9 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - :cite:`(2) Section 2.5.1 "Ellipse Geometry"`
-        - :cite:`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
+        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
+        - cite`(2) Section 2.5.1 "Ellipse Geometry"`
+        - cite`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
         
         <hr>
 
@@ -344,9 +344,9 @@ class OrbitalElements:
         
         📖 **References**
         
-        - :cite:`(1) Section 2.4 "Angular momentum and the orbit formulas"`
-        - :cite:`(2) Section 2.5.2 "Flight-Path Angle and Velocity Components"`
-        - :cite:`(4) Section 7.3.3 "Orbital Velocity"`
+        - cite`(1) Section 2.4 "Angular momentum and the orbit formulas"`
+        - cite`(2) Section 2.5.2 "Flight-Path Angle and Velocity Components"`
+        - cite`(4) Section 7.3.3 "Orbital Velocity"`
 
         :param attractor: _description_
         :type attractor: Attractor
@@ -397,8 +397,8 @@ class EquinoctialOrbitalElements:
         
     📖 **References**
     
-    - :cite:`(4) Astronautics - The Physics of Space Flight`
-        - :cite:`Chapter 7 "Orbits"`
+    - cite`(4) Astronautics - The Physics of Space Flight`
+        - cite`Chapter 7 "Orbits"`
     
     <hr>
     

@@ -19,14 +19,14 @@ class Atmosphere(Singleton):
     
     📖 **References**
 
-    - :cite:`(1) Orbital Mechanics for Engineering Students`
-        - :cite:`Chapter 12 "Introduction to Orbital Perturbations"`
+    - cite`(1) Orbital Mechanics for Engineering Students`
+        - cite`Chapter 12 "Introduction to Orbital Perturbations"`
     
-    - :cite:`(3) Manned Spacecraft - Design Principles`
-        - :cite:`Chapter 2 "EARTH'S ATMOSPHERE"`
+    - cite`(3) Manned Spacecraft - Design Principles`
+        - cite`Chapter 2 "EARTH'S ATMOSPHERE"`
     
-    - :cite:`(4) Manned Spacecraft - Design Principles`
-        - :cite:`Chapter 6 "Earths's Atmosphere"`
+    - cite`(4) Manned Spacecraft - Design Principles`
+        - cite`Chapter 6 "Earths's Atmosphere"`
     
     <hr>
 
@@ -81,7 +81,7 @@ class Atmosphere(Singleton):
         
         📖 **References**
         
-        - :cite:`Section 2.5 "TABLES OF ATMOSPHERIC PROPERTIES"`
+        - cite`Section 2.5 "TABLES OF ATMOSPHERIC PROPERTIES"`
         """
         
         file: pl.Path = pl.Path(__file__).parent / "1976_us_standard_atmosphere.csv"
@@ -117,8 +117,8 @@ class Atmosphere(Singleton):
         
         📖 **References**
         
-        - :cite:`(1) Section 12.4 "Atmospheric Drag"`
-        - :cite:`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
+        - cite`(1) Section 12.4 "Atmospheric Drag"`
+        - cite`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
         """
         
         file: pl.Path = pl.Path(__file__).parent / "density_models.csv"
@@ -265,8 +265,8 @@ class Atmosphere(Singleton):
         
         📖 **References**
         
-        - :cite:`(1) Section 12.4 "Atmospheric Drag"`
-        - :cite:`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
+        - cite`(1) Section 12.4 "Atmospheric Drag"`
+        - cite`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
 
         📌 **Notes**
         

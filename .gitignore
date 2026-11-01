@@ -1,6 +1,8 @@
 .backup/
 .pytest_cache/
 dist/
+docs/sphinx/_build/
+docs/sphinx/api
 docs/videos/*mp4
 htmlcov/
 space_laboratory.egg-info/

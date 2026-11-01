@@ -15,19 +15,19 @@ class RocketMotor:
     
     📖 **References**
     
-    - :cite:`(1) Orbital Mechanics for Engineering Students`
-        - :cite:`Chapter 6 "Orbital Maneuvers"`
-        - :cite:`Chapter 11 "Rocket Vehicle Dynamics"`
+    - cite`(1) Orbital Mechanics for Engineering Students`
+        - cite`Chapter 6 "Orbital Maneuvers"`
+        - cite`Chapter 11 "Rocket Vehicle Dynamics"`
         
-    - :cite:`(2) Space Flight Dynamics`
-        - :cite:`Chapter 6 "Rocket Performance"`
+    - cite`(2) Space Flight Dynamics`
+        - cite`Chapter 6 "Rocket Performance"`
         
-    - :cite:`(3) Manned Spacecraft - Design Principles`
-        - :cite:`Chapter 7 "LAUNCH MECHANICS"`
+    - cite`(3) Manned Spacecraft - Design Principles`
+        - cite`Chapter 7 "LAUNCH MECHANICS"`
     
-    - :cite:`(4) Astronautics - The Physics of Space Flight`
-        - :cite:`Chapter 1 "Rocket Fundamentals"`
-        - :cite:`Chapter 2 "Rocket Flight"`
+    - cite`(4) Astronautics - The Physics of Space Flight`
+        - cite`Chapter 1 "Rocket Fundamentals"`
+        - cite`Chapter 2 "Rocket Flight"`
     
     <hr>
     
@@ -55,9 +55,9 @@ class RocketMotor:
         
         📖 **References**
         
-        - :cite:`(1) Section 6.2 "Impulsive maneuvers"`
-        - :cite:`(2) Section 6.3 "The Rocket Equation"`
-        - :cite:`(4) Section 2.2 "Rocket in Free Space"`
+        - cite`(1) Section 6.2 "Impulsive maneuvers"`
+        - cite`(2) Section 6.3 "The Rocket Equation"`
+        - cite`(4) Section 2.2 "Rocket in Free Space"`
         
         <hr>
         
@@ -121,9 +121,9 @@ class RocketMotor:
         
         📖 **References**
         
-        - :cite:`(1) Section 11.4 "Rocket performance"`
-        - :cite:`(2) Section 6.3 "The Rocket Equation"`
-        - :cite:`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
+        - cite`(1) Section 11.4 "Rocket performance"`
+        - cite`(2) Section 6.3 "The Rocket Equation"`
+        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
 
         :param propellant_mass: Propellant mass
         :type propellant_mass: u.Quantity
@@ -192,10 +192,10 @@ class RocketMotor:
         
         📖 **References**
         
-        - :cite:`(1) Section 11.3 "The thrust equation"`
-        - :cite:`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
-        - :cite:`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
-        - :cite:`(4) Section 1.1.2 "Total Trust"`
+        - cite`(1) Section 11.3 "The thrust equation"`
+        - cite`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
+        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
+        - cite`(4) Section 1.1.2 "Total Trust"`
         
         <hr>
 
@@ -229,10 +229,10 @@ class RocketMotor:
         
         📖 **References**
         
-        - :cite:`(1) Section 11.3 "The thrust equation"`
-        - :cite:`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
-        - :cite:`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
-        - :cite:`(4) Section 1.1.2 "Total Trust"`
+        - cite`(1) Section 11.3 "The thrust equation"`
+        - cite`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
+        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
+        - cite`(4) Section 1.1.2 "Total Trust"`
         
         <hr>
 

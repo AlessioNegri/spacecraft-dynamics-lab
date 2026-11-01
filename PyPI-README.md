@@ -5,7 +5,7 @@
 <p align="center">
   <img
     src="./spacelab-logo.png"
-    width="25%"
+    width="256px"
     alt="ui"
     style="border-radius: 20px"
   >
