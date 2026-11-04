@@ -184,7 +184,7 @@ async def put_convert_keplerian_to_equinoctial(data: schema.EquinoctialInModelIn
         eccentricityVectorK=eq.eccentricity_vector_k.to_value(u.one),
         ascendingNodeVectorP=eq.ascending_node_vector_p.to_value(u.one),
         ascendingNodeVectorQ=eq.ascending_node_vector_q.to_value(u.one),
-        periapsisLocation=eq.periapsis_locaton.to_value(u.deg)
+        periapsisLocation=eq.periapsis_location.to_value(u.deg)
     )
 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

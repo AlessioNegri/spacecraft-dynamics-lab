@@ -8,28 +8,35 @@ from spacelab.models.orbital_elements import OrbitalElements
 class Result:
     """
     Result of integration for Two-Body Problem.
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **success : bool** Integration status flag
+    🧮 **Attributes**
 
-    **time : u.Quantity** Propagation time
+    success : bool
+        Integration status flag
 
-    **position_x : u.Quantity** Cartesian X-coordinate :math:`x`
+    time : u.Quantity
+        Propagation time
 
-    **position_y : u.Quantity** Cartesian Y-coordinate :math:`y`
+    position_x : u.Quantity
+        Cartesian X-coordinate :math:`x`
 
-    **position_z : u.Quantity** Cartesian Z-coordinate :math:`z`
+    position_y : u.Quantity
+        Cartesian Y-coordinate :math:`y`
 
-    **velocity_x : u.Quantity** Cartesian X-velocity :math:`v_x`
+    position_z : u.Quantity
+        Cartesian Z-coordinate :math:`z`
 
-    **velocity_y : u.Quantity** Cartesian Y-velocity :math:`v_y`
+    velocity_x : u.Quantity
+        Cartesian X-velocity :math:`v_x`
 
-    **velocity_z : u.Quantity** Cartesian Z-velocity :math:`v_z`
+    velocity_y : u.Quantity
+        Cartesian Y-velocity :math:`v_y`
 
-    **mass_spacecraft : u.Quantity** Spacecraft mass
+    velocity_z : u.Quantity
+        Cartesian Z-velocity :math:`v_z`
+
+    mass_spacecraft : u.Quantity
+        Spacecraft mass
     """
     
     success         : bool = False
@@ -46,26 +53,32 @@ class Result:
 class ResultCR3BP:
     """
     Result of integration for Circular Restricted 3-Body Problem.
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **success : bool** Integration status flag
+    🧮 **Attributes**
 
-    **time : u.Quantity** Propagation time
+    success : bool
+        Integration status flag
 
-    **position_x : u.Quantity** Cartesian X-coordinate in the rotating frame :math:`x`
+    time : u.Quantity
+        Propagation time
 
-    **position_y : u.Quantity** Cartesian Y-coordinate in the rotating frame :math:`y`
+    position_x : u.Quantity
+        Cartesian X-coordinate in the rotating frame :math:`x`
 
-    **position_z : u.Quantity** Cartesian Z-coordinate in the rotating frame :math:`z`
+    position_y : u.Quantity
+        Cartesian Y-coordinate in the rotating frame :math:`y`
 
-    **velocity_x : u.Quantity** Cartesian X-velocity in the rotating frame :math:`\\dot{x}`
+    position_z : u.Quantity
+        Cartesian Z-coordinate in the rotating frame :math:`z`
 
-    **velocity_y : u.Quantity** Cartesian Y-velocity in the rotating frame :math:`\\dot{y}`
+    velocity_x : u.Quantity
+        Cartesian X-velocity in the rotating frame :math:`\\dot{x}`
 
-    **velocity_z : u.Quantity** Cartesian Z-velocity in the rotating frame :math:`\\dot{z}`
+    velocity_y : u.Quantity
+        Cartesian Y-velocity in the rotating frame :math:`\\dot{y}`
+
+    velocity_z : u.Quantity
+        Cartesian Z-velocity in the rotating frame :math:`\\dot{z}`
     """
     
     success         : bool = False
@@ -81,38 +94,50 @@ class ResultCR3BP:
 class ResultRM:
     """
     Result of integration for Relative Motion.
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **success : bool** Integration status flag
+    🧮 **Attributes**
 
-    **time : u.Quantity** Propagation time
+    success : bool
+        Integration status flag
 
-    **relative_position_x : u.Quantity** Relative X-coordinate :math:`\\delta x`
+    time : u.Quantity
+        Propagation time
 
-    **relative_position_y : u.Quantity** Relative Y-coordinate :math:`\\delta y`
+    relative_position_x : u.Quantity
+        Relative X-coordinate :math:`\\delta x`
 
-    **relative_position_z : u.Quantity** Relative Z-coordinate :math:`\\delta z`
+    relative_position_y : u.Quantity
+        Relative Y-coordinate :math:`\\delta y`
 
-    **relative_velocity_x : u.Quantity** Relative X-velocity :math:`\\delta v_x`
+    relative_position_z : u.Quantity
+        Relative Z-coordinate :math:`\\delta z`
 
-    **relative_velocity_y : u.Quantity** Relative Y-velocity :math:`\\delta v_y`
+    relative_velocity_x : u.Quantity
+        Relative X-velocity :math:`\\delta v_x`
 
-    **relative_velocity_z : u.Quantity** Relative Z-velocity :math:`\\delta v_z`
+    relative_velocity_y : u.Quantity
+        Relative Y-velocity :math:`\\delta v_y`
 
-    **position_x : u.Quantity** Reference orbit X-coordinate :math:`x`
+    relative_velocity_z : u.Quantity
+        Relative Z-velocity :math:`\\delta v_z`
 
-    **position_y : u.Quantity** Reference orbit Y-coordinate :math:`y`
+    position_x : u.Quantity
+        Reference orbit X-coordinate :math:`x`
 
-    **position_z : u.Quantity** Reference orbit Z-coordinate :math:`z`
+    position_y : u.Quantity
+        Reference orbit Y-coordinate :math:`y`
 
-    **velocity_x : u.Quantity** Reference orbit X-velocity :math:`v_x`
+    position_z : u.Quantity
+        Reference orbit Z-coordinate :math:`z`
 
-    **velocity_y : u.Quantity** Reference orbit Y-velocity :math:`v_y`
+    velocity_x : u.Quantity
+        Reference orbit X-velocity :math:`v_x`
 
-    **velocity_z : u.Quantity** Reference orbit Z-velocity :math:`v_z`
+    velocity_y : u.Quantity
+        Reference orbit Y-velocity :math:`v_y`
+
+    velocity_z : u.Quantity
+        Reference orbit Z-velocity :math:`v_z`
     """
     
     success             : bool = False
@@ -133,29 +158,36 @@ class ResultRM:
 @dc.dataclass
 class ResultOP:
     """
-    Result of integration for Orbital Perturbations
-    
-    <hr>
-    
-    🧮 Attributes
+    Result of integration for Orbital Perturbations.
 
-    **success : bool** Integration status flag
+    🧮 **Attributes**
 
-    **time : u.Quantity** Propagation time
+    success : bool
+        Integration status flag
 
-    **position_x : u.Quantity** Cartesian X-coordinate :math:`x`
+    time : u.Quantity
+        Propagation time
 
-    **position_y : u.Quantity** Cartesian Y-coordinate :math:`y`
+    position_x : u.Quantity
+        Cartesian X-coordinate :math:`x`
 
-    **position_z : u.Quantity** Cartesian Z-coordinate :math:`z`
+    position_y : u.Quantity
+        Cartesian Y-coordinate :math:`y`
 
-    **velocity_x : u.Quantity** Cartesian X-velocity :math:`v_x`
+    position_z : u.Quantity
+        Cartesian Z-coordinate :math:`z`
 
-    **velocity_y : u.Quantity** Cartesian Y-velocity :math:`v_y`
+    velocity_x : u.Quantity
+        Cartesian X-velocity :math:`v_x`
 
-    **velocity_z : u.Quantity** Cartesian Z-velocity :math:`v_z`
+    velocity_y : u.Quantity
+        Cartesian Y-velocity :math:`v_y`
 
-    **orbital_elements : List[OrbitalElements]** Osculating orbital elements
+    velocity_z : u.Quantity
+        Cartesian Z-velocity :math:`v_z`
+
+    orbital_elements : ty.List[OrbitalElements]
+        Osculating orbital elements
     """
     
     success             : bool = False
@@ -172,24 +204,29 @@ class ResultOP:
 class ManeuverResult:
     """
     Result of maneuver execution.
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **delta_velocity_list : List[u.Quantity]** Required velocity increments :math:`\\Delta v`
+    🧮 **Attributes**
 
-    **flight_time_list : List[u.Quantity]** Flight times between maneuver points
+    delta_velocity_list : ty.List[u.Quantity]
+        Required velocity increments :math:`\\Delta v`
 
-    **delta_mass_list : List[u.Quantity]** Propellant mass consumed at each maneuver
+    flight_time_list : ty.List[u.Quantity]
+        Flight times between maneuver points
 
-    **burn_time_list : List[u.Quantity]** Engine burn durations
+    delta_mass_list : ty.List[u.Quantity]
+        Propellant mass consumed at each maneuver
 
-    **orbital_elements_list : List[OrbitalElements]** Orbital elements after each maneuver point
+    burn_time_list : ty.List[u.Quantity]
+        Engine burn durations
 
-    **true_anomaly_list : List[u.Quantity]** True anomalies at each maneuver point
+    orbital_elements_list : ty.List[OrbitalElements]
+        Orbital elements after each maneuver point
 
-    **rocket_elevation_angle_list : List[u.Quantity]** Rocket elevation angles at each maneuver point
+    true_anomaly_list : ty.List[u.Quantity]
+        True anomalies at each maneuver point
+
+    rocket_elevation_angle_list : ty.List[u.Quantity]
+        Rocket elevation angles at each maneuver point
     """
     
     delta_velocity_list         : ty.List[u.Quantity] = dc.field(default_factory=lambda: [0 * u.km / u.s])
@@ -204,26 +241,32 @@ class ManeuverResult:
 class NonImpulsiveManeuverResult:
     """
     Result of non-impulsive maneuver integration.
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **burn_time : u.Quantity** Total engine burn duration
+    🧮 **Attributes**
 
-    **position_x : u.Quantity** Final X-coordinate :math:`x`
+    burn_time : u.Quantity
+        Total engine burn duration
 
-    **position_y : u.Quantity** Final Y-coordinate :math:`y`
+    position_x : u.Quantity
+        Final X-coordinate :math:`x`
 
-    **position_z : u.Quantity** Final Z-coordinate :math:`z`
+    position_y : u.Quantity
+        Final Y-coordinate :math:`y`
 
-    **velocity_x : u.Quantity** Final X-velocity :math:`v_x`
+    position_z : u.Quantity
+        Final Z-coordinate :math:`z`
 
-    **velocity_y : u.Quantity** Final Y-velocity :math:`v_y`
+    velocity_x : u.Quantity
+        Final X-velocity :math:`v_x`
 
-    **velocity_z : u.Quantity** Final Z-velocity :math:`v_z`
+    velocity_y : u.Quantity
+        Final Y-velocity :math:`v_y`
 
-    **spacecraft_mass : u.Quantity** Final spacecraft mass
+    velocity_z : u.Quantity
+        Final Z-velocity :math:`v_z`
+
+    spacecraft_mass : u.Quantity
+        Final spacecraft mass
     """
     
     burn_time       : u.Quantity = 0 * u.s

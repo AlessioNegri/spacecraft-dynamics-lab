@@ -23,7 +23,7 @@ import typing
 import spacelab.physical_constants as physical_constants
 import spacelab.bodies as bodies
 import spacelab.common as common
-import spacelab.lagrange_coefficients as lc
+import spacelab.n_body_models.lagrange_coefficients as lc
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
 

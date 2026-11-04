@@ -93,7 +93,7 @@ def test_keplerian_to_equinoctial():
     assert np.isclose(eq.eccentricity_vector_k.to_value(u.one), 0.139685, atol=1e-4)
     assert np.isclose(eq.ascending_node_vector_p.to_value(u.one), -0.577350, atol=1e-4)
     assert np.isclose(eq.ascending_node_vector_q.to_value(u.one), 0.0, atol=1e-6)
-    assert np.isclose(eq.periapsis_locaton.to_value(u.deg), 545.0, atol=1e-6)
+    assert np.isclose(eq.periapsis_location.to_value(u.deg), 545.0, atol=1e-6)
 
 def test_planet_oblateness_effect():
     """EXAMPLE 4.8"""

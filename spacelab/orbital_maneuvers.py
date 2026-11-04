@@ -33,7 +33,7 @@ import spacelab.orbit_3d as o3d
 import spacelab.orbital_position as op
 import spacelab.orbit_determination as od
 import spacelab.n_body_models.two_body_problem as tbp
-import spacelab.lagrange_coefficients as lc
+import spacelab.n_body_models.lagrange_coefficients as lc
 
 from spacelab.enums import OrbitDirection, HohmannDirection, SpiralDirection, ThrustDirection
 

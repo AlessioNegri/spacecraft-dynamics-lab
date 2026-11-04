@@ -13,23 +13,28 @@ class OrbitalElements:
     called *integrals of motion* (a.k.a. *invariants of motion*) and, evidently, they are of particular interest to
     characterize an orbit.
     
-    <hr>
-        
-    📖 **References**
+    🧮 Attributes
+
+    specific_angular_momentum : u.Quantity
+        Specific angular momentum :math:`h`
+
+    semimajor_axis : u.Quantity
+        Semi-major axis :math:`a`
+
+    eccentricity : u.Quantity
+        Eccentricity :math:`e`
+
+    inclination : u.Quantity
+        Inclination :math:`i`
     
-    - cite`(1) Orbital Mechanics for Engineering Students`
-        - cite`Chapter 2 "The Two-Body Problem"`
-        
-    - cite`(2) Space Flight Dynamics`
-        - cite`Chapter 2 "Two-Body Orbital Mechanics"`
-        
-    - cite`(3) Manned Spacecraft - Design Principles`
-        - cite`Chapter 5 "ORBITAL MECHANICS"`
+    right_ascension_of_ascending_node : u.Quantity
+        Right ascension of ascending node :math:`\\Omega`
     
-    - cite`(4) Astronautics - The Physics of Space Flight`
-        - cite`Chapter 7 "Orbits"`
+    argument_of_periapsis : u.Quantity
+        Argument of periapsis :math:`\\omega`
     
-    <hr>
+    true_anomaly : u.Quantity
+        True anomaly :math:`\\theta`
     
     📌 **Notes**
     
@@ -37,39 +42,35 @@ class OrbitalElements:
     the next three describe the orientation of the orbital plane + orientation in the orbital plane (*angular elements*),
     and the sixth parameter determines the location on the orbit (*orbital state sequencer*):
     
-        - Semi-major axis (a) / Specific angular momentum (h)
-        - Eccentricity (e)
-        - Inclination (i)
-        - Tight ascension of ascending node (Ω)
-        - Argument of periapsis (ω)
-        - time after periapsis passage (t - t_p) or mean anomaly (M = n * (t - t_p))
+        - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
+        - Eccentricity (:math:`e`)
+        - Inclination (:math:`i`)
+        - Right ascension of ascending node (:math:`\\Omega`)
+        - Argument of periapsis (:math:`\\omega`)
+        - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
     
     In **Keplerian Elements**, the sequencer is replaced by one of the followings:
     
-        - semimajor axis (a) / specific angular momentum (h)
-        - eccentricity (e)
-        - inclination (i)
-        - right ascension of ascending node (Ω)
-        - argument of periapsis (ω)
-        - true anomaly (θ) or eccentric anomaly (E) or hyperbolic anomaly (F) or universal anomaly (G)
+        - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
+        - eccentricity (:math:`e`)
+        - inclination (:math:`i`)
+        - right ascension of ascending node (:math:`\\Omega`)
+        - argument of periapsis (:math:`\\omega`)
+        - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
     
-    <hr>
+    📖 **References**
     
-    🧮 Attributes
-
-    **specific_angular_momentum : u.Quantity** Specific angular momentum :math:`h`
-
-    **semimajor_axis : u.Quantity** Semi-major axis :math:`a`
-
-    **eccentricity : u.Quantity** Eccentricity :math:`e`
-
-    **inclination : u.Quantity** Inclination :math:`i`
+    - :cite:`curtis`
+        - Chapter 2 *The Two-Body Problem*
+        
+    - :cite:`kluever`
+        - Chapter 2 *Two-Body Orbital Mechanics*
+        
+    - :cite:`sforza`
+        - Chapter 5 *ORBITAL MECHANICS*
     
-    **right_ascension_of_ascending_node : u.Quantity** Right ascension of ascending node :math:`\\Omega`
-    
-    **argument_of_periapsis : u.Quantity** Argument of periapsis :math:`\\omega`
-    
-    **true_anomaly : u.Quantity** True anomaly :math:`\\theta`
+    - :cite:`walter`
+        - Chapter 7 *Orbits*
     """
     
     specific_angular_momentum           : u.Quantity = 0 * u.km**2 / u.s
@@ -83,20 +84,18 @@ class OrbitalElements:
     def calc_semimajor_axis(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the **semi-major axis** of the orbit.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - cite`(4) Section 7.3.1 "Orbit Equation"`
-        
-        <hr>
 
         :param attractor: Main attractor, defaults to Attractor.EARTH
         :type attractor: Attractor
         :return: Semi-major axis
         :rtype: u.Quantity
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.7 *Elliptical orbits (0 < e < 1)*
+        - :cite:`walter`
+            - Section 7.3.1 *Orbit Equation*
         """
         
         # >>> Validation
@@ -117,25 +116,22 @@ class OrbitalElements:
         """
         Calculates the **periapsis** of the orbit (i.e. minimum distance to the central body at the focal point).
         
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - cite`(2) Section 2.4.1 "Trajectory Equation"`
-        - cite`(4) Section 7.4.2 "Elliptic Orbit"`
-        
-        <hr>
+        :return: Periapsis radius
+        :rtype: u.Quantity
         
         📌 **Notes**
         
         The general term periapsis is also called pericenter. Depending on the central body, the specific terms are
         perigee (Earth), perihelion (Sun), periselene (Moon), etc.
-
-        <hr>
-
-        :return: Periapsis radius
-        :rtype: u.Quantity
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.7 *Elliptical orbits (0 < e < 1)*
+        - :cite:`kluever`
+            - Section 2.4.1 *Trajectory Equation*
+        - :cite:`walter`
+            - Section 7.4.2 *Elliptic Orbit*
         """
         
         return self.semimajor_axis * (1 - self.eccentricity)
@@ -143,26 +139,23 @@ class OrbitalElements:
     def calc_apoapsis_radius(self) -> u.Quantity:
         """
         Calculates the **apoapsis** of the orbut (i.e. maximum distance to the central body at the focal point).
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - cite`(2) Section 2.4.1 "Trajectory Equation"`
-        - cite`(4) Section 7.4.2 "Elliptic Orbit"`
-        
-        <hr>
+
+        :return: Apoapsis radius
+        :rtype: u.Quantity
         
         📌 **Notes**
         
         The general term apoapsis is also called apocenter. Depending on the central body, the specific terms are
         apogee (Earth), apohelion (Sun), aposelene (Moon), etc.
         
-        <hr>
-
-        :return: Apoapsis radius
-        :rtype: u.Quantity
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.7 *Elliptical orbits (0 < e < 1)*
+        - :cite:`kluever`
+            - Section 2.4.1 *Trajectory Equation*
+        - :cite:`walter`
+            - Section 7.4.2 *Elliptic Orbit*
         """
         
         return self.semimajor_axis * (1 + self.eccentricity)
@@ -170,8 +163,6 @@ class OrbitalElements:
     def calc_specific_angular_momentum(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the **specific angular momentum** of the orbit.
-        
-        <hr>
 
         :param attractor: Main attractor, defaults to Attractor.EARTH
         :type attractor: Attractor
@@ -207,22 +198,22 @@ class OrbitalElements:
     def calc_orbital_period(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the **orbital period** of the orbit.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - cite`(2) Section 2.5.3 "Period of an Elliptical Orbit"`
-        - cite`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
-        - cite`(4) Section 7.4.1 "Circular Orbit"`
-        
-        <hr>
 
         :param attractor: Main attractor, defaults to Attractor.EARTH
         :type attractor: Attractor
         :return: Orbital period
         :rtype: u.Quantity
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.7 *Elliptical orbits (0 < e < 1)*
+        - :cite:`kluever`
+            - Section 2.5.3 *Period of an Elliptical Orbit*
+        - :cite:`sforza`
+            - Section 5.1.2 *CLOSED ORBITS IN A CENTRAL FORCE FIELD*
+        - :cite:`walter`
+            - Section 7.4.1 *Circular Orbit*
         """
         
         # >>> Validation
@@ -257,22 +248,22 @@ class OrbitalElements:
     def calc_semilatus_rectum(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the **semi-latus rectum** of the orbit.
-        
-        <hr>
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor
+        :return: Semi-latus rectum
+        :rtype: u.Quantity
         
         📖 **References**
         
-        - cite`(1) Section 2.4 "Angular momentum and the orbit formulas"`
-        - cite`(2) Section 2.4.1 "Trajectory Equation"`
-        - cite`(3) Section 5.2.2 "CONSERVATION OF ANGULAR MOMENTUM"`
-        - cite`(4) Section 7.3.1 "Orbit Equation"`
-        
-        <hr>
-
-        :param attractor: _description_
-        :type attractor: Attractor
-        :return: _description_
-        :rtype: u.Quantity
+        - :cite:`curtis`
+            - Section 2.4 *Angular momentum and the orbit formulas*
+        - :cite:`kluever`
+            - Section 2.4.1 *Trajectory Equation*
+        - :cite:`sforza`
+            - Section 5.2.2 *CONSERVATION OF ANGULAR MOMENTUM*
+        - :cite:`walter`
+            - Section 7.3.1 *Orbit Equation*
         """
         
         # >>> Validation
@@ -298,21 +289,20 @@ class OrbitalElements:
     def update_from_periapsis_apoapsis(self, periapsis_radius: u.Quantity, apoapsis_radius: u.Quantity) -> None:
         """
         Updates the *semi-major axis* and *eccentricity* from the given apsis radii.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 2.7 "Elliptical orbits (0 < e < 1)"`
-        - cite`(2) Section 2.5.1 "Ellipse Geometry"`
-        - cite`(3) Section 5.1.2 "CLOSED ORBITS IN A CENTRAL FORCE FIELD"`
-        
-        <hr>
 
         :param periapsis_radius: Periapsis radius
         :type periapsis_radius: u.Quantity
         :param apoapsis_radius: Apoapsis radius
         :type apoapsis_radius: u.Quantity
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.7 *Elliptical orbits (0 < e < 1)*
+        - :cite:`kluever`
+            - Section 2.5.1 *Ellipse Geometry*
+        - :cite:`sforza`
+            - Section 5.1.2 *CLOSED ORBITS IN A CENTRAL FORCE FIELD*
         """
         
         # >>> Validation
@@ -340,18 +330,21 @@ class OrbitalElements:
     
     def calc_velocity(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
-        _summary_
+        Calculates the **orbital velocity** of the orbit.
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor
+        :return: Orbital velocity
+        :rtype: u.Quantity
         
         📖 **References**
         
-        - cite`(1) Section 2.4 "Angular momentum and the orbit formulas"`
-        - cite`(2) Section 2.5.2 "Flight-Path Angle and Velocity Components"`
-        - cite`(4) Section 7.3.3 "Orbital Velocity"`
-
-        :param attractor: _description_
-        :type attractor: Attractor
-        :return: _description_
-        :rtype: u.Quantity
+        - :cite:`curtis`
+            - Section 2.4 *Angular momentum and the orbit formulas*
+        - :cite:`kluever`
+            - Section 2.5.2 *Flight-Path Angle and Velocity Components*
+        - :cite:`walter`
+            - Section 7.3.3 *Orbital Velocity*
         """
         
         # >>> Validation
@@ -393,14 +386,25 @@ class EquinoctialOrbitalElements:
     will become undefined for *eccentricity* = 0. These problems are solved by adopting the **standard equinoctial
     orbital elements**.
     
-    <hr>
-        
-    📖 **References**
+    🧮 Attributes
     
-    - cite`(4) Astronautics - The Physics of Space Flight`
-        - cite`Chapter 7 "Orbits"`
+    semimajor_axis : u.Quantity
+        Semi-major axis :math:`a`
+
+    eccentricity_vector_h : u.Quantity
+        Eccentricity vector component :math:`h`
+
+    eccentricity_vector_k : u.Quantity
+        Eccentricity vector component :math:`k`
+
+    ascending_node_vector_p : u.Quantity
+        Rescaled ascending node vector component :math:`p`
     
-    <hr>
+    ascending_node_vector_q : u.Quantity
+        Rescaled ascending node vector component :math:`q`
+    
+    periapsis_location : u.Quantity
+        Periapsis location in time :math:`l`
     
     📌 **Notes**
     
@@ -408,37 +412,26 @@ class EquinoctialOrbitalElements:
     the next three describe the orientation of the orbital plane + orientation in the orbital plane (*angular elements*),
     and the sixth parameter determines the location on the orbit (*orbital state sequencer*):
     
-        - Semi-major axis (a) / Specific angular momentum (h)
-        - Eccentricity (e)
-        - Inclination (i)
-        - Tight ascension of ascending node (Ω)
-        - Argument of periapsis (ω)
-        - time after periapsis passage (t - t_p) or mean anomaly (M = n * (t - t_p))
+        - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
+        - Eccentricity (:math:`e`)
+        - Inclination (:math:`i`)
+        - Right ascension of ascending node (:math:`\\Omega`)
+        - Argument of periapsis (:math:`\\omega`)
+        - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
     
     In **Keplerian Elements**, the sequencer is replaced by one of the followings:
     
-        - semimajor axis (a) / specific angular momentum (h)
-        - eccentricity (e)
-        - inclination (i)
-        - right ascension of ascending node (Ω)
-        - argument of periapsis (ω)
-        - true anomaly (θ) or eccentric anomaly (E) or hyperbolic anomaly (F) or universal anomaly (G)
+        - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
+        - eccentricity (:math:`e`)
+        - inclination (:math:`i`)
+        - right ascension of ascending node (:math:`\\Omega`)
+        - argument of periapsis (:math:`\\omega`)
+        - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
     
-    <hr>
+    📖 **References**
     
-    🧮 Attributes
-
-    **semimajor_axis : u.Quantity** Semi-major axis :math:`a`
-
-    **eccentricity_vector_h : u.Quantity** Eccentricity vector component :math:`h`
-
-    **eccentricity_vector_k : u.Quantity** Eccentricity vector component :math:`k`
-
-    **ascending_node_vector_p : u.Quantity** Rescaled ascending node vector component :math:`p`
-    
-    **ascending_node_vector_q : u.Quantity** Rescaled ascending node vector component :math:`q`
-    
-    **periapsis_locaton : u.Quantity** Periapsis location in time :math:`l`
+    - :cite:`walter`
+        - Chapter 7 *Orbits*
     """
 
     semimajor_axis          : u.Quantity = 0 * u.km
@@ -446,4 +439,4 @@ class EquinoctialOrbitalElements:
     eccentricity_vector_k   : u.Quantity = 0 * u.one
     ascending_node_vector_p : u.Quantity = 0 * u.one
     ascending_node_vector_q : u.Quantity = 0 * u.one
-    periapsis_locaton       : u.Quantity = 0 * u.deg
+    periapsis_location      : u.Quantity = 0 * u.deg

@@ -147,6 +147,7 @@ def cartesian_to_orbit_parameters(
         parameters.apoapsis_velocity    = np.sqrt(mu / r_m) * u.km / u.s
         parameters.semiminor_axis       = r_m * u.km
         parameters.period               = (2 * np.pi) /  np.sqrt(mu) * r_m ** (3 / 2) * u.s
+        parameters.mean_motion          = np.sqrt(mu / a**3) * u.rad / u.s
     
     elif np.isclose(e, 1.0, rtol=1e-3, atol=1e-6):
         
@@ -170,6 +171,7 @@ def cartesian_to_orbit_parameters(
         parameters.apoapsis_velocity    = mu / h_m * (1 - e) * u.km / u.s
         parameters.semiminor_axis       = a * np.sqrt(1 - e ** 2) * u.km
         parameters.period               = (2 * np.pi) /  np.sqrt(mu) * a ** (3 / 2) * u.s
+        parameters.mean_motion          = np.sqrt(mu / a**3) * u.rad / u.s
     
     else:
         

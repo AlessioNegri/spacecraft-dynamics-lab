@@ -105,3 +105,9 @@ class AtmosphereModel(enum.Enum):
     
     USSA76 = "USSA76",
     CIRA72 = "CIRA72"
+
+class AngleType(enum.Enum):
+    """Type of angle"""
+    
+    TRUE_ANOMALY = 0
+    ECCENTRIC_ANOMALY = 1

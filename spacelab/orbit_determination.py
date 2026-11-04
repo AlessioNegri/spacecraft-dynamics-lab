@@ -25,7 +25,7 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.orbit_3d as o3d
-import spacelab.lagrange_coefficients as lc
+import spacelab.n_body_models.lagrange_coefficients as lc
 
 from spacelab.enums import OrbitDirection
 

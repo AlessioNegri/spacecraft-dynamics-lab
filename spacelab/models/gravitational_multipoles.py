@@ -14,16 +14,24 @@ class GravitationalMultipoles(Singleton):
     """
     **Gravitational multipoles** describes the spatial distribution of mass and momentum in a gravitational system,
     breaking down a complex gravitational field into a series of terms with increasingly finer angular features.
-    
-    <hr>
 
-    📖 **References**
+    🧮 **Attributes**
     
-    - cite`Astronautics - The Physics of Space Flight`
-        - cite`Chapter 12 "Orbit Perturbations"`
+    C : Dict[Tuple[int, int], float]
+        Cosine coefficients
     
-    <hr>
-
+    S : Dict[Tuple[int, int], float]
+        Sine coefficients
+    
+    J : Dict[Tuple[int, int], float]
+        Harmonic coefficients
+    
+    L : Dict[Tuple[int, int], float]
+        Geographic equilibrium longitudes
+    
+    j : Dict[Tuple[int, int], float]
+        Reduced harmonic coefficients
+    
     📌 **Notes**
     
     Because the detailed density distribution of the Earth is beyond our knowledge, the multipole coefficients
@@ -32,26 +40,18 @@ class GravitationalMultipoles(Singleton):
     
     The harmonic amplitudes are calculated as :math:`J_{nm} = \\sqrt{C_{nm}^2 + S_{nm}^2}`.
     
-    The Geographic longitudes are calculated as :math:`\\lambda_{nm} = 2 / m * \\arctan{S_{nm} / (C_{nm} + J_{nm})}`.
+    The Geographic longitudes are calculated as :math:`\\lambda_{nm} = 2 / m \\cdot \\arctan({S_{nm} / (C_{nm} + J_{nm})})`.
     
     Terminology:
+    
     - *Zonal Harmonics* (:math:`m = 0`) describe latitudinal variations
     - *Sectorial Harmonics* (:math:`n = m`) describe longitudinal variations
     - *Tesseral Harmonics* (:math:`0 < m < n`) describe mixed variations
     
-    <hr>
-
-    🧮 **Attributes**
+    📖 **References**
     
-    **C : Dict[Tuple[int, int], float]** Cosine coefficients
-    
-    **S : Dict[Tuple[int, int], float]** Sine coefficients
-    
-    **J : Dict[Tuple[int, int], float]** Harmonic coefficients
-    
-    **L : Dict[Tuple[int, int], float]** Geographic equilibrium longitudes
-    
-    **j : Dict[Tuple[int, int], float]** Reduced harmonic coefficients
+    - :cite:`walter`
+        - Chapter 12 *Orbit Perturbations*
     """
     
     C: ty.Dict[ty.Tuple[int, int], float]
@@ -74,11 +74,10 @@ class GravitationalMultipoles(Singleton):
         """
         Loads the multipole coefficients of Earth's gravitational potential.
         
-        <hr>
-        
         📖 **References**
         
-        - cite`Section 12.2.2 "Gravitational Potential"`
+        - :cite:`walter`
+            - Section 12.2.2 *Gravitational Potential*
         """
         
         file: pl.Path = pl.Path(__file__).parent / "gravitational_multipoles.csv"
@@ -115,20 +114,21 @@ class GravitationalMultipoles(Singleton):
         """
         Calculates the earth reduced harmonic coefficients :math:`j_{nm}`.
         
-        📖 **References**
-        
-        - cite`Section 12.3.2 "Removing Short-Periodic Effects"`
-        
-        📌 **Notes**
-        
-        The common factor 3/2 is a remnant of orbit averaging.
-
         :param semimajor_axis: Semimajor axis
         :type semimajor_axis: u.Quantity
         :param eccentricity: Eccentricity
         :type eccentricity: u.Quantity
         :return: Success
         :rtype: bool
+        
+        📌 **Notes**
+        
+        The common factor 3/2 is a remnant of orbit averaging.
+        
+        📖 **References**
+        
+        - :cite:`walter`
+            - Section 12.3.2 *Removing Short-Periodic Effects*
         """
         
         # >>> Validation

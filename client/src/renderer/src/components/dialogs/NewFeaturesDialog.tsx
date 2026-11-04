@@ -37,6 +37,7 @@ const newFeatures: string[] =
     `Commensurate Orbits dialog in Orbital Perturbations Tools menu`,
     `GPS and GEO Longitudinal Drift dialog in Orbital Perturbations Tools menu`,
     `Drag Orbit Times dialog in Orbital Perturbations Tools menu`,
+    `Updated lagrange coefficients algorithm in spacelab Orbital Perturbations`,
 ]
 
 interface Props

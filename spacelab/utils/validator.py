@@ -51,6 +51,26 @@ def validate_quantity_vector(name: str, value: u.Quantity, unit: u.Unit, size: i
         
         return f"'{name}' must have shape = ({size},)"
 
+def validate_quantity_angle(name: str, value: u.Quantity) -> str | None:
+    """
+    Validates the astropy Quantity angle value.
+
+    :param name: Name of the value variable
+    :type name: str
+    :param value: Value
+    :type value: u.Quantity
+    :return: Error message (None if ok)
+    :rtype: str | None
+    """
+    
+    err_msg: str | None = validate_quantity(name, value, u.deg)
+    
+    if err_msg != None: return err_msg
+        
+    if not (-360 <= value.to_value(u.deg) <= 360):
+        
+        return f"'{name} = {value.to_value(u.deg)} deg' must be in [-360, +360] deg"
+
 def validate_attractor(attractor: Attractor) -> str | None:
     """
     Validates the attractor.

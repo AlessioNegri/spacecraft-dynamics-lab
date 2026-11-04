@@ -387,7 +387,7 @@ class Orbit3D():
                                           eccentricity_vector_k=k * u.one,
                                           ascending_node_vector_p=p * u.one,
                                           ascending_node_vector_q=q * u.one,
-                                          periapsis_locaton=l * u.rad)
+                                          periapsis_location=l * u.rad)
     
     @staticmethod
     def perifocal_to_geocentric_equatorial_position_vector(orbital_elements: OrbitalElements,

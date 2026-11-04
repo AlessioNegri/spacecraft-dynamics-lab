@@ -10,36 +10,33 @@ from spacelab.utils.validator import validate_quantity, validate_attractor
 class RocketMotor:
     """
     This class implements a **Rocket Motor** model, which is used in orbital maneuvers calculations.
-    
-    <hr>
-    
+
+    🧮 **Attributes**
+
+    specific_impulse : u.Quantity
+        Engine specific impulse :math:`I_{sp}`
+
+    thrust : u.Quantity
+        Engine thrust :math:`T`
+
+    spacecraft_mass : u.Quantity
+        Total spacecraft mass, including propellant :math:`m_0`
+
+    propellant_mass : u.Quantity
+        Propellant mass required to accomplish the maneuver :math:`m_p`
+
     📖 **References**
-    
-    - cite`(1) Orbital Mechanics for Engineering Students`
-        - cite`Chapter 6 "Orbital Maneuvers"`
-        - cite`Chapter 11 "Rocket Vehicle Dynamics"`
-        
-    - cite`(2) Space Flight Dynamics`
-        - cite`Chapter 6 "Rocket Performance"`
-        
-    - cite`(3) Manned Spacecraft - Design Principles`
-        - cite`Chapter 7 "LAUNCH MECHANICS"`
-    
-    - cite`(4) Astronautics - The Physics of Space Flight`
-        - cite`Chapter 1 "Rocket Fundamentals"`
-        - cite`Chapter 2 "Rocket Flight"`
-    
-    <hr>
-    
-    🧮 Attributes
 
-    **specific_impulse : u.Quantity** Engine specific impulse :math:`I_{sp}`
-
-    **thrust : u.Quantity** Engine thrust :math:`T`
-
-    **spacecraft_mass : u.Quantity** Total spacecraft mass, including propellant :math:`m_0`
-
-    **propellant_mass : u.Quantity** Propellant mass required to accomplish the maneuver :math:`m_p`
+    - :cite:`curtis`
+        - Chapter 6 *Orbital Maneuvers*
+        - Chapter 11 *Rocket Vehicle Dynamics*
+    - :cite:`kluever`
+        - Chapter 6 *Rocket Performance*
+    - :cite:`sforza`
+        - Chapter 7 *LAUNCH MECHANICS*
+    - :cite:`walter`
+        - Chapter 1 *Rocket Fundamentals*
+        - Chapter 2 *Rocket Flight*
     """
     
     specific_impulse: u.Quantity
@@ -50,22 +47,6 @@ class RocketMotor:
     def calc_propellant_mass(self, delta_velocity: u.Quantity, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the propellant mass required for a given delta velocity using the **ideal rocket equation**.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 6.2 "Impulsive maneuvers"`
-        - cite`(2) Section 6.3 "The Rocket Equation"`
-        - cite`(4) Section 2.2 "Rocket in Free Space"`
-        
-        <hr>
-        
-        📌 **Notes**
-        
-        The ideal rocket equation is also known as the **Tsiolkovsky rocket equation**.
-        
-        <hr>
 
         :param delta_velocity: Delta velocity
         :type delta_velocity: u.Quantity
@@ -73,6 +54,19 @@ class RocketMotor:
         :type attractor: Attractor, optional
         :return: Propellant mass
         :rtype: u.Quantity
+
+        📌 **Notes**
+
+        The ideal rocket equation is also known as the **Tsiolkovsky rocket equation**.
+
+        📖 **References**
+
+        - :cite:`curtis`
+            - Section 6.2 *Impulsive maneuvers*
+        - :cite:`kluever`
+            - Section 6.3 *The Rocket Equation*
+        - :cite:`walter`
+            - Section 2.2 *Rocket in Free Space*
         """
         
         # >>> Validation
@@ -116,14 +110,6 @@ class RocketMotor:
     def calc_burn_time(self, propellant_mass: u.Quantity, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the burn time.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 11.4 "Rocket performance"`
-        - cite`(2) Section 6.3 "The Rocket Equation"`
-        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
 
         :param propellant_mass: Propellant mass
         :type propellant_mass: u.Quantity
@@ -131,6 +117,16 @@ class RocketMotor:
         :type attractor: Attractor, optional
         :return: Burn time
         :rtype: u.Quantity
+
+        📖 **References**
+
+        - :cite:`curtis`
+            - Section 11.4 *Rocket performance*
+        - :cite:`kluever`
+            - Section 6.3 *The Rocket Equation*
+        - :cite:`sforza`
+            - Section 7.2.1 *ROCKET ENGINE THRUST*
+
         """
         
         # >>> Validation
@@ -187,22 +183,23 @@ class RocketMotor:
     def calc_effective_exhaust_velocity(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the effective exhaust velocity.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 11.3 "The thrust equation"`
-        - cite`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
-        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
-        - cite`(4) Section 1.1.2 "Total Trust"`
-        
-        <hr>
 
         :param attractor: Main attractor, defaults to Attractor.EARTH
         :type attractor: Attractor
         :return: Effective exhaust velocity
         :rtype: u.Quantity
+
+        📖 **References**
+
+        - :cite:`curtis`
+            - Section 11.3 *The thrust equation*
+        - :cite:`kluever`
+            - Section 6.2 *Rocket Propulsion Fundamentals*
+        - :cite:`sforza`
+            - Section 7.2.1 *ROCKET ENGINE THRUST*
+        - :cite:`walter`
+            - Section 1.1.2 *Total Thrust*
+
         """
         
         # >>> Validation
@@ -224,22 +221,23 @@ class RocketMotor:
     def calc_propellant_mass_flow_rate(self, attractor: Attractor = Attractor.EARTH) -> u.Quantity:
         """
         Calculates the propellant mass flow-rate.
-        
-        <hr>
-        
-        📖 **References**
-        
-        - cite`(1) Section 11.3 "The thrust equation"`
-        - cite`(2) Section 6.2 "Rocket Propulsion Fundamentals"`
-        - cite`(3) Section 7.2.1 "ROCKET ENGINE THRUST"`
-        - cite`(4) Section 1.1.2 "Total Trust"`
-        
-        <hr>
 
         :param attractor: Main attractor, defaults to Attractor.EARTH
         :type attractor: Attractor
         :return: Propellant mass flow-rate
         :rtype: u.Quantity
+
+        📖 **References**
+
+        - :cite:`curtis`
+            - Section 11.3 *The thrust equation*
+        - :cite:`kluever`
+            - Section 6.2 *Rocket Propulsion Fundamentals*
+        - :cite:`sforza`
+            - Section 7.2.1 *ROCKET ENGINE THRUST*
+        - :cite:`walter`
+            - Section 1.1.2 *Total Thrust*
+
         """
         
         # >>> Validation

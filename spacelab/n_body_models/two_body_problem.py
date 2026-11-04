@@ -17,15 +17,6 @@ class Orbit:
     """
     This class implements a **Generic Orbit** model, which is based on the **two-body problem**.
     
-    📌 **Notes**
-    
-    The vector-based approach is used to solve the classical problem of determining the motion of two bodies due solely
-    to their own mutual gravitational attraction. The *two-body problem* is regulated by the second order differential
-    equation that governs the motion of the secondary mass relative to primary one. It has two vector constants of
-    integration, each having three scalar components (i.e. six constants of integration). Note that interchanging the
-    roles of the two masses changes nothing. Thus, the motion of :math:`m_2` as seen from :math:`m_1` is precisely the
-    same as the motion of :math:`m_1` as seen from :math:`m_2`.
-    
     🧮 **Attributes**
     
     ready : bool
@@ -42,6 +33,15 @@ class Orbit:
 
     epoch : time.Time
         Epoch of the initial state.
+    
+    📌 **Notes**
+    
+    The vector-based approach is used to solve the classical problem of determining the motion of two bodies due solely
+    to their own mutual gravitational attraction. The *two-body problem* is regulated by the second order differential
+    equation that governs the motion of the secondary mass relative to primary one. It has two vector constants of
+    integration, each having three scalar components (i.e. six constants of integration). Note that interchanging the
+    roles of the two masses changes nothing. Thus, the motion of :math:`m_2` as seen from :math:`m_1` is precisely the
+    same as the motion of :math:`m_1` as seen from :math:`m_2`.
     
     📖 **References**
     
@@ -327,16 +327,6 @@ class Orbit:
         """
         Propagate the orbit for delta time, with optional thrust and mass depletion.
         
-        📌 **Notes**
-        
-        If the rocket motor is provided, the thrust is applied with constant direction and with fixed magnitude.
-        
-        If the thrust direction is set to `sl_enums.ThrustDirection.ALONG_VELOCITY`, the thrust is applied along the
-        instantaneous velocity vector (i.e. shape change).
-        
-        If the thrust direction is set to `sl_enums.ThrustDirection.ALONG_ANGULAR_MOMENTUM`, the thrust is applied along
-        the orbital angular momentum vector (i.e. inclination change).
-
         :param delta: Delta time for propagation
         :type delta: float
         :param rocket_motor: Rocket motor for thrust, defaults to None
@@ -353,6 +343,16 @@ class Orbit:
         :type target_inclination: float, optional
         :return: Integration result
         :rtype: sl_results.Result
+        
+        📌 **Notes**
+        
+        If the rocket motor is provided, the thrust is applied with constant direction and with fixed magnitude.
+        
+        If the thrust direction is set to `sl_enums.ThrustDirection.ALONG_VELOCITY`, the thrust is applied along the
+        instantaneous velocity vector (i.e. shape change).
+        
+        If the thrust direction is set to `sl_enums.ThrustDirection.ALONG_ANGULAR_MOMENTUM`, the thrust is applied along
+        the orbital angular momentum vector (i.e. inclination change).
         """
         
         result = sl_results.Result(success=False)
@@ -433,6 +433,13 @@ class Orbit:
         """
         **Newton's gravitational equation of motion** under a central gravitational field.
         
+        :param t: Time (unused, included for ODE solver compatibility)
+        :type t: float
+        :param X: State vector [position(x, y, z), velocity(v_x, v_y, v_z)]
+        :type X: np.ndarray
+        :return: Time derivative dx_dt
+        :rtype: np.ndarray
+        
         📌 **Notes**
         
         This function integrates the classical two-body equations:
@@ -456,13 +463,6 @@ class Orbit:
         1. The two bodies are spherically symmetric so that they may be considered as particles or point masses.
         2. The mutually attractive gravitational forces are the only forces acting in the two-body system.
         3. The mass of the satellite is negligible compared with the mass of the celestial body.
-
-        :param t: Time (unused, included for ODE solver compatibility)
-        :type t: float
-        :param X: State vector [position(x, y, z), velocity(v_x, v_y, v_z)]
-        :type X: np.ndarray
-        :return: Time derivative dx_dt
-        :rtype: np.ndarray
         
         📖 **References**
         
@@ -514,6 +514,27 @@ class Orbit:
         **Newton's gravitational equation of motion** under a central gravitational field with constant and continuous
         thrust, and mass depletion (rocket equation).
         
+        :param t: Time (unused, included for ODE solver compatibility)
+        :type t: float
+        :param X: State vector [position(x, y, z), velocity(v_x, v_y, v_z), mass(m)]
+        :type X: np.ndarray
+        :param thrust: Thrust magnitude [N]
+        :type thrust: float
+        :param specific_impulse: Specific impulse [s]
+        :type specific_impulse: float
+        :param thrust_direction: Direction of the thrust
+        :type thrust_direction: sl_enums.ThrustDirection
+        :param initial_radius: Initial radius [km]
+        :type initial_radius: float
+        :param target_radius: Target radius [km]
+        :type target_radius: float
+        :param initial_inclination: Initial inclination [rad]
+        :type initial_inclination: float
+        :param target_inclination: Target inclination [rad]
+        :type target_inclination: float
+        :return: Time derivative dx_dt
+        :rtype: np.ndarray
+        
         📌 **Notes**
         
         It is assumed that the thrust is applied with constant direction and with fixed magnitude. The continuous
@@ -552,27 +573,6 @@ class Orbit:
                 :math:`\\vec{h} = \\vec{r} \\times \\vec{v}`
                 
                 :math:`\\hat{h} = \\vec{h} / ||\\vec{h}||`.
-
-        :param t: Time (unused, included for ODE solver compatibility)
-        :type t: float
-        :param X: State vector [position(x, y, z), velocity(v_x, v_y, v_z), mass(m)]
-        :type X: np.ndarray
-        :param thrust: Thrust magnitude [N]
-        :type thrust: float
-        :param specific_impulse: Specific impulse [s]
-        :type specific_impulse: float
-        :param thrust_direction: Direction of the thrust
-        :type thrust_direction: sl_enums.ThrustDirection
-        :param initial_radius: Initial radius [km]
-        :type initial_radius: float
-        :param target_radius: Target radius [km]
-        :type target_radius: float
-        :param initial_inclination: Initial inclination [rad]
-        :type initial_inclination: float
-        :param target_inclination: Target inclination [rad]
-        :type target_inclination: float
-        :return: Time derivative dx_dt
-        :rtype: np.ndarray
         
         📖 **References**
         

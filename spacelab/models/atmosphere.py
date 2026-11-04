@@ -14,22 +14,18 @@ import spacelab.physical_constants as sl_constants
 class Atmosphere(Singleton):
     """
     **Atmosphere** describes the models used for modeling the thermodynamics properties of the Earth's atmosphere.
-    
-    <hr>
-    
-    📖 **References**
 
-    - cite`(1) Orbital Mechanics for Engineering Students`
-        - cite`Chapter 12 "Introduction to Orbital Perturbations"`
+    🧮 **Attributes**
     
-    - cite`(3) Manned Spacecraft - Design Principles`
-        - cite`Chapter 2 "EARTH'S ATMOSPHERE"`
+    temperature_interpolator : interpolate.CubicSpline
+        Temperature interpolator (COESA, 1976)
     
-    - cite`(4) Manned Spacecraft - Design Principles`
-        - cite`Chapter 6 "Earths's Atmosphere"`
+    pressure_interpolator : interpolate.interp1d
+        Pressure interpolator (COESA, 1976)
     
-    <hr>
-
+    density_interpolator : interpolate.interp1d
+        Density interpolator (COESA, 1976)
+    
     📌 **Notes**
     
     The *World Meteorological Organization* defines such a standard as
@@ -47,15 +43,16 @@ class Atmosphere(Singleton):
     This model is an idealized, steady-state representation of the atmosphere in the mid-latitudes during a period of
     moderate solar activity.
     
-    <hr>
+    📖 **References**
+
+    - :cite:`curtis`
+        - Chapter 12 *Introduction to Orbital Perturbations*
     
-    🧮 **Attributes**
+    - :cite:`sforza`
+        - Chapter 2 *EARTH'S ATMOSPHERE*
     
-    **temperature_interpolator : interpolate.CubicSpline** Temperature interpolator (COESA, 1976)
-    
-    **pressure_interpolator : interpolate.interp1d** Pressure interpolator (COESA, 1976)
-    
-    **density_interpolator : interpolate.interp1d** Density interpolator (COESA, 1976)
+    - :cite:`walter`
+        - Chapter 6 *Earths's Atmosphere*
     """
 
     def _singleton_init(self):
@@ -77,11 +74,10 @@ class Atmosphere(Singleton):
         """
         Loads the 1976 U.S. Standard Atmosphere model.
         
-        <hr>
-        
         📖 **References**
         
-        - cite`Section 2.5 "TABLES OF ATMOSPHERIC PROPERTIES"`
+        - :cite:`sforza`
+            - Section 2.5 *TABLES OF ATMOSPHERIC PROPERTIES*
         """
         
         file: pl.Path = pl.Path(__file__).parent / "1976_us_standard_atmosphere.csv"
@@ -113,12 +109,12 @@ class Atmosphere(Singleton):
         """
         Loads the density models.
         
-        <hr>
-        
         📖 **References**
         
-        - cite`(1) Section 12.4 "Atmospheric Drag"`
-        - cite`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
+        - :cite:`curtis`
+            - Section 12.4 *Atmospheric Drag*
+        - :cite:`walter`
+            - Section 6.1.3 *Piecewise-Expoìonential Model*
         """
         
         file: pl.Path = pl.Path(__file__).parent / "density_models.csv"
@@ -260,25 +256,25 @@ class Atmosphere(Singleton):
         
         - *USSA76* piecewise exponential model
         - *CIRA-72* piecewise exponential model
-
-        <hr>
         
-        📖 **References**
-        
-        - cite`(1) Section 12.4 "Atmospheric Drag"`
-        - cite`(4) Section 6.1.3 "Piecewise-Expoìonential Model"`
-
-        📌 **Notes**
-        
-        The given altitude is located in the values of the altitude ranges. For example, and altitude of 249 km will be
-        located in the range 200-250 but uses the value of 200 km reference altitude.
-
         :param altitude: Altitude
         :type altitude: u.Quantity
         :param model: Atmosphere model, defaults to AtmosphereModel.USSA76
         :type model: AtmosphereModel, optional
         :return: Density and scale height
         :rtype: ty.List[u.Quantity]
+
+        📌 **Notes**
+        
+        The given altitude is located in the values of the altitude ranges. For example, and altitude of 249 km will be
+        located in the range 200-250 but uses the value of 200 km reference altitude.
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 12.4 *Atmospheric Drag*
+        - :cite:`walter`
+            - Section 6.1.3 *Piecewise-Expoìonential Model*
         """
         
         # >>> Validation
