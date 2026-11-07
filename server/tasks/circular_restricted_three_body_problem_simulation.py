@@ -11,7 +11,9 @@ from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
 import spacelab.bodies as bd
-import spacelab.circular_restricted_three_body_problem as cr3bp
+import spacelab.enums as sl_enums
+import spacelab.models.orbit_parameters as sl_orbit_parameters
+import spacelab.n_body_models.circular_restricted_three_body_problem as cr3bp
 import spacelab.models.results as sl_results
 
 async def cr3bp_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
@@ -98,7 +100,7 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
         
         deltas = np.append(deltas, n_full_days * step + remainder)
 
-    parameters: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    parameters: sl_orbit_parameters.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
 
     lagrange_point: u.Quantity = get_lagrange_point(parameters=parameters, name=payload.lagrangePoint)
     
@@ -108,12 +110,12 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
     
     match payload.lagrangePoint:
         
-        case "L1": libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L1; is_eulerian = True
-        case "L2": libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L2; is_eulerian = True
-        case "L3": libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L3; is_eulerian = True
-        case "L4": libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L4; is_lagrangian = True
-        case "L5": libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L5; is_lagrangian = True
-        case _: libration_point: cr3bp.LibrationPoint = cr3bp.LibrationPoint.L1; is_eulerian = True
+        case "L1": libration_point = sl_enums.LibrationPoint.L1; is_eulerian = True
+        case "L2": libration_point = sl_enums.LibrationPoint.L2; is_eulerian = True
+        case "L3": libration_point = sl_enums.LibrationPoint.L3; is_eulerian = True
+        case "L4": libration_point = sl_enums.LibrationPoint.L4; is_lagrangian = True
+        case "L5": libration_point = sl_enums.LibrationPoint.L5; is_lagrangian = True
+        case _: libration_point = sl_enums.LibrationPoint.L1; is_eulerian = True
     
     offset: u.Quantity = np.array([payload.position.x, payload.position.y, payload.position.z], dtype=float) * u.km
 
@@ -366,25 +368,25 @@ def compute_cr3bp(payload: schema.SimulationModel, data: AppData) -> typing.Gene
 
     return info_data.model_dump()
 
-def get_lagrange_point(parameters: cr3bp.OrbitParametersCR3BP, name: str) -> u.Quantity:
+def get_lagrange_point(parameters: sl_orbit_parameters.OrbitParametersCR3BP, name: str) -> u.Quantity:
     """Retrieve the Lagrange point
 
     Args:
-        parameters (cr3bp.OrbitParametersCR3BP): Orbit parameters
+        parameters (sl_orbit_parameters.OrbitParametersCR3BP): Orbit parameters
         name (str): Lagrange point name
 
     Returns:
         u.Quantity: Lagrange point
     """
     
-    if name == "L1": return parameters.lagrangian_equilibrium_point_1.to(u.km)
+    if name == "L1": return parameters.libration_point_1.to(u.km)
     
-    if name == "L2": return parameters.lagrangian_equilibrium_point_2.to(u.km)
+    if name == "L2": return parameters.libration_point_2.to(u.km)
     
-    if name == "L3": return parameters.lagrangian_equilibrium_point_3.to(u.km)
+    if name == "L3": return parameters.libration_point_3.to(u.km)
     
-    if name == "L4": return parameters.lagrangian_equilibrium_point_4.to(u.km)
+    if name == "L4": return parameters.libration_point_4.to(u.km)
     
-    if name == "L5": return parameters.lagrangian_equilibrium_point_5.to(u.km)
+    if name == "L5": return parameters.libration_point_5.to(u.km)
     
     raise ValueError("Unsupported Lagrange point")

@@ -4,8 +4,6 @@ import numpy as np
 import scipy.integrate as ode
 import typing as ty
 
-import spacelab.common as common
-
 import spacelab.bodies as sl_bodies
 import spacelab.enums as sl_enums
 import spacelab.utils.logger as sl_logger
@@ -444,17 +442,23 @@ class Orbit:
         
         This function integrates the classical two-body equations:
 
-            :math:`\\frac{dx}{dt}   = v_x`
+        .. math::
+        
+            \\begin{aligned}
+        
+            \\frac{dx}{dt}   = v_x
             
-            :math:`\\frac{dy}{dt}   = v_y`
+            \\frac{dy}{dt}   = v_y
             
-            :math:`\\frac{dz}{dt}   = v_z`
+            \\frac{dz}{dt}   = v_z
 
-            :math:`\\frac{dv_x}{dt} = - \\mu \\frac{x}{r^3}`
+            \\frac{dv_x}{dt} = - \\mu \\frac{x}{r^3}
             
-            :math:`\\frac{dv_y}{dt} = - \\mu \\frac{y}{r^3}`
+            \\frac{dv_y}{dt} = - \\mu \\frac{y}{r^3}
             
-            :math:`\\frac{dv_z}{dt} = - \\mu \\frac{z}{r^3}`
+            \\frac{dv_z}{dt} = - \\mu \\frac{z}{r^3}
+            
+            \\end{aligned}
 
         where :math:`\\mu` is the gravitational parameter of the attractor.
         
@@ -516,7 +520,7 @@ class Orbit:
         
         :param t: Time (unused, included for ODE solver compatibility)
         :type t: float
-        :param X: State vector [position(x, y, z), velocity(v_x, v_y, v_z), mass(m)]
+        :param X: State vector :math:`[\\vec{r} = (x, y, z), \\vec{v} = (v_x, v_y, v_z), m]`
         :type X: np.ndarray
         :param thrust: Thrust magnitude [N]
         :type thrust: float
@@ -542,19 +546,25 @@ class Orbit:
         
         This function integrates the classical two-body equations with Tsiolkovsky's rocket equation:
 
-            :math:`\\frac{dx}{dt}   = v_x`
-            
-            :math:`\\frac{dy}{dt}   = v_y`
-            
-            :math:`\\frac{dz}{dt}   = v_z`
+        .. math::
 
-            :math:`\\frac{dv_x}{dt} = - \\mu \\frac{x}{r^3} + a^T_x`
+            \\begin{aligned}
             
-            :math:`\\frac{dv_y}{dt} = - \\mu \\frac{y}{r^3} + a^T_y`
+            \\frac{dx}{dt}   = v_x
             
-            :math:`\\frac{dv_z}{dt} = - \\mu \\frac{z}{r^3} + a^T_z`
+            \\frac{dy}{dt}   = v_y
             
-            :math:`\\frac{dm}{dt}   = - \\frac{T}{I_{sp} g_0}`
+            \\frac{dz}{dt}   = v_z
+
+            \\frac{dv_x}{dt} = - \\mu \\frac{x}{r^3} + a^T_x
+            
+            \\frac{dv_y}{dt} = - \\mu \\frac{y}{r^3} + a^T_y
+            
+            \\frac{dv_z}{dt} = - \\mu \\frac{z}{r^3} + a^T_z
+            
+            \\frac{dm}{dt}   = - \\frac{T}{I_{sp} g_0}
+            
+            \\end{aligned}
 
         where :math:`\\mu` is the gravitational parameter of the attractor.
         

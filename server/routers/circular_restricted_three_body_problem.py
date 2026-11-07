@@ -7,7 +7,8 @@ import schemas.circular_restricted_three_body_problem_schema as schema
 import tasks.circular_restricted_three_body_problem_simulation as cr3bp_simulation
 
 import spacelab.bodies as bd
-import spacelab.circular_restricted_three_body_problem as cr3bp
+import spacelab.models.orbit_parameters as sl_orbit_parameters
+import spacelab.n_body_models.circular_restricted_three_body_problem as cr3bp
 
 from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
@@ -75,7 +76,7 @@ async def put_cr3bp_orbit_parameters(data: schema.OrbitParametersInModelInfo) ->
     body_1: bd.Attractor = bd.Attractor(data.body1.lower())
     body_2: bd.Attractor = bd.Attractor(data.body2.lower())
 
-    parameters: cr3bp.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
+    parameters: sl_orbit_parameters.OrbitParametersCR3BP = cr3bp.Orbit.orbit_parameters(body_1=body_1, body_2=body_2)
     
     result: schema.OrbitParametersOutModelInfo = schema.OrbitParametersOutModelInfo(
         inertialAngularVelocity=parameters.inertial_angular_velocity.to_value(u.deg / u.day),
@@ -86,11 +87,11 @@ async def put_cr3bp_orbit_parameters(data: schema.OrbitParametersInModelInfo) ->
         bodyPosition1=parameters.body_position_1.to_value(u.km),
         bodyPosition2=parameters.body_position_2.to_value(u.km),
         bodyDistance=parameters.body_distance.to_value(u.km),
-        lagrangianPoint1=parameters.lagrangian_equilibrium_point_1.to_value(u.km).tolist(),
-        lagrangianPoint2=parameters.lagrangian_equilibrium_point_2.to_value(u.km).tolist(),
-        lagrangianPoint3=parameters.lagrangian_equilibrium_point_3.to_value(u.km).tolist(),
-        lagrangianPoint4=parameters.lagrangian_equilibrium_point_4.to_value(u.km).tolist(),
-        lagrangianPoint5=parameters.lagrangian_equilibrium_point_5.to_value(u.km).tolist()
+        lagrangianPoint1=parameters.libration_point_1.to_value(u.km).tolist(),
+        lagrangianPoint2=parameters.libration_point_2.to_value(u.km).tolist(),
+        lagrangianPoint3=parameters.libration_point_3.to_value(u.km).tolist(),
+        lagrangianPoint4=parameters.libration_point_4.to_value(u.km).tolist(),
+        lagrangianPoint5=parameters.libration_point_5.to_value(u.km).tolist()
     )
 
     return fastapi.responses.JSONResponse(status_code=fastapi.status.HTTP_200_OK, content=result.model_dump())

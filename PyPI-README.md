@@ -70,6 +70,7 @@ The library provides algorithms commonly used in spacecraft engineering and orbi
 - Interplanetary trajectories
 - Planetary flyby analysis
 - Atmospheric models
+- Two-body and restricted three-body orbit propagation
 
 ## Models
 
@@ -82,6 +83,48 @@ The `spacelab.models` package provides shared data structures and physical model
 - Earth gravitational multipole coefficients for perturbation analysis
 
 Many model values use `astropy.units.Quantity` so calculations can retain and validate physical units.
+
+For example, create a unit-aware set of classical orbital elements:
+
+```python
+from astropy import units as u
+from spacelab.models.orbital_elements import OrbitalElements
+
+elements = OrbitalElements(
+  semimajor_axis=7000 * u.km,
+  eccentricity=0.01 * u.one,
+  inclination=28.5 * u.deg,
+)
+```
+
+## N-Body Models
+
+The `spacelab.n_body_models` package currently provides two-body and circular restricted three-body problem (CR3BP) models; it does not implement a general solver for an arbitrary number of mutually interacting bodies.
+
+- **Two-body orbits:** initialize from Cartesian position and velocity, then propagate to a time interval or epoch. Propagation supports optional rocket-motor thrust and maneuver controls.
+- **Universal-variable methods:** convert Cartesian states to orbital parameters and propagate position and velocity with Lagrange coefficients across conic orbit types.
+- **CR3BP:** initialize a spacecraft state relative to two primary bodies; calculate the five libration points and zero-velocity curves; and propagate in dimensional or dimensionless form, including around libration points.
+
+For example, initialize an Earth orbit from Cartesian state vectors and propagate it for 60 seconds:
+
+```python
+import numpy as np
+from astropy import units as u
+from astropy.time import TimeDelta
+from spacelab.bodies import Attractor
+from spacelab.n_body_models.two_body_problem import Orbit
+
+orbit = Orbit()
+orbit.from_cartesian(
+  attractor=Attractor.EARTH,
+  position=np.array([7000, 0, 0]) * u.km,
+  velocity=np.array([0, 7.5, 0]) * u.km / u.s,
+)
+
+result = orbit.propagate_for(TimeDelta(60 * u.s))
+if result.success:
+  print(result.position_x[-1], result.position_y[-1], result.position_z[-1])
+```
 
 ## Installation
 
