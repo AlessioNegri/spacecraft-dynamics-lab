@@ -13,6 +13,8 @@ import spacelab.physical_constants as sl_physical_constants
 import spacelab.utils.logger as sl_logger
 import spacelab.utils.validator as sl_validator
 
+error_ready: str = "'Orbit' object is not ready"
+
 class Orbit:
     """
     This class implements a **Generic Orbit** model, which is based on the **circular restricted three-body problem**.
@@ -411,7 +413,7 @@ class Orbit:
         
         if not self.ready:
             
-            sl_logger.logger.error("'Orbit' object is not ready")
+            sl_logger.logger.error(error_ready)
             
             return result
         
@@ -508,7 +510,7 @@ class Orbit:
         
         if not self.ready:
             
-            sl_logger.logger.error("'Orbit' object is not ready")
+            sl_logger.logger.error(error_ready)
             
             return result
         
@@ -583,7 +585,7 @@ class Orbit:
         
         if not self.ready:
             
-            sl_logger.logger.error("'Orbit' object is not ready")
+            sl_logger.logger.error(error_ready)
             
             return result
         
@@ -658,7 +660,7 @@ class Orbit:
         
         if not self.ready:
             
-            sl_logger.logger.error("'Orbit' object is not ready")
+            sl_logger.logger.error(error_ready)
             
             return result
         

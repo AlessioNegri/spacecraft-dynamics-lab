@@ -15,7 +15,7 @@ import spacelab.enums as ae
 import spacelab.orbit_3d as o3d
 import spacelab.orbital_maneuvers as om
 import spacelab.n_body_models.two_body_problem as tbp
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 import spacelab.models.results as sl_results
 
 # --- UTILITY ---
@@ -121,22 +121,22 @@ def calculate_simulation_time(attractor: bodies.Attractor,
     
     if orbital_elements.eccentricity < 1:
         
-        t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_1,
+        t_1: u.Quantity = op.elliptical_orbit_time(true_anomaly=true_anomaly_1,
                                                                    period=orbital_elements.calc_orbital_period(attractor),
                                                                    eccentricity=orbital_elements.eccentricity)
         
-        t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_2,
+        t_2: u.Quantity = op.elliptical_orbit_time(true_anomaly=true_anomaly_2,
                                                                    period=orbital_elements.calc_orbital_period(attractor),
                                                                    eccentricity=orbital_elements.eccentricity)
     
     else:
         
-        t_1: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=true_anomaly_1,
+        t_1: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=true_anomaly_1,
                                                                    specific_angular_momentum=orbital_elements.specific_angular_momentum,
                                                                    eccentricity=orbital_elements.eccentricity,
                                                                    attractor=attractor)
         
-        t_2: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=true_anomaly_2,
+        t_2: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=true_anomaly_2,
                                                                    specific_angular_momentum=orbital_elements.specific_angular_momentum,
                                                                    eccentricity=orbital_elements.eccentricity,
                                                                    attractor=attractor)

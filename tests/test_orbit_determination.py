@@ -5,7 +5,7 @@ import numpy as np
 import spacelab.bodies as bd
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.n_body_models.two_body_problem as tbp
@@ -48,7 +48,7 @@ def test_lambert():
                                                                            position=r_1,
                                                                            velocity=v_1)
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe.true_anomaly,
+    t_1: u.Quantity = op.elliptical_orbit_time(true_anomaly=oe.true_anomaly,
                                                                period=orb_par.period,
                                                                eccentricity=oe.eccentricity)
     

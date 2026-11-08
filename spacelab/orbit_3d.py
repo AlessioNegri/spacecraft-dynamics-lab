@@ -27,7 +27,7 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.models.orbit_parameters as sl_orbit_parameters
-import spacelab.orbital_position as orbital_position
+import spacelab.orbit.position as orbital_position
 import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.n_body_models.two_body_problem as two_body_problem
 import spacelab.orbit_determination as orbit_determination
@@ -819,12 +819,11 @@ class Orbit3D():
         
         if ecc == 0:
             
-            t_0 = orbital_position.OrbitalPosition.circular_orbit_time(true_anomaly=orbital_elements.true_anomaly,
-                                                                       period=op.period)
+            t_0 = orbital_position.circular_orbit_time(true_anomaly=orbital_elements.true_anomaly, period=op.period)
             
         elif ecc < 1.0:
             
-            t_0 = orbital_position.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements.true_anomaly,
+            t_0 = orbital_position.elliptical_orbit_time(true_anomaly=orbital_elements.true_anomaly,
                                                                          period=op.period,
                                                                          eccentricity=orbital_elements.eccentricity)
         
@@ -838,13 +837,12 @@ class Orbit3D():
         
         if ecc == 0:
             
-            ta = orbital_position.OrbitalPosition.circular_orbit_true_anomaly(time_of_flight=t, period=op.period)
+            ta = orbital_position.circular_orbit_true_anomaly(time_of_flight=t, period=op.period)
             
         elif ecc < 1.0:
             
-            ta = orbital_position.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t,
-                                                                                period=op.period,
-                                                                                eccentricity=orbital_elements.eccentricity)
+            ta = orbital_position.elliptical_orbit_true_anomaly(
+                time_of_flight=t, period=op.period, eccentricity=orbital_elements.eccentricity)
         
         # >>> b) New Orbital Elements
         

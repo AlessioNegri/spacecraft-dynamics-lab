@@ -30,7 +30,7 @@ import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.physical_constants as constants
 import spacelab.orbit_3d as o3d
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 import spacelab.orbit_determination as od
 import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.n_body_models.lagrange_coefficients as lc
@@ -506,7 +506,7 @@ class OrbitalManeuvers():
         
         # >>> 2. Time from A (pericenter - chaser) to B (target) placed at true_anomaly_target w.r.t. A
         
-        t_ab: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
+        t_ab: u.Quantity = op.elliptical_orbit_time(true_anomaly=true_anomaly_target,
                                                                     period=T_1 * u.s,
                                                                     eccentricity=orbital_elements.eccentricity)
         
@@ -701,13 +701,13 @@ class OrbitalManeuvers():
         
         if e_t < 1:
             
-            t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
+            t_1: u.Quantity = op.elliptical_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
                                                                     period=period_t * u.s,
                                                                     eccentricity=e_t * u.one)
         
         else:
             
-            t_1: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
+            t_1: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=orbital_elements_1.true_anomaly,
                                                                        specific_angular_momentum=h_t * u.km**2 / u.s,
                                                                        eccentricity=e_t * u.one,
                                                                        attractor=attractor)
@@ -720,13 +720,13 @@ class OrbitalManeuvers():
         
         if e_t < 1:
             
-            t_2: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
+            t_2: u.Quantity = op.elliptical_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
                                                                     period=period_t * u.s,
                                                                     eccentricity=e_t * u.one)
             
         else:
             
-            t_2: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
+            t_2: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=orbital_elements_2.true_anomaly,
                                                                        specific_angular_momentum=h_t * u.km**2 / u.s,
                                                                        eccentricity=e_t * u.one,
                                                                        attractor=attractor)
@@ -1048,15 +1048,13 @@ class OrbitalManeuvers():
         
         # >>> 3. New Perifocal Frame state vector for Target T after dt
         
-        t_t: float = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=true_anomaly_target,
-                                                              period=T * u.s,
-                                                              eccentricity=e * u.one).to_value(u.s)
+        t_t: float = op.elliptical_orbit_time(
+            true_anomaly=true_anomaly_target, period=T * u.s, eccentricity=e * u.one).to_value(u.s)
         
         t_t_new: float = t_t + delta_time.to_value(u.s)
         
-        ta_t_new: float = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_t_new * u.s,
-                                                                           period=T * u.s,
-                                                                           eccentricity=e * u.one).to_value(u.rad)
+        ta_t_new: float = op.elliptical_orbit_true_anomaly(
+            time_of_flight=t_t_new * u.s, period=T * u.s, eccentricity=e * u.one).to_value(u.rad)
         
         r_t: float = h**2 / mu * 1 / (1 + e * np.cos(ta_t_new)) * np.array([np.cos(ta_t_new), np.sin(ta_t_new), 0])
         

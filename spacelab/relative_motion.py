@@ -23,7 +23,7 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.orbit_3d as o3d
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 import spacelab.n_body_models.lagrange_coefficients as lc
 import spacelab.orbit_determination as od
 
@@ -255,7 +255,7 @@ class RelativeMotion():
         
         # >>> 3. Target initial time
         
-        t_0: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=orbital_elements_target.true_anomaly,
+        t_0: u.Quantity = op.elliptical_orbit_time(true_anomaly=orbital_elements_target.true_anomaly,
                                                                    period=t_target,
                                                                    eccentricity=orbital_elements_target.eccentricity)
         

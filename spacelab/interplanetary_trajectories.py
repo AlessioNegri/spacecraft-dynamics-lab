@@ -23,7 +23,7 @@ import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 
 from spacelab.enums import FlybySide
 
@@ -243,7 +243,7 @@ class InterplanetaryTrajectories():
         
         theta: float = np.arccos((p / r_soi.to_value(u.km) - 1) / e)
         
-        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
+        tof: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
                                                                    specific_angular_momentum=h * u.km**2 / u.s,
                                                                    eccentricity=e * u.one,
                                                                    attractor=departure_planet)
@@ -442,7 +442,7 @@ class InterplanetaryTrajectories():
         
         theta_hyp: float = np.arccos((p / r_soi.to_value(u.km) - 1) / e_hyp)
         
-        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
+        tof: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
                                                                    specific_angular_momentum=h_hyp * u.km**2 / u.s,
                                                                    eccentricity=e_hyp * u.one,
                                                                    attractor=arrival_planet)
@@ -522,7 +522,7 @@ class InterplanetaryTrajectories():
         
         theta_hyp: float = np.arccos((p / r_soi.to_value(u.km) - 1) / e_hyp)
         
-        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
+        tof: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=theta_hyp * u.rad,
                                                                    specific_angular_momentum=h_hyp * u.km**2 / u.s,
                                                                    eccentricity=e_hyp * u.one,
                                                                    attractor=arrival_planet)
@@ -697,7 +697,7 @@ class InterplanetaryTrajectories():
         
         theta: float = np.arccos((p / r_soi.to_value(u.km) - 1) / e_hyp)
         
-        tof: u.Quantity = op.OrbitalPosition.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
+        tof: u.Quantity = op.hyperbolic_orbit_time(true_anomaly=theta * u.rad,
                                                                    specific_angular_momentum=h_hyp * u.km**2 / u.s,
                                                                    eccentricity=e_hyp * u.one,
                                                                    attractor=arrival_planet)
@@ -893,9 +893,7 @@ class InterplanetaryTrajectories():
         
         t: u.Quantity = mean_anomaly.to(u.rad) * period / (2 * np.pi * u.rad)
         
-        ta: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t,
-                                                                          period=period,
-                                                                          eccentricity=eccentricity)
+        ta: u.Quantity = op.elliptical_orbit_true_anomaly(time_of_flight=t, period=period, eccentricity=eccentricity)
         
         # >>> 7. State vector
         

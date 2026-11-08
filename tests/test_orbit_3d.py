@@ -6,7 +6,7 @@ import spacelab.bodies as bodies
 import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.n_body_models.two_body_problem as tbp
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 import spacelab.orbit_3d as o3d
 
 def test_right_ascension_declination():
@@ -137,13 +137,13 @@ def test_example_4_11():
     
     n: float = 2 * np.pi / parameters.period.to_value(u.s) # ? Mean motion [rad/s]
     
-    t_1: u.Quantity = op.OrbitalPosition.elliptical_orbit_time(oe.true_anomaly, parameters.period, oe.eccentricity)
+    t_1: u.Quantity = op.elliptical_orbit_time(oe.true_anomaly, parameters.period, oe.eccentricity)
     
     assert np.isclose(t_1.to_value(u.s), 631.00, atol=1e-0)
     
     t_2: u.Quantity = t_1 + 96 * u.hour
     
-    nu_32: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(t_2, parameters.period, oe.eccentricity)
+    nu_32: u.Quantity = op.elliptical_orbit_true_anomaly(t_2, parameters.period, oe.eccentricity)
     
     assert np.isclose(nu_32.to_value(u.deg), 360-148.75, atol=1e-1)
     

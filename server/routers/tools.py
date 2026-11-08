@@ -12,7 +12,7 @@ import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbit_3d as o3d
 import spacelab.orbit_determination as od
-import spacelab.orbital_position as op
+import spacelab.orbit.position as op
 
 # --- HTTP ---
 
@@ -306,13 +306,11 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
 
     if oe.eccentricity.to_value(u.one) == 0:
         
-        t_0 = op.OrbitalPosition.circular_orbit_time(true_anomaly=oe.true_anomaly, period=period)
+        t_0 = op.circular_orbit_time(true_anomaly=oe.true_anomaly, period=period)
         
     else:
         
-        t_0 = op.OrbitalPosition.elliptical_orbit_time(true_anomaly=oe.true_anomaly,
-                                                       period=period,
-                                                       eccentricity=oe.eccentricity)
+        t_0 = op.elliptical_orbit_time(true_anomaly=oe.true_anomaly, period=period, eccentricity=oe.eccentricity)
     
     step_time: float = duration.to_value(u.s) / max(samples - 1, 1)
 
@@ -332,13 +330,12 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
         
             if oe.eccentricity.to_value() == 0:
                 
-                ta_i: u.Quantity = op.OrbitalPosition.circular_orbit_true_anomaly(time_of_flight=t_i, period=period)
+                ta_i: u.Quantity = op.circular_orbit_true_anomaly(time_of_flight=t_i, period=period)
                 
             else:
                 
-                ta_i: u.Quantity = op.OrbitalPosition.elliptical_orbit_true_anomaly(time_of_flight=t_i,
-                                                                                    period=period,
-                                                                                    eccentricity=oe.eccentricity)
+                ta_i: u.Quantity = op.elliptical_orbit_true_anomaly(
+                    time_of_flight=t_i, period=period, eccentricity=oe.eccentricity)
         
         oe.true_anomaly = ta_i
         
