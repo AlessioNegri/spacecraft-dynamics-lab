@@ -42,21 +42,28 @@ class OrbitalElements:
     the next three describe the orientation of the orbital plane + orientation in the orbital plane (*angular elements*),
     and the sixth parameter determines the location on the orbit (*orbital state sequencer*):
     
-        - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
-        - Eccentricity (:math:`e`)
-        - Inclination (:math:`i`)
-        - Right ascension of ascending node (:math:`\\Omega`)
-        - Argument of periapsis (:math:`\\omega`)
-        - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
+    - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
+    - Eccentricity (:math:`e`)
+    - Inclination (:math:`i`)
+    - Right ascension of ascending node (:math:`\\Omega`)
+    - Argument of periapsis (:math:`\\omega`)
+    - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
     
     In **Keplerian Elements**, the sequencer is replaced by one of the followings:
     
-        - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
-        - eccentricity (:math:`e`)
-        - inclination (:math:`i`)
-        - right ascension of ascending node (:math:`\\Omega`)
-        - argument of periapsis (:math:`\\omega`)
-        - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
+    - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
+    - eccentricity (:math:`e`)
+    - inclination (:math:`i`)
+    - right ascension of ascending node (:math:`\\Omega`)
+    - argument of periapsis (:math:`\\omega`)
+    - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
+    
+    The following classification of orbits according to the orbit inclination is common:
+    
+    - :math:`i = 0°` *Equatorial Orbit*
+    - :math:`0° < i < 90°` *Prograde Orbit*
+    - :math:`i \\approx 90°` *Polar Orbit*
+    - :math:`i > 90°` *Retrograde Orbit*
     
     📖 **References**
     
@@ -412,21 +419,21 @@ class EquinoctialOrbitalElements:
     the next three describe the orientation of the orbital plane + orientation in the orbital plane (*angular elements*),
     and the sixth parameter determines the location on the orbit (*orbital state sequencer*):
     
-        - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
-        - Eccentricity (:math:`e`)
-        - Inclination (:math:`i`)
-        - Right ascension of ascending node (:math:`\\Omega`)
-        - Argument of periapsis (:math:`\\omega`)
-        - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
+    - Semi-major axis (:math:`a`) / Specific angular momentum (:math:`h`)
+    - Eccentricity (:math:`e`)
+    - Inclination (:math:`i`)
+    - Right ascension of ascending node (:math:`\\Omega`)
+    - Argument of periapsis (:math:`\\omega`)
+    - time after periapsis passage (:math:`t - t_p`) or mean anomaly (:math:`M = n * (t - t_p)`)
     
     In **Keplerian Elements**, the sequencer is replaced by one of the followings:
     
-        - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
-        - eccentricity (:math:`e`)
-        - inclination (:math:`i`)
-        - right ascension of ascending node (:math:`\\Omega`)
-        - argument of periapsis (:math:`\\omega`)
-        - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
+    - semimajor axis (:math:`a`) / specific angular momentum (:math:`h`)
+    - eccentricity (:math:`e`)
+    - inclination (:math:`i`)
+    - right ascension of ascending node (:math:`\\Omega`)
+    - argument of periapsis (:math:`\\omega`)
+    - true anomaly (:math:`\\theta`) or eccentric anomaly (:math:`E`) or hyperbolic anomaly (:math:`F`) or universal anomaly (:math:`G`)
     
     📖 **References**
     

@@ -29,7 +29,8 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.physical_constants as constants
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as o3d
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit.position as op
 import spacelab.orbit_determination as od
 import spacelab.n_body_models.two_body_problem as tbp
@@ -58,6 +59,8 @@ class OrbitalManeuvers():
 
         Returns:
             u.Quantity: Launch azimuth
+            
+            kluever => 3.6 Ground Tracks
         """
         
         common.check_angle(launch_site_latitude)
@@ -1062,11 +1065,11 @@ class OrbitalManeuvers():
         
         # >>> 4. Lambert problem solution for the transfer from C to T in time dt
         
-        r_c: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
-                                                                                         perifocal_position=r_c * u.km)
+        r_c: u.Quantity = sl_representation.perifocal_to_geocentric_equatorial_position_vector(
+            orbital_elements=orbital_elements, perifocal_position=r_c * u.km)
         
-        r_t: u.Quantity = o3d.Orbit3D.perifocal_to_geocentric_equatorial_position_vector(orbital_elements=orbital_elements,
-                                                                                         perifocal_position=r_t * u.km)
+        r_t: u.Quantity = sl_representation.perifocal_to_geocentric_equatorial_position_vector(
+            orbital_elements=orbital_elements, perifocal_position=r_t * u.km)
         
         if orbital_elements.inclination <= 90.0 * u.deg:
             
@@ -2112,7 +2115,7 @@ class OrbitalManeuvers():
             
             # >>> 2. Calculate orbital elements
             
-            oe: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+            oe: OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
             
             # >>> 3. Update state vector
             

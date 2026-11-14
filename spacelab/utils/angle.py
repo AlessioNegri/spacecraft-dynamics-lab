@@ -17,7 +17,7 @@ def wrap_angle(angle: u.Quantity, low: u.Quantity = 0 * u.deg, high: u.Quantity 
     :rtype: u.Quantity
     """
     
-    err_msg: str | None = sl_validator.validate_quantity_angle("wrapped angle", angle)
+    err_msg: str | None = sl_validator.validate_quantity("wrapped angle", angle, u.deg)
     
     if err_msg != None: sl_logger.logger.warning(err_msg); return 0 * u.deg
     

@@ -9,7 +9,7 @@ import tasks.perturbed_orbit as perturbed_orbit
 import astropy.units as u
 
 import spacelab.orbital_perturbations as op
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.bodies as bodies
 
 from common.app_data import AppData
@@ -76,7 +76,7 @@ async def put_nodal_regression_rate(data: schema.NodalRegressionInModelInfo) -> 
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=data.orbitalElements.sma * u.km,
                                                   eccentricity=data.orbitalElements.ecc * u.one,
                                                   inclination=data.orbitalElements.inc * u.deg,
@@ -108,7 +108,7 @@ async def put_apsidal_rotation_rate(data: schema.ApsidalRotationInModelInfo) -> 
 
     attractor = bodies.Attractor(data.attractor.lower())
 
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=data.orbitalElements.sma * u.km,
                                                   eccentricity=data.orbitalElements.ecc * u.one,
                                                   inclination=data.orbitalElements.inc * u.deg,
@@ -140,7 +140,7 @@ async def put_sun_synchronous_inclination(data: schema.SunSynchronousInModelInfo
 
     attractor = bodies.Attractor(data.attractor.lower())
 
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=data.orbitalElements.sma * u.km,
                                                   eccentricity=data.orbitalElements.ecc * u.one,
                                                   inclination=data.orbitalElements.inc * u.deg,

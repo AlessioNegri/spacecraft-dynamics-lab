@@ -6,9 +6,9 @@ import copy
 import numpy as np
 
 import spacelab.bodies as bd
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbital_maneuvers as om
-import spacelab.n_body_models.two_body_problem as tbp
 
 rocket_motor: om.RocketMotor = om.RocketMotor(specific_impulse=300 * u.s,
                                               thrust=400 * u.N,
@@ -30,7 +30,7 @@ def test_hohmann_transfer_1():
     r_p_1: u.Quantity = (6378 + 480) * u.km
     r_a_1: u.Quantity = (6378 + 800) * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_1 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_1 + r_a_1),
         eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one,
@@ -43,7 +43,7 @@ def test_hohmann_transfer_1():
     r_p_2: u.Quantity = (6378 + 16000) * u.km
     r_a_2: u.Quantity = (6378 + 16000) * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_2 + r_a_2),
         eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one,
@@ -81,12 +81,12 @@ def test_hohmann_transfer_2():
     r: u.Quantity = np.array([-(6378 + 5000), 0, 0]) * u.km
     v: u.Quantity = np.array([0, -10, 0]) * u.km / u.s
     
-    oe_1: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe_1: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     r_p_2: u.Quantity = (6378 + 500) * u.km
     r_a_2: u.Quantity = (6378 + 500) * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_2 + r_a_2),
         eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one,
@@ -123,7 +123,7 @@ def test_hohmann_transfer_3():
     r_p_1: u.Quantity = (6378 + 580) * u.km
     r_a_1: u.Quantity = (6378 + 17350) * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_1 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_1 + r_a_1),
         eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one,
@@ -136,7 +136,7 @@ def test_hohmann_transfer_3():
     r_p_2: u.Quantity = (6378 + 31000) * u.km
     r_a_2: u.Quantity = (6378 + 31000) * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_2 + r_a_2),
         eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one,
@@ -164,8 +164,8 @@ def test_hohmann_transfer_4():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 400) * u.km)
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 10000) * u.km)
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=(6378 + 400) * u.km)
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=(6378 + 10000) * u.km)
     
     direction: om.HohmannDirection = om.HohmannDirection.PERICENTER_APOCENTER
     
@@ -187,8 +187,8 @@ def test_hohmann_transfer_4():
     tof_1: float = maneuver_1.flight_time_list[0].to_value(u.s)
     tof_2: float = maneuver_2.flight_time_list[0].to_value(u.s)
     
-    oe_1: o3d.OrbitalElements = maneuver_1.orbital_elements_list[0]
-    oe_2: o3d.OrbitalElements = maneuver_2.orbital_elements_list[0]
+    oe_1: sl_orbital_elements.OrbitalElements = maneuver_1.orbital_elements_list[0]
+    oe_2: sl_orbital_elements.OrbitalElements = maneuver_2.orbital_elements_list[0]
     
     assert np.isclose(dv_1[0].to_value(u.km / u.s) + dv_1[1].to_value(u.km / u.s), dv_2[0].to_value(u.km / u.s), atol=1e-4)
     assert np.isclose(tof_1, tof_2, atol=1e-4)
@@ -210,7 +210,7 @@ def test_bi_elliptic_hohmann_transfer():
     
     r_1: u.Quantity = 7000 * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_1 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=r_1,
         eccentricity=0 * u.one,
@@ -222,7 +222,7 @@ def test_bi_elliptic_hohmann_transfer():
     
     r_2: u.Quantity = 105000 * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=r_2,
         eccentricity=0 * u.one,
@@ -270,7 +270,7 @@ def test_phasing_maneuver_1():
     r_p: u.Quantity = 6800 * u.km
     r_a: u.Quantity = 13600 * u.km
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=60116 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p + r_a),
         eccentricity=(r_a - r_p) / (r_a + r_p) * u.one,
@@ -310,7 +310,7 @@ def test_phasing_maneuver_2():
     
     r: u.Quantity = 42164 * u.km
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=np.sqrt(mu * r.to_value(u.km)) * u.km**2 / u.s,
         semimajor_axis=r,
         eccentricity=0 * u.one,
@@ -349,7 +349,7 @@ def test_non_hohmann_transfer_1():
     r_p_1: u.Quantity = 10000 * u.km
     r_a_1: u.Quantity = 20000 * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_1 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=0.5 * (r_p_1 + r_a_1),
         eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one,
@@ -361,7 +361,7 @@ def test_non_hohmann_transfer_1():
     
     r_2: u.Quantity = 6378 * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         specific_angular_momentum=0 * u.km**2 / u.s,
         semimajor_axis=r_2,
         eccentricity=0 * u.one,
@@ -393,9 +393,9 @@ def test_non_hohmann_transfer_2():
         propellant_mass=0 * u.kg
     )
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=2.5 * 6378 * u.km, true_anomaly=67.55 * u.deg)
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=2.5 * 6378 * u.km, true_anomaly=67.55 * u.deg)
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=6 * 6378 * u.km, true_anomaly=139.47 * u.deg)
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=6 * 6378 * u.km, true_anomaly=139.47 * u.deg)
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.non_hohmann_transfer(attractor=attractor,
                                                                            rocket_motor=rocket_motor,
@@ -421,13 +421,13 @@ def test_apse_line_rotation_from_eta():
     r_p_1: u.Quantity = 8000 * u.km
     r_a_1: u.Quantity = 16000 * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
                                                     eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one)
     
     r_p_2: u.Quantity = 7000 * u.km
     r_a_2: u.Quantity = 21000 * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
                                                     eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one,
                                                     argument_of_periapsis=25 * u.deg)
     
@@ -458,7 +458,7 @@ def test_apse_line_rotation_from_true_anomaly():
     r_p: u.Quantity = 7000 * u.km
     r_a: u.Quantity = 17000 * u.km
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p + r_a),
+    oe = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p + r_a),
                                                   eccentricity=(r_a - r_p) / (r_a + r_p) * u.one)
     
     dv: u.Quantity = 2 * u.km / u.s
@@ -490,7 +490,7 @@ def test_chase_maneuver():
     r_p: u.Quantity = 8100 * u.km
     r_a: u.Quantity = 18900 * u.km
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p + r_a),
+    oe = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p + r_a),
                                                   eccentricity=(r_a - r_p) / (r_a + r_p) * u.one,
                                                   true_anomaly=45 * u.deg)
     
@@ -526,15 +526,15 @@ def test_launch_azimuth():
 def test_one_impulse_maneuver():
     """EXAMPLE 8.1.6 - BOOK 4"""
     
-    oe_LEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=6578.14 * u.km,
+    oe_LEO = sl_orbital_elements.OrbitalElements(semimajor_axis=6578.14 * u.km,
                                                       inclination=28 * u.deg,
                                                       right_ascension_of_ascending_node=180 * u.deg)
     
-    oe_GEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=42166 * u.km,
+    oe_GEO = sl_orbital_elements.OrbitalElements(semimajor_axis=42166 * u.km,
                                                       inclination=3 * u.deg,
                                                       right_ascension_of_ascending_node=280 * u.deg)
     
-    oe_GTO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
+    oe_GTO = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
                                                       eccentricity=(42166 - 6578.14) / (42166 + 6578.14) * u.one,
                                                       inclination=3 * u.deg,
                                                       right_ascension_of_ascending_node=180 * u.deg)
@@ -560,9 +560,9 @@ def test_one_impulse_maneuver():
 def test_inclination_change_maneuver():
     """EXAMPLE 7.7 - BOOK 2"""
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 20180) * u.km, inclination=41 * u.deg)
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=(6378 + 20180) * u.km, inclination=41 * u.deg)
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=(6378 + 20180) * u.km, inclination=55 * u.deg)
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=(6378 + 20180) * u.km, inclination=55 * u.deg)
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.inclination_change_maneuver(attractor=bd.Attractor.EARTH,
                                                                                   rocket_motor=rocket_motor,
@@ -574,11 +574,11 @@ def test_inclination_change_maneuver():
 def test_raan_change_maneuver():
     """EXAMPLE 8.1.6 - BOOK 4"""
     
-    oe_GEO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=42166 * u.km,
+    oe_GEO = sl_orbital_elements.OrbitalElements(semimajor_axis=42166 * u.km,
                                                       inclination=3 * u.deg,
                                                       right_ascension_of_ascending_node=280 * u.deg)
     
-    oe_GTO: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
+    oe_GTO = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (6578.14 + 42166) * u.km,
                                                       eccentricity=(42166 - 6578.14) / (42166 + 6578.14) * u.one,
                                                       inclination=3 * u.deg,
                                                       right_ascension_of_ascending_node=180 * u.deg,
@@ -600,7 +600,7 @@ def test_raan_change_maneuver():
         
     assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 1.149, atol=1e-3)
     
-    oe_GEO_minus: o3d.OrbitalElements = copy.deepcopy(oe_GEO)
+    oe_GEO_minus: sl_orbital_elements.OrbitalElements = copy.deepcopy(oe_GEO)
     
     oe_GEO_minus.right_ascension_of_ascending_node = 180 * u.deg
         
@@ -617,12 +617,12 @@ def test_plane_change_maneuver_from_dihedral_angle_1():
     r_p_1: u.Quantity = 6678 * u.km
     r_a_1: u.Quantity = 42164 * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
                                                     eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one,
                                                     inclination=28 * u.deg,
                                                     true_anomaly=180 * u.deg)
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=42164 * u.km)
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=42164 * u.km)
     
     dihedral_angle: u.Quantity = oe_2.inclination - oe_1.inclination
     
@@ -634,14 +634,14 @@ def test_plane_change_maneuver_from_dihedral_angle_1():
     
     assert np.isclose(maneuver.delta_velocity_list[0].to_value(u.km / u.s), 1.8191, atol=1e-4)
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=6678 * u.km,
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=6678 * u.km,
                                                     inclination=28 * u.deg,
                                                     true_anomaly=180 * u.deg)
     
     r_p_2: u.Quantity = 6678 * u.km
     r_a_2: u.Quantity = 42164 * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
                                                     eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one)
     
     dihedral_angle: u.Quantity = oe_2.inclination - oe_1.inclination
@@ -660,7 +660,7 @@ def test_plane_change_maneuver_from_dihedral_angle_2():
     r_p_1: u.Quantity = (500 + 6378) * u.km
     r_a_1: u.Quantity = (10000 + 6378) * u.km
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
+    oe_1 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_1 + r_a_1),
                                                     eccentricity=(r_a_1 - r_p_1) / (r_a_1 + r_p_1) * u.one,
                                                     inclination=15 * u.deg,
                                                     true_anomaly=120 * u.deg)
@@ -668,7 +668,7 @@ def test_plane_change_maneuver_from_dihedral_angle_2():
     r_p_2: u.Quantity = (500 + 6378) * u.km
     r_a_2: u.Quantity = (10000 + 6378) * u.km
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
+    oe_2 = sl_orbital_elements.OrbitalElements(semimajor_axis=0.5 * (r_p_2 + r_a_2),
                                                     eccentricity=(r_a_2 - r_p_2) / (r_a_2 + r_p_2) * u.one,
                                                     true_anomaly=120 * u.deg)
     
@@ -696,7 +696,7 @@ def test_plane_change_maneuver_from_dihedral_angle_2():
 def test_plane_change_maneuver_from_raan_and_inclination():
     """PROJECT"""
     
-    oe_1: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_1 = sl_orbital_elements.OrbitalElements(
         semimajor_axis=10048 * u.km,
         eccentricity=0.1983 * u.dimensionless_unscaled,
         inclination=2.7794 * u.rad,
@@ -705,7 +705,7 @@ def test_plane_change_maneuver_from_raan_and_inclination():
         true_anomaly=1.3078 * u.rad
     )
     
-    oe_2: o3d.OrbitalElements = o3d.OrbitalElements(
+    oe_2 = sl_orbital_elements.OrbitalElements(
         semimajor_axis=10048 * u.km,
         eccentricity=0.1983 * u.dimensionless_unscaled,
         inclination=0.444 * u.rad,
@@ -1008,7 +1008,7 @@ def test_non_impulsive_maneuver_1():
                               maneuver.velocity_y.to_value(u.km / u.s),
                               maneuver.velocity_z.to_value(u.km / u.s)]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 16000 + 6378, atol=1e-0)
     assert np.isclose(oe.eccentricity.to_value(u.dimensionless_unscaled), 0.00867, atol=1e-5)
@@ -1064,9 +1064,7 @@ def test_non_impulsive_maneuver_2():
                               maneuver.velocity_y.to_value(u.km / u.s),
                               maneuver.velocity_z.to_value(u.km / u.s)]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                           position=r,
-                                                           velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 42164 - 15, atol=1e-0)
     assert np.isclose(oe.eccentricity.to_value(u.dimensionless_unscaled), 0.02346, atol=1e-5)

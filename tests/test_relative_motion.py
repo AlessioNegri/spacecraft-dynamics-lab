@@ -2,7 +2,8 @@ import astropy.units as u
 import numpy as np
 
 import spacelab.bodies as bd
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.relative_motion as rm
 
 def test_lvlh_kinematics_and_geocentric_equatorial_kinematics():
@@ -10,23 +11,23 @@ def test_lvlh_kinematics_and_geocentric_equatorial_kinematics():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=52059 * u.km**2 / u.s,
+    oe_target = sl_orbital_elements.OrbitalElements(specific_angular_momentum=52059 * u.km**2 / u.s,
                                                          eccentricity=0.025724 * u.dimensionless_unscaled,
                                                          inclination=60 * u.deg,
                                                          right_ascension_of_ascending_node=40 * u.deg,
                                                          argument_of_periapsis=30 * u.deg,
                                                          true_anomaly=40 * u.deg)
     
-    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
+    r_target, v_target = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
-    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=52362 * u.km**2 / u.s,
+    oe_chaser = sl_orbital_elements.OrbitalElements(specific_angular_momentum=52362 * u.km**2 / u.s,
                                                          eccentricity=0.0072696 * u.dimensionless_unscaled,
                                                          inclination=50 * u.deg,
                                                          right_ascension_of_ascending_node=40 * u.deg,
                                                          argument_of_periapsis=120 * u.deg,
                                                          true_anomaly=40 * u.deg)
     
-    r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_chaser)
+    r_chaser, v_chaser = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_chaser)
     
     kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor,
                                                    orbital_elements_target=oe_target,
@@ -68,7 +69,7 @@ def test_two_impulsive_rendezvous_maneuver_1():
     
     radius: float = bd.BODIES[attractor].R_E.to_value(u.km)
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements(inclination=40 * u.deg,
+    oe_target = sl_orbital_elements.OrbitalElements(inclination=40 * u.deg,
                                                          right_ascension_of_ascending_node=20 * u.deg,
                                                          argument_of_periapsis=0 * u.deg,
                                                          true_anomaly=60 * u.deg)
@@ -76,7 +77,7 @@ def test_two_impulsive_rendezvous_maneuver_1():
     oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 300) * u.km,
                                          apoapsis_radius=(radius + 300) * u.km)
     
-    oe_chaser: o3d.OrbitalElements = o3d.OrbitalElements(inclination=40.130 * u.deg,
+    oe_chaser = sl_orbital_elements.OrbitalElements(inclination=40.130 * u.deg,
                                                          right_ascension_of_ascending_node=19.819 * u.deg,
                                                          argument_of_periapsis=70.662 * u.deg,
                                                          true_anomaly=349.65 * u.deg)
@@ -98,12 +99,12 @@ def test_two_impulsive_rendezvous_maneuver_2():
     
     radius: float = bd.BODIES[attractor].R_E.to_value(u.km)
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements()
+    oe_target = sl_orbital_elements.OrbitalElements()
     
     oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 300) * u.km,
                                          apoapsis_radius=(radius + 300) * u.km)
     
-    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
+    r_target, v_target = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
     mu: float = bd.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
     
@@ -114,9 +115,8 @@ def test_two_impulsive_rendezvous_maneuver_2():
                                                                             position_rel_lvlh=np.array([20, 40, 0]) * u.km,
                                                                             velocity_rel_lvlh=np.array([0, y_dot, 0]) * u.km / u.s)
     
-    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                        position=r_chaser,
-                                                                        velocity=v_chaser)
+    oe_chaser: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_chaser, velocity=v_chaser)
     
     dv_tot, _, _, _ = rm.RelativeMotion.two_impulsive_rendezvous_maneuver(attractor=attractor,
                                                                           orbital_elements_target=oe_target,
@@ -132,21 +132,20 @@ def test_two_impulsive_rendezvous_maneuver_3():
     
     radius: float = bd.BODIES[attractor].R_E.to_value(u.km)
     
-    oe_target: o3d.OrbitalElements = o3d.OrbitalElements()
+    oe_target = sl_orbital_elements.OrbitalElements()
     
     oe_target.update_from_periapsis_apoapsis(periapsis_radius=(radius + 350) * u.km,
                                          apoapsis_radius=(radius + 350) * u.km)
     
-    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
+    r_target, v_target = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
     r_chaser, v_chaser = rm.RelativeMotion.geocentric_equatorial_kinematics(position_target=r_target,
                                                                             velocity_target=v_target,
                                                                             position_rel_lvlh=np.array([0, 587.13, 0]) * u.km,
                                                                             velocity_rel_lvlh=np.array([0, 0, 0]) * u.km / u.s)
     
-    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                        position=r_chaser,
-                                                                        velocity=v_chaser)
+    oe_chaser: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_chaser, velocity=v_chaser)
     
     dv_tot, _, _, _ = rm.RelativeMotion.two_impulsive_rendezvous_maneuver(attractor=attractor,
                                                                           orbital_elements_target=oe_target,

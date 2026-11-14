@@ -14,7 +14,8 @@ from common.web_socket_manager import WebSocketManager
 import spacelab.bodies as bd
 import spacelab.common as cm
 import spacelab.orbital_perturbations as op
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit_determination as od
 
 async def orbital_perturbations_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
@@ -126,7 +127,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
     raan: list = []
     aop: list = []
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe_0 = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                     semimajor_axis=payload.orbitalElements.sma * u.km,
                                                     eccentricity=payload.orbitalElements.ecc * u.one,
                                                     inclination=payload.orbitalElements.inc * u.deg,
@@ -136,9 +137,9 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
     
     oe_0.calc_specific_angular_momentum(attractor=attractor)
 
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
-    oe_ini: o3d.OrbitalElements = copy.deepcopy(oe_0)
+    oe_ini: sl_orbital_elements.OrbitalElements = copy.deepcopy(oe_0)
     
     # * Iteration
 
@@ -188,9 +189,9 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
 
         # * New initial conditions for next iteration
         
-        oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+        oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
         
-        oe_0 = o3d.OrbitalElements(specific_angular_momentum=oe_f.specific_angular_momentum,
+        oe_0 = sl_orbital_elements.OrbitalElements(specific_angular_momentum=oe_f.specific_angular_momentum,
                                    semimajor_axis=oe_f.semimajor_axis,
                                    eccentricity=oe_f.eccentricity,
                                    inclination=cm.wrap_angle(oe_f.inclination, low=-90, high=180),
@@ -198,7 +199,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
                                    argument_of_periapsis=cm.wrap_angle(oe_f.argument_of_periapsis, low=0, high=360),
                                    true_anomaly=cm.wrap_angle(oe_f.true_anomaly, low=0, high=360)) # ! Do not use [-180 ; 360]
         
-        r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
+        r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
         
         # * Notify progress to WebSocket
         

@@ -24,7 +24,8 @@ import typing
 
 import spacelab.bodies as bodies
 import spacelab.common as common
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.n_body_models.lagrange_coefficients as lc
 
 from spacelab.enums import OrbitDirection
@@ -43,7 +44,7 @@ class OrbitDetermination():
                              position_2 : u.Quantity,
                              time_2: u.Quantity,
                              position_3 : u.Quantity,
-                             time_3: u.Quantity) -> o3d.OrbitalElements:
+                             time_3: u.Quantity) -> sl_orbital_elements.OrbitalElements:
         """
         Herrick-Gibbs method of orbit determination from tree position vectors with associated times
         
@@ -60,7 +61,7 @@ class OrbitDetermination():
             time_3 (u.Quantity): Time for position vector 3
 
         Returns:
-            o3d.OrbitalElements: Orbital elements
+            sl_orbital_elements.OrbitalElements: Orbital elements
         """
         
         r_1: np.ndarray = position_1.to_value(u.km)
@@ -90,10 +91,9 @@ class OrbitDetermination():
                       dt_32 * (mu / (12 * r_1_m**3) - 1 / (dt_21 * dt_31)) * r_1 +\
             (dt_32 - dt_21) * (mu / (12 * r_2_m**3) + 1 / (dt_21 * dt_32)) * r_2 +\
                       dt_21 * (mu / (12 * r_3_m**3) + 1 / (dt_31 * dt_32)) * r_3
-        print(v_2)
-        oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                     position=r_2 * u.km,
-                                                                     velocity=v_2 * u.km / u.s)
+        
+        oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
     
         return oe
     
@@ -101,7 +101,7 @@ class OrbitDetermination():
     def gibbs_method(attractor: bodies.Attractor,
                      position_1 : u.Quantity,
                      position_2 : u.Quantity,
-                     position_3 : u.Quantity) -> o3d.OrbitalElements:
+                     position_3 : u.Quantity) -> sl_orbital_elements.OrbitalElements:
         """
         Gibbs method of orbit determination from tree position vectors
         
@@ -115,7 +115,7 @@ class OrbitDetermination():
             position_3 (u.Quantity): Position vector 3
 
         Returns:
-            o3d.OrbitalElements: Orbital elements
+            sl_orbital_elements.OrbitalElements: Orbital elements
         """
         
         r_1: np.ndarray = position_1.to_value(u.km)
@@ -145,13 +145,13 @@ class OrbitDetermination():
         
         u_r_1: np.ndarray = r_1 / r_1_m
         
-        if np.abs(np.dot(u_r_1, C_23 / np.linalg.norm(C_23))) > 0.0349: return o3d.OrbitalElements()
+        if np.abs(np.dot(u_r_1, C_23 / np.linalg.norm(C_23))) > 0.0349: return sl_orbital_elements.OrbitalElements()
         
         theta_12: float = np.arccos(np.dot(r_1, r_2) / (r_1_m * r_2_m))
         
         theta_23: float = np.arccos(np.dot(r_2, r_3) / (r_2_m * r_3_m))
         
-        if theta_12 < np.deg2rad(1) or theta_23 < np.deg2rad(1): return o3d.OrbitalElements()
+        if theta_12 < np.deg2rad(1) or theta_23 < np.deg2rad(1): return sl_orbital_elements.OrbitalElements()
         
         # >>> 4. Calculate N, D, and S auxiliary vectors
         
@@ -171,9 +171,8 @@ class OrbitDetermination():
         
         # >>> 6. Compute the orbital elements
         
-        oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                     position=r_2 * u.km,
-                                                                     velocity=v_2 * u.km / u.s)
+        oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
         
         return oe
     
@@ -183,7 +182,7 @@ class OrbitDetermination():
                 arrival_position: u.Quantity,
                 delta_time: time.TimeDelta,
                 direction: OrbitDirection = OrbitDirection.PROGRADE)\
-                    -> typing.Tuple[u.Quantity, u.Quantity, o3d.OrbitalElements, u.Quantity]:
+                    -> typing.Tuple[u.Quantity, u.Quantity, sl_orbital_elements.OrbitalElements, u.Quantity]:
         """
         Solve Lambert's problem.
 
@@ -204,7 +203,7 @@ class OrbitDetermination():
         Returns:
             tuple: (`v_1`, `v_2`, `oe`, `theta_2`) where
                 - `v_1`, `v_2` (u.Quantity): velocity vectors at `departure_position` and `arrival_position` (km/s)
-                - `oe` (o3d.OrbitalElements): orbital elements for the resulting trajectory
+                - `oe` (sl_orbital_elements.OrbitalElements): orbital elements for the resulting trajectory
                 - `theta_2` (u.Quantity): true anomaly at `arrival_position`
         """
         
@@ -257,7 +256,7 @@ class OrbitDetermination():
             
         failed_result: np.ndarray = [np.ones(r_1.shape) * 100.0 * u.km / u.s,
                                      np.ones(r_2.shape) * 100.0 * u.km / u.s,
-                                     o3d.OrbitalElements(),
+                                     sl_orbital_elements.OrbitalElements(),
                                      0.0 * u.deg]
 
         try:
@@ -294,13 +293,11 @@ class OrbitDetermination():
         
         # >>> 8. Orbital elements
         
-        oe_1: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                       position=r_1 * u.km,
-                                                                       velocity=v_1 * u.km / u.s)
+        oe_1: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=attractor, position=r_1 * u.km, velocity=v_1 * u.km / u.s)
         
-        oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                       position=r_2 * u.km,
-                                                                       velocity=v_2 * u.km / u.s)
+        oe_2: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
         
         return [v_1 * u.km / u.s, v_2 * u.km / u.s, oe_1, oe_2.true_anomaly]
     
@@ -693,7 +690,7 @@ class OrbitDetermination():
         
         # >>> 3. Right Ascension and Declination
         
-        alpha, delta = o3d.Orbit3D.right_ascension_declination(position=rho * u.km)
+        alpha, delta = sl_representation.right_ascension_declination(position=rho * u.km)
         
         return [rho * u.one, alpha, delta]
     

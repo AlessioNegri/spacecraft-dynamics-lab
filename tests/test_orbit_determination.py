@@ -3,7 +3,8 @@ import astropy.units as u
 import numpy as np
 
 import spacelab.bodies as bd
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit_determination as od
 import spacelab.orbit.position as op
 import spacelab.models.orbit_parameters as sl_orbit_parameters
@@ -19,7 +20,7 @@ def test_gibbs_method():
     r_2: u.Quantity = np.array([-1365.5, 3637.6, 6346.8]) * u.km
     r_3: u.Quantity = np.array([-2940.3, 2473.7, 6555.8]) * u.km
     
-    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
+    oe: sl_orbital_elements.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
                                                                  position_1=r_1,
                                                                  position_2=r_2,
                                                                  position_3=r_3)
@@ -186,7 +187,7 @@ def test_topocentric_equatorial_position_vector():
     assert np.isclose(rho[1].to_value(u.km), -1084, 1e-0)
     assert np.isclose(rho[2].to_value(u.km), 1523, 1e-0)
     
-    alpha, delta = o3d.Orbit3D.right_ascension_declination(position=rho)
+    alpha, delta = sl_representation.right_ascension_declination(position=rho)
     
     assert np.isclose(alpha.to_value(u.deg), 298.4, 1e-1)
     assert np.isclose(delta.to_value(u.deg), 51.01, 1e-2)
@@ -276,7 +277,7 @@ def test_predict_from_angle_range():
     assert np.isclose(v[1].to_value(u.km / u.s), -4.562, atol=1e-3)
     assert np.isclose(v[2].to_value(u.km / u.s), -0.2920, atol=1e-3)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 5170, atol=1e-0)
     assert np.isclose(oe.eccentricity.to_value(), 0.6195, atol=1e-4)

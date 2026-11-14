@@ -12,7 +12,9 @@ import routers.utility as utility
 import spacelab.bodies as bodies
 import spacelab.physical_constants as constants
 import spacelab.enums as ae
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbital_maneuvers as om
 import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbit.position as op
@@ -41,7 +43,7 @@ def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> om.RocketMotor:
     return rocket_motor
 
 def fill_orbital_elements(attractor: bodies.Attractor,
-                          orbital_elements_schema: schema.OrbitalElements) -> o3d.OrbitalElements:
+                          orbital_elements_schema: schema.OrbitalElements) -> sl_orbital_elements.OrbitalElements:
     """
     Fill the orbital elements from schema values
 
@@ -50,10 +52,10 @@ def fill_orbital_elements(attractor: bodies.Attractor,
         orbital_elements_schema (schema.OrbitalElements): Pydantic schema orbital elements
 
     Returns:
-        o3d.OrbitalElements: Orbital elements
+        sl_orbital_elements.OrbitalElements: Orbital elements
     """
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements()
+    oe = sl_orbital_elements.OrbitalElements()
     
     oe.specific_angular_momentum = orbital_elements_schema.sam * u.km**2 / u.s
     oe.semimajor_axis = orbital_elements_schema.sma * u.km
@@ -68,21 +70,21 @@ def fill_orbital_elements(attractor: bodies.Attractor,
     return oe
 
 def propagate_orbit(attractor: bodies.Attractor,
-                    orbital_elements: o3d.OrbitalElements,
+                    orbital_elements: sl_orbital_elements.OrbitalElements,
                     delta_time: time.TimeDelta) -> typing.List[schema.Vector3D]:
     """
     Propagate the orbit with given Orbital Parameters for a given time
 
     Args:
         attractor (bodies.Attractor): Main attractor
-        orbital_elements (o3d.OrbitalElements): Orbital Elements with true anomaly from initial position
+        orbital_elements (sl_orbital_elements.OrbitalElements): Orbital Elements with true anomaly from initial position
         delta_timedt (time.TimeDelta): Time of integration
 
     Returns:
         typing.List[schema.Vector3D]: Simulation points
     """
     
-    r_gef, v_gef = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+    r_gef, v_gef = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
     
     orbit: tbp.Orbit = tbp.Orbit()
     
@@ -103,7 +105,7 @@ def propagate_orbit(attractor: bodies.Attractor,
     return simulation_points
 
 def calculate_simulation_time(attractor: bodies.Attractor,
-                              orbital_elements: o3d.OrbitalElements,
+                              orbital_elements: sl_orbital_elements.OrbitalElements,
                               true_anomaly_1: u.Quantity,
                               true_anomaly_2: u.Quantity) -> u.Quantity:
     """
@@ -111,7 +113,7 @@ def calculate_simulation_time(attractor: bodies.Attractor,
 
     Args:
         attractor (bodies.Attractor): Main attractor
-        orbital_elements (o3d.OrbitalElements): Orbital Elements
+        orbital_elements (sl_orbital_elements.OrbitalElements): Orbital Elements
         true_anomaly_1 (u.Quantity): First true anomaly
         true_anomaly_2 (u.Quantity): Second true anomaly
 
@@ -159,7 +161,7 @@ def calculate_simulation_time(attractor: bodies.Attractor,
 
 def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
                                             rocket_motor: om.RocketMotor,
-                                            orbital_elements: o3d.OrbitalElements,
+                                            orbital_elements: sl_orbital_elements.OrbitalElements,
                                             target_semi_major_axis: u.Quantity,
                                             time_step: u.Quantity = 10 * u.s)\
                                                 -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
@@ -169,7 +171,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
     Args:
         attractor (bodies.Attractor): Main attractor
         rocket_motor (om.RocketMotor): Rocket motor
-        orbital_elements (o3d.OrbitalElements): Orbital elements
+        orbital_elements (sl_orbital_elements.OrbitalElements): Orbital elements
         target_semi_major_axis (u.Quantity): Target value for the semimajor axis
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
 
@@ -196,7 +198,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
         final_radius=final_radius
     )
 
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
     
     return om.OrbitalManeuvers.non_impulsive_maneuver(
         attractor=attractor,
@@ -213,7 +215,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
 
 def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attractor,
                                                      rocket_motor: om.RocketMotor,
-                                                     orbital_elements: o3d.OrbitalElements,
+                                                     orbital_elements: sl_orbital_elements.OrbitalElements,
                                                      target_inclination: u.Quantity,
                                                      time_step: u.Quantity = 10 * u.s)\
                                                          -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
@@ -223,7 +225,7 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
     Args:
         attractor (bodies.Attractor): Main attractor
         rocket_motor (om.RocketMotor): Rocket motor
-        orbital_elements (o3d.OrbitalElements): Orbital elements
+        orbital_elements (sl_orbital_elements.OrbitalElements): Orbital elements
         target_inclination (u.Quantity): Target value for the inclination
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
 
@@ -247,7 +249,7 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
         final_inclination=target_inclination
     )
 
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
     
     orbit: tbp.Orbit = tbp.Orbit()
     
@@ -293,14 +295,14 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.sma = data.maneuver.data.sma
     oe_2_schema.ecc = data.maneuver.data.ecc
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
+    oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     if data.maneuver.data.direction == 0:
         
@@ -391,14 +393,14 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema : schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.sma = data.maneuver.data.sma
     oe_2_schema.ecc = data.maneuver.data.ecc
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
+    oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     r_3: u.Quantity = data.maneuver.data.supportApocenterRadius * u.km
     
@@ -485,7 +487,7 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     nu_target: u.Quantity = data.maneuver.data.targetTrueAnomaly * u.deg
     
@@ -566,9 +568,9 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
-    oe_2:o3d.OrbitalElements = copy.deepcopy(oe_1)
+    oe_2:sl_orbital_elements.OrbitalElements = copy.deepcopy(oe_1)
 
     oe_2.semimajor_axis = data.maneuver.data.sma * u.km
     oe_2.eccentricity = data.maneuver.data.ecc * u.one
@@ -648,13 +650,13 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.aop = data.maneuver.data.aop
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
+    oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     sip: bool = data.maneuver.data.intersectionPoint == 1
     
@@ -734,7 +736,7 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     nu_t: u.Quantity = data.maneuver.data.trueAnomalyTarget * u.deg
     
@@ -767,7 +769,7 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     # * Final Orbit
     
-    r_fin, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
+    r_fin, _ = sl_representation.keplerian_to_cartesian(attractor=attractor,
                                                   orbital_elements=maneuver.orbital_elements_list[-1])
     
     final_orbit: typing.List[schema.Vector3D] = [schema.Vector3D(x=r_fin[0].to_value(u.km),
@@ -815,13 +817,13 @@ async def put_inclination_change(data: schema.InclinationChangeInModelInfo) -> f
 
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
 
     oe_2_schema.inc = data.maneuver.data.inc
 
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
+    oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.inclination_change_maneuver(attractor=attractor,
                                                                                    rocket_motor=rocket_motor,
@@ -897,14 +899,14 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
     
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
     oe_2_schema: schema.OrbitalElements = copy.deepcopy(data.orbitalElements)
     
     oe_2_schema.inc = data.maneuver.data.inc
     oe_2_schema.raan = data.maneuver.data.raan
     
-    oe_2: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
+    oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
     
     maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_raan_and_inclination(attractor=attractor,
                                                                                                       rocket_motor=rocket_motor,
@@ -973,7 +975,7 @@ async def put_coplanar_circle_circle(data: schema.CoplanarCircleCircleInModelInf
 
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     maneuver, result = compute_coplanar_circle_circle_maneuver(attractor=attractor,
                                                                rocket_motor=rocket_motor,
@@ -996,9 +998,8 @@ async def put_coplanar_circle_circle(data: schema.CoplanarCircleCircleInModelInf
                                              result.velocity_y[0].to_value(),
                                              result.velocity_z[0].to_value()]) * u.km / u.s
     
-    oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                   position=position,
-                                                                   velocity=velocity)
+    oe_2: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=position, velocity=velocity)
     
     # * Initial Orbit
 
@@ -1056,7 +1057,7 @@ async def put_inclination_change_non_impulsive(data: schema.InclinationChangeNon
 
     rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    oe_1: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
+    oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
     maneuver, result = compute_inclination_change_non_impulsive_maneuver(attractor=attractor,
                                                                          rocket_motor=rocket_motor,
@@ -1079,9 +1080,8 @@ async def put_inclination_change_non_impulsive(data: schema.InclinationChangeNon
                                              result.velocity_y[0].to_value(),
                                              result.velocity_z[0].to_value()]) * u.km / u.s
     
-    oe_2: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                   position=position,
-                                                                   velocity=velocity)
+    oe_2: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=position, velocity=velocity)
     
     # * Initial Orbit
 

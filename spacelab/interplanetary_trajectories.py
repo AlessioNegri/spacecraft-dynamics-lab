@@ -21,7 +21,7 @@ import typing
 
 import spacelab.bodies as bodies
 import spacelab.common as common
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit_determination as od
 import spacelab.orbit.position as op
 
@@ -905,7 +905,7 @@ class InterplanetaryTrajectories():
                                               argument_of_periapsis=argument_of_perihelion,
                                               true_anomaly=ta)
         
-        r_hef, v_hef = o3d.Orbit3D.keplerian_to_cartesian(attractor=bodies.Attractor.SUN, orbital_elements=oe) # ? HEF
+        r_hef, v_hef = sl_representation.keplerian_to_cartesian(attractor=bodies.Attractor.SUN, orbital_elements=oe) # ? HEF
         
         return r_hef, v_hef
     

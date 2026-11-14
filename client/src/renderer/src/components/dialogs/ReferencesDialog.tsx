@@ -52,6 +52,7 @@ const references: Reference[] =
         series: "Aerospace Engineering",
         isbn: "978-0128044254",
         cover: msdp,
+        // link: "https://www.google.it/books/edition/Manned_Spacecraft_Design_Principles/ntWcBAAAQBAJ?hl=it&gbpv=1&dq=Manned+Spacecraft+Design+Principles&printsec=frontcover"
         link: "https://shop.elsevier.com/books/manned-spacecraft-design-principles/sforza/978-0-12-804425-4"
     },
     {

@@ -6,7 +6,8 @@ import numpy as np
 
 import spacelab.bodies as bd
 import spacelab.orbital_perturbations as op
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 
 @pytest.mark.skip(reason="Too long to run")
 def test_cowell_method_atmospheric_drag():
@@ -66,9 +67,8 @@ def test_cowell_method_gravitational_perturbation():
                                 result.velocity_y[-1].to_value(u.km / u.s),
                                 result.velocity_z[-1].to_value(u.km / u.s)])
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                 position=r_f * u.km,
-                                                                 velocity=v_f * u.km / u.s)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_f * u.km, velocity=v_f * u.km / u.s)
     
     assert np.isclose(oe.semimajor_axis.to_value(u.km), 8059, atol=1e-0)
     assert np.isclose(oe.eccentricity.to_value(), 0.15, atol=1e-2)
@@ -79,7 +79,7 @@ def test_cowell_method_gravitational_perturbation():
 def test_nodal_regression():
     """EXAMPLE 5.2 - BOOK 2"""
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=6790.6 * u.km,
                                                   eccentricity=0.0005 * u.one,
                                                   inclination=51.65 * u.deg,
@@ -97,7 +97,7 @@ def test_nodal_regression():
 def test_sun_synchronous_inclination():
     """EXAMPLE 5.3 - BOOK 2"""
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=(6378 + 400) * u.km,
                                                   eccentricity=0 * u.one,
                                                   inclination=0 * u.deg,
@@ -114,7 +114,7 @@ def test_sun_synchronous_inclination():
 def test_apsidal_rotation_rate():
     """EXAMPLE 5.3 - BOOK 2"""
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=8059 * u.km,
                                                   eccentricity=0.15 * u.one,
                                                   inclination=20 * u.deg,
@@ -130,7 +130,7 @@ def test_apsidal_rotation_rate():
 def test_lunar_solar_regressions():
     """EXAMPLE 5.5 - BOOK 2"""
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=8059 * u.km,
                                                   eccentricity=0.15 * u.one,
                                                   inclination=20 * u.deg,
@@ -169,8 +169,8 @@ def test_encke_method():
     
     result: op.ResultOP = orbit.propagate_encke_for(delta=delta, step=step)
     
-    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
-    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    oe_i: sl_orbital_elements.OrbitalElements = result.orbital_elements[0]
+    oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
     
     delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
     delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
@@ -186,7 +186,7 @@ def test_gauss_method_atmospheric_drag():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=(6378 + 300) * u.km,
                                                   eccentricity=0.000001 * u.one,
                                                   inclination=0.000001 * u.deg,
@@ -194,7 +194,7 @@ def test_gauss_method_atmospheric_drag():
                                                   argument_of_periapsis=0 * u.deg,
                                                   true_anomaly=0 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
     delta: t.TimeDelta = t.TimeDelta(45 * u.day)
     
@@ -233,8 +233,8 @@ def test_gauss_method_gravitational_perturbation():
     
     result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
-    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
-    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    oe_i: sl_orbital_elements.OrbitalElements = result.orbital_elements[0]
+    oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
     
     delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
     delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
@@ -275,7 +275,7 @@ def test_gauss_method_solar_radiation_pressure():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=63383.4 * u.km**2 / u.s,
+    oe_0 = sl_orbital_elements.OrbitalElements(specific_angular_momentum=63383.4 * u.km**2 / u.s,
                                                     semimajor_axis=0 * u.km,
                                                     eccentricity=0.025422 * u.dimensionless_unscaled,
                                                     inclination=88.3924 * u.deg,
@@ -283,7 +283,7 @@ def test_gauss_method_solar_radiation_pressure():
                                                     argument_of_periapsis=227.493 * u.deg,
                                                     true_anomaly=343.427 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_438_400.5
     
@@ -304,8 +304,8 @@ def test_gauss_method_solar_radiation_pressure():
     
     result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
-    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
-    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    oe_i: sl_orbital_elements.OrbitalElements = result.orbital_elements[0]
+    oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
     
     delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
     delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
@@ -330,7 +330,7 @@ def test_gauss_method_lunar_gravity():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
+    oe_0 = sl_orbital_elements.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
                                                     semimajor_axis=26553.4 * u.km,
                                                     eccentricity=0.741 * u.dimensionless_unscaled,
                                                     inclination=63.4 * u.deg,
@@ -338,7 +338,7 @@ def test_gauss_method_lunar_gravity():
                                                     argument_of_periapsis=270 * u.deg,
                                                     true_anomaly=0 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_454_283.0
     
@@ -351,8 +351,8 @@ def test_gauss_method_lunar_gravity():
     
     result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
-    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
-    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    oe_i: sl_orbital_elements.OrbitalElements = result.orbital_elements[0]
+    oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
     
     delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
     delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)
@@ -366,7 +366,7 @@ def test_gauss_method_sun_gravity():
     
     attractor: bd.Attractor = bd.Attractor.EARTH
     
-    oe_0: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
+    oe_0 = sl_orbital_elements.OrbitalElements(specific_angular_momentum=69084.1 * u.km**2 / u.s,
                                                     semimajor_axis=26553.4 * u.km,
                                                     eccentricity=0.741 * u.dimensionless_unscaled,
                                                     inclination=63.4 * u.deg,
@@ -374,7 +374,7 @@ def test_gauss_method_sun_gravity():
                                                     argument_of_periapsis=270 * u.deg,
                                                     true_anomaly=0 * u.deg)
     
-    r_0, v_0 = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
+    r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_0)
     
     JD_0: float = 2_454_283.0
     
@@ -387,8 +387,8 @@ def test_gauss_method_sun_gravity():
     
     result: op.ResultOP = orbit.propagate_gauss_for(delta=delta)
     
-    oe_i: o3d.OrbitalElements = result.orbital_elements[0]
-    oe_f: o3d.OrbitalElements = result.orbital_elements[-1]
+    oe_i: sl_orbital_elements.OrbitalElements = result.orbital_elements[0]
+    oe_f: sl_orbital_elements.OrbitalElements = result.orbital_elements[-1]
     
     delta_raan: float = (oe_f.right_ascension_of_ascending_node - oe_i.right_ascension_of_ascending_node).to_value(u.deg)
     delta_argp: float = (oe_f.argument_of_periapsis - oe_i.argument_of_periapsis).to_value(u.deg)

@@ -24,7 +24,8 @@ import spacelab.physical_constants as physical_constants
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.n_body_models.lagrange_coefficients as lc
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as o3d
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit_determination as od
 
 from spacelab.enums import AtmosphereModel
@@ -1024,9 +1025,8 @@ class OrbitalPerturbations():
         
         dv_0: np.ndarray = np.zeros(shape=(3))
         
-        oe_0: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                   position=r_0 * u.km,
-                                                                   velocity=v_0 * u.km / u.s)
+        oe_0: OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=self.attractor, position=r_0 * u.km, velocity=v_0 * u.km / u.s)
         
         max_step: float = oe_0.calc_orbital_period(attractor=self.attractor).to_value(u.s) / 100.0
         
@@ -1074,9 +1074,8 @@ class OrbitalPerturbations():
             
             # >>> c. Calculates osculating orbital elements
             
-            oe: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                     position=r_0 * u.km,
-                                                                     velocity=v_0 * u.km / u.s)
+            oe: OrbitalElements = sl_representation.cartesian_to_keplerian(
+                attractor=self.attractor, position=r_0 * u.km, velocity=v_0 * u.km / u.s)
             
             orbital_elements.append(oe)
         
@@ -1109,9 +1108,8 @@ class OrbitalPerturbations():
         
         common.check_time_delta(delta)
         
-        oe_0: OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=self.attractor,
-                                                                   position=self.position * u.km,
-                                                                   velocity=self.velocity * u.km / u.s)
+        oe_0: OrbitalElements = sl_representation.cartesian_to_keplerian(
+            attractor=self.attractor, position=self.position * u.km, velocity=self.velocity * u.km / u.s)
         
         solution: dict = ode.solve_ivp(fun=self._gauss_variational_eom,
                                        t_span=[0, delta.to_value(u.s)],
@@ -1559,7 +1557,7 @@ class OrbitalPerturbations():
         p_s: float = 0.0
         p_w: float = 0.0
         
-        r_sc, v_sc = o3d.Orbit3D.keplerian_to_cartesian(attractor=self.attractor, orbital_elements=oe) # ? Spacecraft
+        r_sc, v_sc = sl_representation.keplerian_to_cartesian(attractor=self.attractor, orbital_elements=oe) # ? Spacecraft
         
         if self.use_atmospheric_drag:
             

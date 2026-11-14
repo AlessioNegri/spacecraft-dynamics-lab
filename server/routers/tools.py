@@ -9,8 +9,9 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.n_body_models.conversions as sl_conversions
-import spacelab.n_body_models.two_body_problem as tbp
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as o3d
+import spacelab.orbit.representation as sl_representation
+import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.orbit_determination as od
 import spacelab.orbit.position as op
 
@@ -41,7 +42,7 @@ async def put_convert_cartesian_to_orbit_parameters(data: schema.CartesianInMode
     orbit_parameters: sl_orbit_parameters.OrbitParameters =\
         sl_conversions.cartesian_to_orbit_parameters(attractor=attractor, position=r, velocity=v)
     
-    alpha, delta = o3d.Orbit3D.right_ascension_declination(position=r)
+    alpha, delta = sl_representation.right_ascension_declination(position=r)
     
     result: schema.OrbitParametersOutModelInfo = schema.OrbitParametersOutModelInfo(
         conicType                = orbit_parameters.conic_type,
@@ -89,7 +90,7 @@ async def put_convert_cartesian_to_keplerian(data: schema.CartesianInModelInfo) 
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.OrbitalElements = schema.OrbitalElements(
         sam = oe.specific_angular_momentum.to_value(),
@@ -119,7 +120,7 @@ async def put_convert_cartesian_to_perifocal(data: schema.CartesianInModelInfo) 
     r: np.ndarray = np.array([ data.position.x, data.position.y, data.position.z ]) * u.km
     v: np.ndarray = np.array([ data.velocity.x, data.velocity.y, data.velocity.z ]) * u.km / u.s
     
-    r_PF, v_PF = o3d.Orbit3D.geocentric_equatorial_to_perifocal(attractor=attractor, position=r, velocity=v)
+    r_PF, v_PF = sl_representation.geocentric_equatorial_to_perifocal(attractor=attractor, position=r, velocity=v)
     
     result: schema.PerifocalOutModelInfo = schema.PerifocalOutModelInfo(
         position = schema.Vector3D(x=r_PF[0].to_value(), y=r_PF[1].to_value(), z=0),
@@ -141,7 +142,7 @@ async def put_convert_keplerian_to_cartesian(data: schema.KeplerianInModelInfo) 
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
+    oe = sl_orbital_elements.OrbitalElements(specific_angular_momentum=0 * u.km**2 / u.s,
                                                   semimajor_axis=data.oe.sma * u.km,
                                                   eccentricity=data.oe.ecc * u.one,
                                                   inclination=data.oe.inc * u.deg,
@@ -149,7 +150,7 @@ async def put_convert_keplerian_to_cartesian(data: schema.KeplerianInModelInfo) 
                                                   argument_of_periapsis=data.oe.aop * u.deg,
                                                   true_anomaly=data.oe.ta * u.deg)
     
-    r_GEF, v_GEF = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+    r_GEF, v_GEF = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
     result: schema.CartesianOutModelInfo = schema.CartesianOutModelInfo(
         position = schema.Vector3D(x=r_GEF[0].to_value(), y=r_GEF[1].to_value(), z=r_GEF[2].to_value()),
@@ -169,14 +170,14 @@ async def put_convert_keplerian_to_equinoctial(data: schema.EquinoctialInModelIn
         fastapi.responses.JSONResponse: JSON response
     """
 
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=data.orbitalElements.sma * u.km,
+    oe = sl_orbital_elements.OrbitalElements(semimajor_axis=data.orbitalElements.sma * u.km,
                                                   eccentricity=data.orbitalElements.ecc * u.one,
                                                   inclination=data.orbitalElements.inc * u.deg,
                                                   right_ascension_of_ascending_node=data.orbitalElements.raan * u.deg,
                                                   argument_of_periapsis=data.orbitalElements.aop * u.deg,
                                                   true_anomaly=data.orbitalElements.ta * u.deg)
 
-    eq: o3d.EquinoctialOrbitalElements = o3d.Orbit3D.keplerian_to_equinoctial(orbital_elements=oe)
+    eq: o3d.EquinoctialOrbitalElements = sl_representation.keplerian_to_equinoctial(orbital_elements=oe)
 
     result: schema.EquinoctialOutModelInfo = schema.EquinoctialOutModelInfo(
         semimajorAxis=eq.semimajor_axis.to_value(u.km),
@@ -200,20 +201,20 @@ async def put_vector_representations(data: schema.VectorRepresentationsInModelIn
         fastapi.responses.JSONResponse: JSON response
     """
 
-    orbital_elements: o3d.OrbitalElements = o3d.OrbitalElements(
+    orbital_elements = sl_orbital_elements.OrbitalElements(
         inclination=data.orbitalElements.inc * u.deg,
         right_ascension_of_ascending_node=data.orbitalElements.raan * u.deg,
         argument_of_periapsis=data.orbitalElements.aop * u.deg,
         true_anomaly=data.orbitalElements.ta * u.deg
     )
 
-    position_vectors: typing.List[u.Quantity] = o3d.Orbit3D.position_vector_representations(
+    position_vectors: typing.List[u.Quantity] = sl_representation.position_vector_representations(
         orbital_elements=orbital_elements,
         flight_path_angle=data.flightPathAngle * u.deg,
         position_magnitude=data.positionMagnitude * u.km
     )
     
-    velocity_vectors: typing.List[u.Quantity] = o3d.Orbit3D.velocity_vector_representations(
+    velocity_vectors: typing.List[u.Quantity] = sl_representation.velocity_vector_representations(
         orbital_elements=orbital_elements,
         flight_path_angle=data.flightPathAngle * u.deg,
         velocity_magnitude=data.velocityMagnitude * u.km / u.s
@@ -273,7 +274,7 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
     
     if samples < 2: samples = 2
 
-    oe: o3d.OrbitalElements = o3d.OrbitalElements(semimajor_axis=data.oe.sma * u.km,
+    oe = sl_orbital_elements.OrbitalElements(semimajor_axis=data.oe.sma * u.km,
                                                   eccentricity=data.oe.ecc * u.one,
                                                   inclination=data.oe.inc * u.deg,
                                                   right_ascension_of_ascending_node=data.oe.raan * u.deg,
@@ -282,17 +283,16 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
     
     # * Generic ground track
     
-    d_raan_dt, d_argp_dt = o3d.Orbit3D.planet_oblateness_effect(attractor=attractor, orbital_elements=oe)
+    d_raan_dt, d_argp_dt = sl_representation.planet_oblateness_effect(attractor=attractor, orbital_elements=oe)
     
-    alpha, delta = o3d.Orbit3D.ground_track_propagation(attractor=attractor,
-                                                        orbital_elements=copy.deepcopy(oe),
-                                                        time_step=time.TimeDelta(duration))
+    alpha, delta = sl_representation.ground_track_propagation(
+        attractor=attractor, orbital_elements=copy.deepcopy(oe), time_step=time.TimeDelta(duration))
     
     # * Horizon footprint
     
-    r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+    r, _ = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
     
-    c_f, beta, delta_hf, omega_iaa = o3d.Orbit3D.horizon_footprint(attractor=attractor, altitude=np.linalg.norm(r) - R_E)
+    c_f, beta, delta_hf, omega_iaa = sl_representation.horizon_footprint(attractor=attractor, altitude=np.linalg.norm(r) - R_E)
     
     # * Earth ground track
     
@@ -339,16 +339,14 @@ async def put_propagate_ground_track(data: schema.GroundTrackInModelInfo) -> fas
         
         oe.true_anomaly = ta_i
         
-        r, _ = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
+        r, _ = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe)
         
-        c_f_e, _, _, _ = o3d.Orbit3D.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=np.linalg.norm(r) - R_E)
+        c_f_e, _, _, _ = sl_representation.horizon_footprint(attractor=bodies.Attractor.EARTH, altitude=np.linalg.norm(r) - R_E)
         
-        latitude: o3d.AngleHemisphere = o3d.Orbit3D.latitude(inclination=oe.inclination, true_anomaly=ta_i)
+        latitude: o3d.AngleHemisphere = sl_representation.latitude(inclination=oe.inclination, true_anomaly=ta_i)
 
-        longitude: o3d.AngleHemisphere = o3d.Orbit3D.longitude(orbital_elements=copy.deepcopy(oe),
-                                                               latitude=latitude,
-                                                               epoch=epoch,
-                                                               orbit_time=t_i)
+        longitude: o3d.AngleHemisphere = sl_representation.longitude(
+            orbital_elements=copy.deepcopy(oe), latitude=latitude, epoch=epoch, orbit_time=t_i)
         
         longitudes.append(longitude.to_signed_angle().to_value(u.deg))
         latitudes.append(latitude.to_signed_angle().to_value(u.deg))
@@ -383,7 +381,7 @@ async def put_eclipse_duration(data: schema.EclipseDurationInModelInfo) -> fasta
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    beta, eclipse, duration, hot_case = o3d.Orbit3D.eclipse_duration(
+    beta, eclipse, duration, hot_case = sl_representation.eclipse_duration(
         attractor=attractor,
         circular_orbit_radius=bodies.BODIES[attractor].R_E + data.altitude * u.km,
         inclination=data.inclination * u.deg,
@@ -420,7 +418,7 @@ async def put_herrick_gibbs_method(data: schema.HerrickGibbsMethodInModelInfo) -
     ]
     times: list[u.Quantity] = [value * u.s for value in data.times]
 
-    oe: o3d.OrbitalElements = od.OrbitDetermination.herrick_gibbs_method(
+    oe: sl_orbital_elements.OrbitalElements = od.OrbitDetermination.herrick_gibbs_method(
         attractor=attractor,
         position_1=positions[0],
         time_1=times[0],
@@ -459,7 +457,7 @@ async def put_gibbs_method(data: schema.GibbsMethodInModelInfo) -> fastapi.respo
     r_2: u.Quantity = np.array([data.position2.x, data.position2.y, data.position2.z]) * u.km
     r_3: u.Quantity = np.array([data.position3.x, data.position3.y, data.position3.z]) * u.km
     
-    oe: o3d.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
+    oe: sl_orbital_elements.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
                                                                  position_1=r_1,
                                                                  position_2=r_2,
                                                                  position_3=r_3)
@@ -607,7 +605,7 @@ async def put_predict_angle_range(data: schema.AngleRangeInModelInfo) -> fastapi
                                                           latitude=phi,
                                                           site_altitude=H)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),
@@ -656,7 +654,7 @@ async def put_predict_gauss_method(data: schema.GaussMethodInModelInfo) -> fasta
                                                                     observation_time_list=t,
                                                                     site_altitude=H)
     
-    oe: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),

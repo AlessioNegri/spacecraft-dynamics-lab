@@ -22,7 +22,8 @@ import typing
 
 import spacelab.bodies as bodies
 import spacelab.common as common
-import spacelab.orbit_3d as o3d
+import spacelab.orbit.representation as o3d
+import spacelab.orbit.representation as sl_representation
 import spacelab.orbit.position as op
 import spacelab.n_body_models.lagrange_coefficients as lc
 import spacelab.orbit_determination as od
@@ -69,11 +70,11 @@ class RelativeMotion():
             typing.List[u.Quantity]: [r_rel_lvlh, v_rel_lvlh, a_rel_lvlh, omega_lvlh]
         """
         
-        r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
-                                                                orbital_elements=orbital_elements_target)
+        r_target, v_target = sl_representation.keplerian_to_cartesian(
+            attractor=attractor, orbital_elements=orbital_elements_target)
         
-        r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
-                                                                orbital_elements=orbital_elements_chaser)
+        r_chaser, v_chaser = sl_representation.keplerian_to_cartesian(
+            attractor=attractor, orbital_elements=orbital_elements_chaser)
         
         common.check_attractor(attractor)
         
@@ -235,11 +236,11 @@ class RelativeMotion():
         
         orbital_elements_chaser.calc_semimajor_axis(attractor=attractor)
         
-        r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
-                                                                orbital_elements=orbital_elements_target)
+        r_target, v_target = sl_representation.keplerian_to_cartesian(
+            attractor=attractor, orbital_elements=orbital_elements_target)
         
-        r_chaser, v_chaser = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor,
-                                                                orbital_elements=orbital_elements_chaser)
+        r_chaser, v_chaser = sl_representation.keplerian_to_cartesian(
+            attractor=attractor, orbital_elements=orbital_elements_chaser)
         
         common.check_attractor(attractor)
         
@@ -301,13 +302,11 @@ class RelativeMotion():
             
             # >>> c. Update Target-Chaser orbital elements
             
-            orbital_elements_target = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                         position=r_target,
-                                                                         velocity=v_target)
+            orbital_elements_target = sl_representation.cartesian_to_keplerian(
+                attractor=attractor, position=r_target, velocity=v_target)
             
-            orbital_elements_chaser = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                         position=r_chaser,
-                                                                         velocity=v_chaser)
+            orbital_elements_chaser = sl_representation.cartesian_to_keplerian(
+                attractor=attractor, position=r_chaser, velocity=v_chaser)
         
         # >>> 6. Result
         

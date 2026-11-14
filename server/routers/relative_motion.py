@@ -8,13 +8,14 @@ import schemas.relative_motion_schema as schema
 
 import spacelab.relative_motion as rm
 import spacelab.bodies as bd
-import spacelab.orbit_3d as o3d
+import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.orbit.representation as sl_representation
 import spacelab.models.results as sl_results
 
 # --- UTILITY ---
 
 def fill_orbital_elements(attractor: bd.Attractor,
-                          orbital_elements_schema: schema.OrbitalElements) -> o3d.OrbitalElements:
+                          orbital_elements_schema: schema.OrbitalElements) -> sl_orbital_elements.OrbitalElements:
     """
     Fill the orbital elements from schema values
 
@@ -23,10 +24,10 @@ def fill_orbital_elements(attractor: bd.Attractor,
         orbital_elements_schema (schema.OrbitalElements): Pydantic schema orbital elements
 
     Returns:
-        o3d.OrbitalElements: Orbital elements
+        sl_orbital_elements.OrbitalElements: Orbital elements
     """
     
-    oe: o3d.OrbitalElements = o3d.OrbitalElements()
+    oe = sl_orbital_elements.OrbitalElements()
     
     oe.specific_angular_momentum = orbital_elements_schema.sam * u.km**2 / u.s
     oe.semimajor_axis = orbital_elements_schema.sma * u.km
@@ -61,12 +62,12 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     
     attractor: bd.Attractor = bd.Attractor(data.attractor.lower())
     
-    oe_target: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor,
+    oe_target: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsTarget)
     
-    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
+    r_target, v_target = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
-    oe_chaser: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor,
+    oe_chaser: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsChaser)
     
     r_rel_lvlh, v_rel_lvlh, _, omega_lvlh = rm.RelativeMotion.lvlh_kinematics(attractor=attractor,
@@ -167,10 +168,10 @@ async def put_lvlh_kinematics(data: schema.LvlhKinematicsInModelInfo) -> fastapi
     
     attractor: bd.Attractor = bd.Attractor(data.attractor.lower())
     
-    oe_target: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor,
+    oe_target: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsTarget)
     
-    oe_chaser: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor,
+    oe_chaser: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsChaser)
     
     kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor,
@@ -215,10 +216,10 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
     
     attractor: bd.Attractor = bd.Attractor(data.attractor.lower())
     
-    oe_target: o3d.OrbitalElements = fill_orbital_elements(attractor=attractor,
+    oe_target: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsTarget)
     
-    r_target, v_target = o3d.Orbit3D.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
+    r_target, v_target = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=oe_target)
     
     r_rel_lvlh: u.Quantity = np.array([data.lvlhPosition.x, data.lvlhPosition.y, data.lvlhPosition.z]) * u.km
     
@@ -229,9 +230,8 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
                                                                             position_rel_lvlh=r_rel_lvlh,
                                                                             velocity_rel_lvlh=v_rel_lvlh)
     
-    oe_chaser: o3d.OrbitalElements = o3d.Orbit3D.cartesian_to_keplerian(attractor=attractor,
-                                                                        position=r_chaser,
-                                                                        velocity=v_chaser)
+    oe_chaser: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_chaser, velocity=v_chaser)
     
     result: schema.GeocentricEquatorialKinematicsOutModelInfo = schema.GeocentricEquatorialKinematicsOutModelInfo(
         orbitalElementsChaser=schema.OrbitalElements(
