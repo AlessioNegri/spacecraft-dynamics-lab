@@ -30,8 +30,9 @@ import spacelab.enums as sl_enums
 import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.n_body_models.conversions as sl_conversions
-import spacelab.orbit_determination as orbit_determination
+import spacelab.orbit.determination as orbit_determination
 import spacelab.orbit.position as sl_position
+import spacelab.orbit.time as sl_time
 import spacelab.utils.angle as sl_angle
 import spacelab.utils.logger as sl_logger
 import spacelab.utils.validator as sl_validator
@@ -853,9 +854,9 @@ def longitude(
     
     # * Calculate reference time in Julian days since J2000
     
-    jd_epoch: float = orbit_determination.OrbitDetermination.timestamp_2_julian_day(timestamp=epoch)
+    jd_epoch: float = sl_time.timestamp_2_julian_day(timestamp=epoch)
     
-    dt_epoch_j2000: float = (jd_epoch - orbit_determination.OrbitDetermination.J2000) * 86_400 # ? JD -> seconds
+    dt_epoch_j2000: float = (jd_epoch - sl_time.J2000) * 86_400 # ? JD -> seconds
     
     t: float = dt_epoch_j2000 + t_since_epoch
     

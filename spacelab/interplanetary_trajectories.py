@@ -22,7 +22,9 @@ import typing
 import spacelab.bodies as bodies
 import spacelab.common as common
 import spacelab.orbit.representation as sl_representation
-import spacelab.orbit_determination as od
+import spacelab.orbit.determination as od
+import spacelab.orbit.determination as sl_determination
+import spacelab.orbit.time as sl_time
 import spacelab.orbit.position as op
 
 from spacelab.enums import FlybySide
@@ -851,11 +853,11 @@ class InterplanetaryTrajectories():
         
         # >>> 1. Julian day number
         
-        JD: float = od.OrbitDetermination.timestamp_2_julian_day(timestamp=timestamp)
+        JD: float = sl_time.timestamp_2_julian_day(timestamp=timestamp)
         
         # >>> 2. Number of Julian centuries between J2000 and the given timestamp
         
-        T_0: u.Quantity = (JD - od.OrbitDetermination.J2000) / 36_525 * bodies.julian_century
+        T_0: u.Quantity = (JD - sl_time.J2000) / 36_525 * bodies.julian_century
         
         # >>> 3. Orbital elements
         
@@ -959,10 +961,8 @@ class InterplanetaryTrajectories():
         
         # >>> 2. Lambert problem
         
-        V_D_v, V_A_v, _, _ = od.OrbitDetermination.lambert(attractor=bodies.Attractor.SUN,
-                                                           departure_position=R_1,
-                                                           arrival_position=R_2,
-                                                           delta_time=time_of_flight)
+        V_D_v, V_A_v, _, _ = sl_determination.lambert(
+            attractor=bodies.Attractor.SUN, departure_position=R_1, arrival_position=R_2, delta_time=time_of_flight)
         
         # >>> 3. Hyperbolic excess velocities
         

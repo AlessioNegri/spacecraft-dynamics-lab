@@ -12,7 +12,10 @@ import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.orbit.representation as o3d
 import spacelab.orbit.representation as sl_representation
 import spacelab.models.orbital_elements as sl_orbital_elements
-import spacelab.orbit_determination as od
+import spacelab.orbit.determination as od
+import spacelab.orbit.determination as sl_determination
+import spacelab.orbit.time as sl_time
+import spacelab.orbit.frames as sl_frames
 import spacelab.orbit.position as op
 
 # --- HTTP ---
@@ -418,7 +421,7 @@ async def put_herrick_gibbs_method(data: schema.HerrickGibbsMethodInModelInfo) -
     ]
     times: list[u.Quantity] = [value * u.s for value in data.times]
 
-    oe: sl_orbital_elements.OrbitalElements = od.OrbitDetermination.herrick_gibbs_method(
+    oe: sl_orbital_elements.OrbitalElements = sl_determination.herrick_gibbs_method(
         attractor=attractor,
         position_1=positions[0],
         time_1=times[0],
@@ -451,16 +454,11 @@ async def put_gibbs_method(data: schema.GibbsMethodInModelInfo) -> fastapi.respo
         fastapi.responses.JSONResponse: JSON response
     """
     
-    attractor: bodies.Attractor = bodies.Attractor.EARTH
-    
-    r_1: u.Quantity = np.array([data.position1.x, data.position1.y, data.position1.z]) * u.km
-    r_2: u.Quantity = np.array([data.position2.x, data.position2.y, data.position2.z]) * u.km
-    r_3: u.Quantity = np.array([data.position3.x, data.position3.y, data.position3.z]) * u.km
-    
-    oe: sl_orbital_elements.OrbitalElements = od.OrbitDetermination.gibbs_method(attractor=attractor,
-                                                                 position_1=r_1,
-                                                                 position_2=r_2,
-                                                                 position_3=r_3)
+    oe: sl_orbital_elements.OrbitalElements = sl_determination.gibbs_method(
+        attractor=bodies.Attractor.EARTH,
+        position_1=np.array([data.position1.x, data.position1.y, data.position1.z]) * u.km,
+        position_2=np.array([data.position2.x, data.position2.y, data.position2.z]) * u.km,
+        position_3=np.array([data.position3.x, data.position3.y, data.position3.z]) * u.km)
     
     result: schema.OrbitalElements = schema.OrbitalElements(
         sam=oe.specific_angular_momentum.to_value(),
@@ -485,10 +483,10 @@ async def put_convert_timestamp_to_julian_day(data: dict = fastapi.Body(...)) ->
         float: Julian day
     """
     
-    jd: float = od.OrbitDetermination.timestamp_2_julian_day(timestamp=time.Time(data['timestamp']))
+    jd: float = sl_time.timestamp_2_julian_day(timestamp=time.Time(data['timestamp']))
     
-    lst: float = od.OrbitDetermination.local_sidereal_time(timestamp=time.Time(data['timestamp']),
-                                                           longitude=data['longitude'] * u.deg).to_value(u.deg)
+    lst: float = sl_time.local_sidereal_time(
+        timestamp=time.Time(data['timestamp']), longitude=data['longitude'] * u.deg).to_value(u.deg)
     
     return { "julianDay": jd, "localSiderealTime": lst }
 
@@ -503,7 +501,7 @@ async def put_convert_julian_day_to_timestamp(jd: float = fastapi.Body(...)) -> 
         str: Timestamp
     """
     
-    timestamp: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=jd)
+    timestamp: time.Time = sl_time.julian_day_2_timestamp(julian_day=jd)
     
     return str(timestamp.isot).split(".")[0]
 
@@ -528,28 +526,17 @@ async def put_topocentric_frame(data: schema.TopocentricFrameInModelInfo) -> fas
     
     H: u.Quantity = data.elevation * u.km
     
-    R: u.Quantity = od.OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                local_sidereal_time=theta,
-                                                                                latitude=phi,
-                                                                                site_altitude=H)
+    R: u.Quantity = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor, local_sidereal_time=theta, latitude=phi, site_altitude=H)
     
-    rho_te: u.Quantity = od.OrbitDetermination.topocentric_equatorial_position_vector(attractor=attractor,
-                                                                                      position=r,
-                                                                                      local_sidereal_time=theta,
-                                                                                      latitude=phi,
-                                                                                      site_altitude=H)
+    rho_te: u.Quantity = sl_frames.topocentric_equatorial_position_vector(
+        attractor=attractor, position=r, local_sidereal_time=theta, latitude=phi, site_altitude=H)
     
-    rho_th, A, a = od.OrbitDetermination.topocentric_horizon_position_vector(attractor=attractor,
-                                                                             position=r,
-                                                                             local_sidereal_time=theta,
-                                                                             latitude=phi,
-                                                                             site_altitude=H)
+    rho_th, A, a = sl_frames.topocentric_horizon_position_vector(
+        attractor=attractor, position=r, local_sidereal_time=theta, latitude=phi, site_altitude=H)
     
-    _, alpha, delta = od.OrbitDetermination.topocentric_equatorial_right_ascension_declination(attractor=attractor,
-                                                                                               local_sidereal_time=theta,
-                                                                                               latitude=phi,
-                                                                                               azimuth=A,
-                                                                                               elevation=a)
+    _, alpha, delta = sl_frames.topocentric_equatorial_right_ascension_declination(
+        attractor=attractor, local_sidereal_time=theta, latitude=phi, azimuth=A, elevation=a)
     
     result: schema.TopocentricFrameOutModelInfo = schema.TopocentricFrameOutModelInfo(
         positionGeocentricEquatorial=schema.Vector3D(x=R[0].to_value(), y=R[1].to_value(), z=R[2].to_value()),
@@ -574,38 +561,20 @@ async def put_predict_angle_range(data: schema.AngleRangeInModelInfo) -> fastapi
         fastapi.responses.JSONResponse: JSON response
     """
     
-    attractor: bodies.Attractor = bodies.Attractor.EARTH
+    r, v = sl_determination.predict_from_angle_range(
+        attractor=bodies.Attractor.EARTH,
+        slant_range=data.slantRange * u.km,
+        azimuth=data.azimuth * u.deg,
+        elevation=data.elevationA * u.deg,
+        range_rate=data.rangeRate * u.km / u.s,
+        azimuth_rate=data.azimuthRate * u.deg / u.s,
+        elevation_rate=data.elevationARate * u.deg / u.s,
+        local_sidereal_time=data.localSiderealTime * u.deg,
+        latitude=data.latitude * u.deg,
+        site_altitude=data.elevationH * u.km)
     
-    rho: u.Quantity = data.slantRange * u.km
-    
-    A: u.Quantity = data.azimuth * u.deg
-    
-    a: u.Quantity = data.elevationA * u.deg
-    
-    drho_dt: u.Quantity = data.rangeRate * u.km / u.s
-    
-    dA_dt: u.Quantity = data.azimuthRate * u.deg / u.s
-    
-    da_dt: u.Quantity = data.elevationARate * u.deg / u.s
-    
-    theta: u.Quantity = data.localSiderealTime * u.deg
-    
-    phi: u.Quantity = data.latitude * u.deg
-    
-    H: u.Quantity = data.elevationH * u.km
-    
-    r, v = od.OrbitDetermination.predict_from_angle_range(attractor=attractor,
-                                                          slant_range=rho,
-                                                          azimuth=A,
-                                                          elevation=a,
-                                                          range_rate=drho_dt,
-                                                          azimuth_rate=dA_dt,
-                                                          elevation_rate=da_dt,
-                                                          local_sidereal_time=theta,
-                                                          latitude=phi,
-                                                          site_altitude=H)
-    
-    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements =\
+        sl_representation.cartesian_to_keplerian(attractor=bodies.Attractor.EARTH, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),
@@ -632,29 +601,16 @@ async def put_predict_gauss_method(data: schema.GaussMethodInModelInfo) -> fasta
         fastapi.responses.JSONResponse: JSON response
     """
     
-    attractor: bodies.Attractor = bodies.Attractor.EARTH
+    r, v = sl_determination.predict_from_gauss_method_extended(
+        attractor=bodies.Attractor.EARTH,
+        latitude=data.latitude * u.deg,
+        local_sidereal_time_list=np.array([data.localSiderealTime[0], data.localSiderealTime[1], data.localSiderealTime[2]]) * u.deg,
+        right_ascension_list=np.array([data.rightAscension[0], data.rightAscension[1], data.rightAscension[2]]) * u.deg,
+        declination_list=np.array([data.declination[0], data.declination[1], data.declination[2]]) * u.deg,
+        observation_time_list=np.array([data.time[0], data.time[1], data.time[2]]) * u.s,
+        site_altitude=data.elevation * u.km)
     
-    phi: u.Quantity = data.latitude * u.deg
-    
-    theta: u.Quantity = np.array([data.localSiderealTime[0], data.localSiderealTime[1], data.localSiderealTime[2]]) * u.deg
-    
-    alpha: u.Quantity = np.array([data.rightAscension[0], data.rightAscension[1], data.rightAscension[2]]) * u.deg
-    
-    delta: u.Quantity = np.array([data.declination[0], data.declination[1], data.declination[2]]) * u.deg
-    
-    t: u.Quantity = np.array([data.time[0], data.time[1], data.time[2]]) * u.s
-    
-    H: u.Quantity = data.elevation * u.km
-    
-    r, v = od.OrbitDetermination.predict_from_gauss_method_extended(attractor=attractor,
-                                                                    latitude=phi,
-                                                                    local_sidereal_time_list=theta,
-                                                                    right_ascension_list=alpha,
-                                                                    declination_list=delta,
-                                                                    observation_time_list=t,
-                                                                    site_altitude=H)
-    
-    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=attractor, position=r, velocity=v)
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(attractor=bodies.Attractor.EARTH, position=r, velocity=v)
     
     result: schema.AngleRangeOutModelInfo = schema.AngleRangeOutModelInfo(
         position=schema.Vector3D(x=r[0].to_value(), y=r[1].to_value(), z=r[2].to_value()),

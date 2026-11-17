@@ -13,7 +13,7 @@ from common.app_data import AppData
 from common.web_socket_manager import WebSocketManager
 
 from spacelab.bodies import Attractor, BODIES
-from spacelab.orbit_determination import OrbitDetermination
+import spacelab.orbit.determination as sl_determination
 
 async def pork_chop_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of pork-chop analysis
@@ -150,10 +150,8 @@ def compute_pork_chop_sync(payload: schema.SimulationModel, data: AppData) -> ty
 
             # * Lambert solution
             
-            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN,
-                                                            departure_position=r1,
-                                                            arrival_position=r2,
-                                                            delta_time=time.TimeDelta(tof))
+            v_1_l, v_2_l, _, _ = sl_determination.lambert(
+                attractor=Attractor.SUN, departure_position=r1, arrival_position=r2, delta_time=time.TimeDelta(tof))
             
             # * Solution
             
@@ -272,7 +270,8 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
             
             # * Lambert solution
             
-            v_1_l, v_2_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=r1, arrival_position=rfb, delta_time=time.TimeDelta(tof_1))
+            v_1_l, v_2_l, _, _ = sl_determination.lambert(
+                attractor=Attractor.SUN, departure_position=r1, arrival_position=rfb, delta_time=time.TimeDelta(tof_1))
             
             # * Incoming hyperbola excess velocity
             
@@ -307,7 +306,8 @@ def compute_pork_chop_flyby_sync(payload: schema.SimulationModel, data: AppData)
                 
                 # * Lambert solution
                 
-                v_2_l, v_3_l, _, _ = OrbitDetermination.lambert(attractor=Attractor.SUN, departure_position=rfb, arrival_position=r2, delta_time=time.TimeDelta(tof_2))
+                v_2_l, v_3_l, _, _ = sl_determination.lambert(
+                    attractor=Attractor.SUN, departure_position=rfb, arrival_position=r2, delta_time=time.TimeDelta(tof_2))
                 
                 # * Outgoing hyperbola excess velocity
                 

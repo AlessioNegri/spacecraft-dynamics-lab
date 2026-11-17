@@ -32,7 +32,8 @@ import spacelab.physical_constants as constants
 import spacelab.orbit.representation as o3d
 import spacelab.orbit.representation as sl_representation
 import spacelab.orbit.position as op
-import spacelab.orbit_determination as od
+import spacelab.orbit.determination as od
+import spacelab.orbit.determination as sl_determination
 import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.n_body_models.lagrange_coefficients as lc
 
@@ -1079,11 +1080,12 @@ class OrbitalManeuvers():
             
             direction = OrbitDirection.RETROGRADE
         
-        v_t_c, v_t_t, oe_t, ta_t_2 = od.OrbitDetermination.lambert(attractor=attractor,
-                                                                   departure_position=r_c,
-                                                                   arrival_position=r_t,
-                                                                   delta_time=delta_time,
-                                                                   direction=direction)
+        v_t_c, v_t_t, oe_t, ta_t_2 = sl_determination.lambert(
+            attractor=attractor,
+            departure_position=r_c,
+            arrival_position=r_t,
+            delta_time=delta_time,
+            direction=direction)
         
         oe_t_2: OrbitalElements = copy.deepcopy(oe_t)
         
@@ -2147,7 +2149,7 @@ class OrbitalManeuvers():
             
                 delta_theta: u.Quantity = u.Quantity(180.0, u.deg) - oe.true_anomaly
             
-                l_r_f, l_v_f = lc.LagrangeCoefficients.propagate_of_angle(attractor=attractor,
+                l_r_f, l_v_f = lc.propagate_of_angle(attractor=attractor,
                                                                           initial_position=r,
                                                                           initial_velocity=v,
                                                                           delta_true_anomaly=delta_theta)

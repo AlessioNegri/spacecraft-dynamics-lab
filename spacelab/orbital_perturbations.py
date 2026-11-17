@@ -26,7 +26,8 @@ import spacelab.common as common
 import spacelab.n_body_models.lagrange_coefficients as lc
 import spacelab.orbit.representation as o3d
 import spacelab.orbit.representation as sl_representation
-import spacelab.orbit_determination as od
+import spacelab.orbit.determination as od
+import spacelab.orbit.time as sl_time
 
 from spacelab.enums import AtmosphereModel
 
@@ -47,7 +48,7 @@ class OrbitalPerturbations():
         
         self.attractor: bodies.Attractor = bodies.Attractor.EARTH
         
-        self.julian_day: float = od.OrbitDetermination.J2000
+        self.julian_day: float = sl_time.J2000
         
         self.position: np.ndarray = np.zeros(3)
         
@@ -85,11 +86,11 @@ class OrbitalPerturbations():
         
         # >>> 1. Julian day number
         
-        JD: float = od.OrbitDetermination.timestamp_2_julian_day(timestamp=timestamp)
+        JD: float = sl_time.timestamp_2_julian_day(timestamp=timestamp)
         
         # >>> 2. Number of days since J2000
         
-        n: float = JD - od.OrbitDetermination.J2000
+        n: float = JD - sl_time.J2000
         
         # >>> 3. Mean anonaly of the Sun (deg)
         
@@ -207,11 +208,11 @@ class OrbitalPerturbations():
         
         # >>> 1. Julian day number
         
-        JD: float = od.OrbitDetermination.timestamp_2_julian_day(timestamp=timestamp)
+        JD: float = sl_time.timestamp_2_julian_day(timestamp=timestamp)
         
         # >>> 2. Number of Julian centuries since J2000
         
-        T_0: float = (JD - od.OrbitDetermination.J2000) / 36_525
+        T_0: float = (JD - sl_time.J2000) / 36_525
         
         # >>> 3. Obliquity
         
@@ -1034,7 +1035,7 @@ class OrbitalPerturbations():
         
         # >>> 2. Compute the first osculating state vector
         
-        r_osc, v_osc = lc.LagrangeCoefficients.propagate_position_velocity(attractor=self.attractor,
+        r_osc, v_osc = lc.propagate_position_velocity(attractor=self.attractor,
                                                                            initial_position=r_0 * u.km,
                                                                            initial_velocity=v_0 * u.km / u.s,
                                                                            delta_time=step)
@@ -1062,7 +1063,7 @@ class OrbitalPerturbations():
             
             # >>> b. Evaluate new osculating state vector
             
-            r_osc, v_osc = lc.LagrangeCoefficients.propagate_position_velocity(attractor=self.attractor,
+            r_osc, v_osc = lc.propagate_position_velocity(attractor=self.attractor,
                                                                                initial_position=r_0 * u.km,
                                                                                initial_velocity=v_0 * u.km / u.s,
                                                                                delta_time=step)
@@ -1597,7 +1598,7 @@ class OrbitalPerturbations():
             
             # * Solar Radiation Pressure
             
-            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = sl_time.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_sun, lambda_, epsilon = self.sun_position(timestamp=timestamp_0 + t / 86400)
             
@@ -1646,7 +1647,7 @@ class OrbitalPerturbations():
             
             # * Lunar gravity
             
-            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = sl_time.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_moon: u.Quantity = self.moon_position(timestamp=timestamp_0 + t / 86400)
             
@@ -1668,7 +1669,7 @@ class OrbitalPerturbations():
             
             # * Solar gravity
             
-            timestamp_0: time.Time = od.OrbitDetermination.julian_day_2_timestamp(julian_day=self.julian_day)
+            timestamp_0: time.Time = sl_time.julian_day_2_timestamp(julian_day=self.julian_day)
             
             r_sun, lambda_, epsilon = self.sun_position(timestamp=timestamp_0 + t / 86400)
             

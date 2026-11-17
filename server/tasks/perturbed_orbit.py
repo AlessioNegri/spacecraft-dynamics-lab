@@ -16,7 +16,8 @@ import spacelab.common as cm
 import spacelab.orbital_perturbations as op
 import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.orbit.representation as sl_representation
-import spacelab.orbit_determination as od
+import spacelab.orbit.time as sl_time
+import spacelab.orbit.determination as od
 
 async def orbital_perturbations_analysis(payload: schema.SimulationModel, wsm: WebSocketManager, data: AppData) -> dict:
     """Asynchronous execution of orbital perturbations analysis
@@ -156,7 +157,7 @@ def compute_orbital_perturbations(payload: schema.SimulationModel, data: AppData
         
         # * Propagate orbit and store results
         
-        JD_0: float = od.OrbitDetermination.timestamp_2_julian_day(timestamp)
+        JD_0: float = sl_time.timestamp_2_julian_day(timestamp)
         
         delta: t.TimeDelta = t.TimeDelta(step)
         

@@ -1,1205 +1,1217 @@
 """
-Orbit Determination
+This module contains some of the classical ways in which the orbit of a satellite can be determined from earth-bound
+observations. All of the methods presented here are based on the two-body equations of motion. As such, they must be
+considered preliminary **orbit determination** techniques.
 
-Algorithms for orbit determination.
+📖 **References**
 
-References:
-- Howard D. Curtis, "Orbital Mechanics for Engineering Students"
-    - Chapter 5: Preliminary Orbit Determination
-
-- Craig A. Kluever, "Space Flight Dynamics"
-    - Chapter 3: Orbit Determination
-
-- Ulrich Walter, "Astronautics - The Physics of Space Flight"
-    - Chapter 8: Orbital Maneuvering
-    - Chapter 13: Reference Frames
-    - Chapter 14: Orbit Geometry and Determination
+- :cite:`curtis`
+    - Chapter 5 *Preliminary Orbit Determination*
+- :cite:`kluever`
+    - Chapter 3 *Orbit Determination*
+- :cite:`walter`
+    - Chapter 8 *Orbital Maneuvering*
+    - Chapter 14 *Orbit Geometry and Determination*
 """
 
 import astropy.time as time
 import astropy.units as u
 import numpy as np
 import scipy.optimize as optimize
-import typing
+import typing as ty
 
 import spacelab.bodies as bodies
-import spacelab.common as common
+import spacelab.bodies as sl_bodies
+import spacelab.enums as sl_enums
 import spacelab.models.orbital_elements as sl_orbital_elements
+import spacelab.n_body_models.lagrange_coefficients as sl_lagrange_coefficients
+import spacelab.orbit.frames as sl_frames
 import spacelab.orbit.representation as sl_representation
-import spacelab.n_body_models.lagrange_coefficients as lc
+import spacelab.utils.logger as sl_logger
+import spacelab.utils.validator as sl_validator
 
-from spacelab.enums import OrbitDirection
+# * curtis
 
-class OrbitDetermination():
-    """Orbit Determination"""
+def gibbs_method(
+    attractor: bodies.Attractor,
+    position_1 : u.Quantity,
+    position_2 : u.Quantity,
+    position_3 : u.Quantity) -> ty.Optional[sl_orbital_elements.OrbitalElements]:
+    """
+    Gibbs method of orbit determination from tree position vectors.
+
+    :param attractor: Main attractor
+    :type attractor: bodies.Attractor
+    :param position_1: Position vector 1
+    :type position_1: u.Quantity
+    :param position_2: Position vector 2
+    :type position_2: u.Quantity
+    :param position_3: Position vector 3
+    :type position_3: u.Quantity
+    :return: Orbital elements
+    :rtype: ty.Optional[sl_orbital_elements.OrbitalElements]
     
-    J2000: int = 2_451_545
+    📌 **Notes**
     
-    # --- STATIC ---
+    This is a geometric method for orbit determination that is based on three successive inertial position vectors. This
+    method utilizes concepts from vector calculus pioneered by Josiah Willard Gibbs at the end of the nineteenth century
+    and is therefore known as the *Gibbs method*.
     
-    @staticmethod
-    def herrick_gibbs_method(attractor: bodies.Attractor,
-                             position_1 : u.Quantity,
-                             time_1: u.Quantity,
-                             position_2 : u.Quantity,
-                             time_2: u.Quantity,
-                             position_3 : u.Quantity,
-                             time_3: u.Quantity) -> sl_orbital_elements.OrbitalElements:
-        """
-        Herrick-Gibbs method of orbit determination from tree position vectors with associated times
-        
-        The three vectors must lie in the same plane. Useful when the geocentric angles of the three subsequent
-        measurements are less apart than 15° for LEO and 6° for GSO.
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            position_1 (u.Quantity): Position vector 1
-            time_1 (u.Quantity): Time for position vector 1
-            position_2 (u.Quantity): Position vector 2
-            time_2 (u.Quantity): Time for position vector 2
-            position_3 (u.Quantity): Position vector 3
-            time_3 (u.Quantity): Time for position vector 3
-
-        Returns:
-            sl_orbital_elements.OrbitalElements: Orbital elements
-        """
-        
-        r_1: np.ndarray = position_1.to_value(u.km)
-        r_2: np.ndarray = position_2.to_value(u.km)
-        r_3: np.ndarray = position_3.to_value(u.km)
-        
-        t_1: np.ndarray = time_1.to_value(u.s)
-        t_2: np.ndarray = time_2.to_value(u.s)
-        t_3: np.ndarray = time_3.to_value(u.s)
-        
-        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        common.check_attractor(attractor)
-        common.check_position_vector(r_1)
-        common.check_position_vector(r_2)
-        common.check_position_vector(r_3)
-        
-        r_1_m: float = np.linalg.vector_norm(r_1)
-        r_2_m: float = np.linalg.vector_norm(r_2)
-        r_3_m: float = np.linalg.vector_norm(r_3)
-        
-        dt_21: float = t_2 - t_1
-        dt_32: float = t_3 - t_2
-        dt_31: float = t_3 - t_1
-        
-        v_2: np.ndarray =\
-                      dt_32 * (mu / (12 * r_1_m**3) - 1 / (dt_21 * dt_31)) * r_1 +\
-            (dt_32 - dt_21) * (mu / (12 * r_2_m**3) + 1 / (dt_21 * dt_32)) * r_2 +\
-                      dt_21 * (mu / (12 * r_3_m**3) + 1 / (dt_31 * dt_32)) * r_3
-        
-        oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
-            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
+    The three vectors must lie in the same plane and not too close to each other.
     
-        return oe
+    This method is useful when the geocentric angles of the three subsequent measurements are more apart than 15° for
+    LEO and 6° for GSO.
     
-    @staticmethod
-    def gibbs_method(attractor: bodies.Attractor,
-                     position_1 : u.Quantity,
-                     position_2 : u.Quantity,
-                     position_3 : u.Quantity) -> sl_orbital_elements.OrbitalElements:
-        """
-        Gibbs method of orbit determination from tree position vectors
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.2 *Gibbs method of orbit determination from three position vectors*
+    - :cite:`kluever`
+        - Section 3.8 *Orbit Determination from Three Position Vectors*
+    """
+    
+    # >>> Validation
+    
+    # * attractor
+    
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * position_1
+    
+    err_msg = sl_validator.validate_quantity_vector("position_1", position_1, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * position_2
+    
+    err_msg = sl_validator.validate_quantity_vector("position_2", position_2, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * position_3
+    
+    err_msg = sl_validator.validate_quantity_vector("position_3", position_3, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    r_1: np.ndarray = position_1.to_value(u.km)
+    r_2: np.ndarray = position_2.to_value(u.km)
+    r_3: np.ndarray = position_3.to_value(u.km)
+    
+    mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+    
+    # ? 1. Norm
+    
+    r_1_m: float = np.linalg.norm(r_1)
+    r_2_m: float = np.linalg.norm(r_2)
+    r_3_m: float = np.linalg.norm(r_3)
+    
+    # ? 2. Cross products
+    
+    C_12: np.ndarray = np.cross(r_1, r_2)
+    C_23: np.ndarray = np.cross(r_2, r_3)
+    C_31: np.ndarray = np.cross(r_3, r_1)
+    
+    # ? 3. Verify
+    
+    u_r_1: np.ndarray = r_1 / r_1_m
+    
+    if np.abs(np.dot(u_r_1, C_23 / np.linalg.norm(C_23))) > 0.0349:
         
-        The three vectors must lie in the same plane. Useful when the geocentric angles of the three subsequent
-        measurements are more apart than 15° for LEO and 6° for GSO.
+        sl_logger.logger.warning("Not coplanar position vectors (vectors plane - orbital plane angle > 2°)")
+        
+        return None
+    
+    theta_12: float = np.arccos(np.dot(r_1, r_2) / (r_1_m * r_2_m))
+    
+    theta_23: float = np.arccos(np.dot(r_2, r_3) / (r_2_m * r_3_m))
+    
+    if theta_12 < np.deg2rad(1) or theta_23 < np.deg2rad(1):
+        
+        sl_logger.logger.warning("The three position vectors are too close to each other (angle < 1°)")
+        
+        return None
 
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            position_1 (u.Quantity): Position vector 1
-            position_2 (u.Quantity): Position vector 2
-            position_3 (u.Quantity): Position vector 3
+    # ? 4. Calculate N, D, and S auxiliary vectors
+    
+    N: np.ndarray = r_1_m * C_23 + r_2_m * C_31 + r_3_m * C_12
+    
+    n_m: float = np.linalg.norm(N) # ? N_m
+    
+    D: np.ndarray = C_12 + C_23 + C_31
+    
+    d_m: float = np.linalg.norm(D) # ? D_m
+    
+    S: np.ndarray = r_1 * (r_2_m - r_3_m) + r_2 * (r_3_m - r_1_m) + r_3 * (r_1_m - r_2_m)
+    
+    # ? 5. Calculate velocity at 2
+    
+    v_2: np.ndarray = np.sqrt(mu / (n_m * d_m)) * (np.cross(D, r_2) / r_2_m + S)
+    
+    # ? 6. Compute the orbital elements
+    
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
+    
+    return oe
 
-        Returns:
-            sl_orbital_elements.OrbitalElements: Orbital elements
-        """
+def _lambert_equation(z: float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float: # NOSONAR python:S117
+    """
+    Lambert's equation.
+
+    :param z: Variable
+    :type z: float
+    :param mu: Gravitational constant [km^3 / s^2]
+    :type mu: float
+    :param r_1: Position 1
+    :type r_1: float
+    :param r_2: Position 2
+    :type r_2: float
+    :param A: Parameter A
+    :type A: float
+    :param dt: Delta time
+    :type dt: float
+    :return: Result
+    :rtype: float
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.3 *Lambert's problem*
+    """
+    
+    s_z: float = sl_lagrange_coefficients.S(z)
+    c_z: float = sl_lagrange_coefficients.C(z)
+    
+    y: float = max(r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z), 0)
+    
+    return (y / c_z)**(3/2) * s_z + A * np.sqrt(y) - np.sqrt(mu) * dt
+
+def _lambert_equation_first_derivative(z : float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float: # NOSONAR python:S117
+    """
+    Lambert's equation first derivative.
+
+    :param z: Variable
+    :type z: float
+    :param mu: Gravitational constant [km^3 / s^2]
+    :type mu: float
+    :param r_1: Position 1
+    :type r_1: float
+    :param r_2: Position 2
+    :type r_2: float
+    :param A: Parameter A
+    :type A: float
+    :param dt: Delta time
+    :type dt: float
+    :return: Result
+    :rtype: float
+    """
+    
+    s_0: float = sl_lagrange_coefficients.S(0)
+    c_0: float = sl_lagrange_coefficients.C(0)
+    s_z: float = sl_lagrange_coefficients.S(z)
+    c_z: float = sl_lagrange_coefficients.C(z)
+    
+    y_0: float = r_1 + r_2 + A * (0 * s_0 - 1) / np.sqrt(c_0)
+    
+    y: float = r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z)
+    
+    if z == 0:
         
-        r_1: np.ndarray = position_1.to_value(u.km)
-        r_2: np.ndarray = position_2.to_value(u.km)
-        r_3: np.ndarray = position_3.to_value(u.km)
+        return np.sqrt(2) / 40 * y_0**(3/2) + A / 8 * (np.sqrt(y_0) + A * 1 / np.sqrt(2 * y_0))
+    
+    else:
         
-        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        return (y / c_z)**(3/2) * (1 / (2 * z) * (c_z - 3/2 * s_z / c_z) + 3/4 * s_z**2 / c_z) +\
+            A / 8 * (3 * s_z / c_z * np.sqrt(y) + A * np.sqrt(c_z / y))
+
+def lambert(
+    attractor: bodies.Attractor,
+    departure_position: u.Quantity,
+    arrival_position: u.Quantity,
+    delta_time: time.TimeDelta,
+    direction: sl_enums.OrbitDirection = sl_enums.OrbitDirection.PROGRADE)\
+        -> ty.Optional[ty.Tuple[u.Quantity, u.Quantity, sl_orbital_elements.OrbitalElements, u.Quantity]]:
+    """
+    Solves **Lambert**'s problem.
+
+    :param attractor: Main attractor
+    :type attractor: bodies.Attractor
+    :param departure_position: Position vector at departure (km)
+    :type departure_position: u.Quantity
+    :param arrival_position: Position vector at arrival (km)
+    :type arrival_position: u.Quantity
+    :param delta_time: Time of flight between `departure_position` and `arrival_position`
+    :type delta_time: time.TimeDelta
+    :param direction: Type of orbit direction, defaults to sl_enums.OrbitDirection.PROGRADE
+    :type direction: sl_enums.OrbitDirection, optional
+    :return: (velocity at departure, velocity at arrival, transfer orbital elements, true anomaly at arrival)
+    :rtype: ty.Optional[ty.Tuple[u.Quantity, u.Quantity, sl_orbital_elements.OrbitalElements, u.Quantity]]
+
+    📌 **Notes**
+    
+    Given the position vectors at *departure* and *arrival*, with the *time-of-flight* between them, computes the
+    velocity vectors that connect the two positions in the specified time under the gravitational field of the attractor.
         
-        common.check_attractor(attractor)
-        common.check_position_vector(r_1)
-        common.check_position_vector(r_2)
-        common.check_position_vector(r_3)
+    The implementation uses the universal variable formulation and solves for the universal anomaly with Newton's method.
+    
+    The most general description of this problem is that, under the influence of a common central gravitational
+    potential, a spacecraft in the initial orbit at :math:`P_1` possesses the state vector
+    :math:`(\\mathbf{r}_1,\\mathbf{v}_1)` and wants to transfer to :math:`P_2` with state vector
+    :math:`(\\mathbf{r}_2,\\mathbf{v}_2)`. This is a general two-impulse transfer, called a *Lambert transfer*. A first
+    impulse maneuver :math:`\\Delta v_1` at :math:`P_1` injects the spacecraft into an unpowered coplanar conic transfer
+    orbit characterized by the orbital elements :math:`a` and :math:`e`. The transfer orbit terminates at :math:`P_2`,
+    where a second impulse maneuver :math:`\\Delta v_2` is performed.
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.3 *Lambert's problem*
+    - :cite:`walter`
+        - Section 8.2 *Lambert Transfer*
+    """
+    
+    # >>> Validation
+    
+    # * attractor
+    
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * departure_position
+    
+    err_msg = sl_validator.validate_quantity_vector("departure_position", departure_position, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * arrival_position
+    
+    err_msg = sl_validator.validate_quantity_vector("arrival_position", arrival_position, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * delta_time
+    
+    err_msg = sl_validator.validate_time_delta("delta_time", delta_time)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * direction
+    
+    err_msg = sl_validator.validate_type("direction", direction, sl_enums.OrbitDirection)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    r_1: np.ndarray = departure_position.to_value(u.km)
+    r_2: np.ndarray = arrival_position.to_value(u.km)
+    
+    mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+    
+    dt: float = delta_time.to_value(u.s)
+    
+    # ? 1. Norm
+    
+    r_1_m : float = np.linalg.norm(r_1)
+    r_2_m: float = np.linalg.norm(r_2)
+    
+    # ? 2. Delta theta
+    
+    delta_theta: float = 0.0
+    
+    temp: float = np.arccos((np.dot(r_1, r_2)) / (r_1_m * r_2_m))
+    
+    condition: float = np.cross(r_1, r_2)[2] # ? Z component
+    
+    if direction == sl_enums.OrbitDirection.PROGRADE:
         
-        # >>> 1. Norm
+        delta_theta = temp if condition >= 0 else (2 * np.pi - temp)
         
-        r_1_m: float = np.linalg.norm(r_1)
+    elif direction == sl_enums.OrbitDirection.RETROGRADE:
+        
+        delta_theta = temp if condition < 0 else (2 * np.pi - temp)
+        
+    # ? 3. Parameter A
+    
+    A: float = np.sin(delta_theta) * np.sqrt((r_1_m * r_2_m) / (1 - np.cos(delta_theta)))
+    
+    # ? 4. Orbit type
+    
+    z_0: float = -4.0
+    
+    while _lambert_equation(z_0, mu, r_1_m, r_2_m, A, dt) < 0:
+        
+        z_0 = z_0 + 0.1
+    
+    z: float = 0.0
+    
+    # * Used for returning a failed result in case the Newton's method fails to converge (i.e. impossible orbit)
+    failed_result: np.ndarray = [
+        np.ones(r_1.shape) * 100.0 * u.km / u.s,
+        np.ones(r_2.shape) * 100.0 * u.km / u.s,
+        sl_orbital_elements.OrbitalElements(),
+        0.0 * u.deg]
+
+    try:
+        
+        z = optimize.newton(
+            func=_lambert_equation,
+            x0=z_0,
+            fprime=_lambert_equation_first_derivative,
+            args=(mu, r_1_m, r_2_m, A, dt))
+    
+    except Exception:
+        
+        return failed_result
+    
+    # ? 5. Parameter y
+    
+    s_z: float = sl_lagrange_coefficients.S(z)
+    c_z: float = sl_lagrange_coefficients.C(z)
+    
+    y: float = r_1_m + r_2_m + A * (z * s_z - 1) / np.sqrt(c_z)
+    
+    # ? 6. Lagrange functions
+    
+    f: float = 1 - y / r_1_m
+    
+    g: float = A * np.sqrt(y / mu)
+    
+    dg_dt: float = 1 - y / r_2_m
+    
+    # ? 7. Velocities
+    
+    v_1: np.ndarray = 1 / g * (r_2 - f * r_1)
+    
+    v_2: np.ndarray = 1 / g * (dg_dt * r_2 - r_1)
+    
+    # ? 8. Orbital elements of the transfer orbit
+    
+    oe_1: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_1 * u.km, velocity=v_1 * u.km / u.s)
+    
+    oe_2: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
+    
+    return [v_1 * u.km / u.s, v_2 * u.km / u.s, oe_1, oe_2.true_anomaly]
+
+def predict_from_angle_range(
+    attractor: sl_bodies.Attractor,
+    slant_range: u.Quantity,
+    azimuth: u.Quantity,
+    elevation: u.Quantity,
+    range_rate: u.Quantity,
+    azimuth_rate: u.Quantity,
+    elevation_rate: u.Quantity,
+    local_sidereal_time: u.Quantity,
+    latitude: u.Quantity,
+    site_altitude: u.Quantity = 0 * u.km) -> ty.Optional[ty.List[u.Quantity]]:
+    """
+    Predicts the geocentric position and velocity vectors from angle and range measurements.
+
+    :param attractor: Main attractor
+    :type attractor: sl_bodies.Attractor
+    :param slant_range: Slant range
+    :type slant_range: u.Quantity
+    :param azimuth: Azimuth (A, beta)
+    :type azimuth: u.Quantity
+    :param elevation: Elevation (a, sigma)
+    :type elevation: u.Quantity
+    :param range_rate: Range rate
+    :type range_rate: u.Quantity
+    :param azimuth_rate: Azimuth rate
+    :type azimuth_rate: u.Quantity
+    :param elevation_rate: Elevation rate
+    :type elevation_rate: u.Quantity
+    :param local_sidereal_time: Local sidereal time (theta)
+    :type local_sidereal_time: u.Quantity
+    :param latitude: Latitude (phi)
+    :type latitude: u.Quantity
+    :param site_altitude: Ground station elevation above sea level, defaults to 0 * u.km
+    :type site_altitude: u.Quantity, optional
+    :return: [position, velocity]
+    :rtype: ty.Optional[ty.List[u.Quantity]]
+    
+    📌 **Notes**
+    
+    We know that an orbit around the earth is determined once the state vectors :math:`\\vec{r}` and :math:`\\vec{v}` in
+    the inertial geocentric equatorial frame are provided at a given instant of time (epoch). Satellites are of course
+    observed from the earth's surface and not from its center. The state vector can be determined from measurements by
+    an earth-based tracking station.
+    
+    We assume that the tracking station is able to measure simultaneously the six quantities: range and range rate;
+    azimuth and azimuth rate; plus elevation and elevation rate. This data leads directly to the state vector and,
+    hence, to a complete determination of the orbit.
+    
+    This is the most straightforward (and perhaps least realistic) orbit-determination method that relies on six
+    independent Earth-based measurements taken together at one time instant. The basic idea is that an Earth-based
+    station measures the position and velocity vectors of a satellite relative to a moving coordinate system fixed with
+    the station.
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.8 *Orbit determination from angle and range measurements*
+    - :cite:`kluever`
+        - Section 3.7 *Orbit Determination from One Ground-Based Observation*
+    """
+    
+    # >>> Validation
+    
+    # * attractor
+    
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * slant_range
+    
+    err_msg = sl_validator.validate_quantity("slant_range", slant_range, u.km)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * azimuth
+    
+    err_msg = sl_validator.validate_quantity_angle("azimuth", azimuth)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * elevation
+    
+    err_msg = sl_validator.validate_quantity_angle("elevation", elevation)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * range_rate
+    
+    err_msg = sl_validator.validate_quantity("range_rate", range_rate, u.km / u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * azimuth_rate
+    
+    err_msg = sl_validator.validate_quantity("azimuth_rate", azimuth_rate, u.deg / u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * elevation_rate
+    
+    err_msg = sl_validator.validate_quantity("elevation_rate", elevation_rate, u.deg / u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * local_sidereal_time
+    
+    err_msg = sl_validator.validate_quantity_angle("local_sidereal_time", local_sidereal_time)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * latitude
+    
+    err_msg = sl_validator.validate_quantity_angle("latitude", latitude)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * site_altitude
+    
+    err_msg = sl_validator.validate_quantity("site_altitude", site_altitude, u.km)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    # ? 1. Geocentric position vector of the site
+    
+    R: ty.Optional[u.Quantity] = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor, local_sidereal_time=local_sidereal_time, latitude=latitude, site_altitude=site_altitude)
+    
+    if R is None: return None
+    
+    rho: float = slant_range.to_value(u.km)
+    
+    A: float = azimuth.to_value(u.rad)
+    
+    a: float = elevation.to_value(u.rad)
+    
+    drho_dt: float = range_rate.to_value(u.km / u.s)
+    
+    dA_dt: float = azimuth_rate.to_value(u.rad / u.s) # NOSONAR python:S117
+    
+    da_dt: float = elevation_rate.to_value(u.rad / u.s)
+    
+    omega: float = bodies.BODIES[attractor].omega.to_value(u.rad / u.s)
+    
+    theta: float = local_sidereal_time.to_value(u.rad)
+    
+    phi: float = latitude.to_value(u.rad)
+    
+    # ? 2. Topocentric declination
+    
+    delta: float = np.arcsin(np.cos(phi) * np.cos(A) * np.cos(a) + np.sin(phi) * np.sin(a))
+    
+    # ? 3. Topocentric right ascension
+    
+    h: float = 0.0 # * Hour Angle
+    
+    if A > 0 and A < np.pi:
+        
+        h = 2* np.pi - np.arccos((np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a)) / np.cos(delta))
+        
+    else:
+        
+        h = np.arccos((np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a)) / np.cos(delta))
+    
+    alpha: float = theta - h
+    
+    # ? 4. Direction cosine unit vector
+    
+    rho_h: np.ndarray = np.array([np.cos(delta) * np.cos(alpha), np.cos(delta) * np.sin(alpha), np.sin(delta)])
+    
+    # ? 5. Geocentric position vector
+    
+    r: np.ndarray = R.to_value(u.km) + rho * rho_h
+    
+    # ? 6. Inertial velocity of the site
+    
+    dR_dt: np.ndarray = np.cross(np.array([0, 0, omega]), R.to_value(u.km)) # NOSONAR python:S117
+    
+    # ? 7. Declination rate
+    
+    ddelta_dt: float = 1 / np.cos(delta) * (-dA_dt * np.cos(phi) * np.sin(A) * np.cos(a) + \
+        da_dt * (np.sin(phi) * np.cos(a) - np.cos(phi) * np.cos(A) * np.sin(a)))
+    
+    # ? 8. Right ascension rate
+    
+    dalpha_dt: float = omega + (dA_dt * np.cos(A) * np.cos(a) - da_dt * np.sin(A) * np.sin(a) + \
+        ddelta_dt * np.sin(A) * np.cos(a) * np.tan(delta)) / \
+            (np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a))
+    
+    # ? 9. Direction cosine rate unit vector
+    
+    drho_h_dt: np.ndarray = np.array([
+        -dalpha_dt * np.sin(alpha) * np.cos(delta) - ddelta_dt * np.cos(alpha) * np.sin(delta),
+        dalpha_dt * np.cos(alpha) * np.cos(delta) - ddelta_dt * np.sin(alpha) * np.sin(delta),
+        ddelta_dt * np.cos(delta)])
+    
+    # ? 10 Geocentric velocity vector
+    
+    v = dR_dt + drho_dt * rho_h + rho * drho_h_dt
+    
+    return [r * u.km, v * u.km / u.s]
+
+def predict_from_gauss_method(
+    attractor: sl_bodies.Attractor,
+    latitude: u.Quantity,
+    local_sidereal_time_list: u.Quantity,
+    right_ascension_list: u.Quantity,
+    declination_list: u.Quantity,
+    observation_time_list: u.Quantity,
+    site_altitude: u.Quantity = 0 * u.km) -> ty.Optional[ty.List[u.Quantity]]:
+    """
+    Predicts position and velocity with the Gauss method.
+
+    :param attractor: Main attractor
+    :type attractor: sl_bodies.Attractor
+    :param latitude: Latitude (phi)
+    :type latitude: u.Quantity
+    :param local_sidereal_time_list: Vector of 3 local sidereal times (theta)
+    :type local_sidereal_time_list: u.Quantity
+    :param right_ascension_list: Vector of 3 right ascensions (alpha)
+    :type right_ascension_list: u.Quantity
+    :param declination_list: Vector of 3 declinations (delta)
+    :type declination_list: u.Quantity
+    :param observation_time_list: Vector of 3 observation times
+    :type observation_time_list: u.Quantity
+    :param site_altitude: Ground station elevation above sea level, defaults to 0 * u.km
+    :type site_altitude: u.Quantity, optional
+    :return: [positon, velocity] at second point
+    :rtype: ty.Optional[ty.List[u.Quantity]]
+    
+    📌 **Notes**
+    
+    To determine an orbit requires specifying six independent quantities. These can be the six classical orbital
+    elements or the total of six components the state vector at a given instant. To determine an orbit solely from
+    observations therefore requires six independent measurements.  In the absence of range and range rate measuring
+    capability, as with a telescope, we must rely on measurements of just the two angles, azimuth and elevation, to
+    determine the orbit. A minimum of three observations of azimuth and elevation is therefore required to accumulate
+    the six quantitieswe need to predict the orbit. We shall henceforth assume that the angular measurements are
+    converted to topocentric right ascension and declination. We consider the classical method of angles-only orbit
+    determination due to Carl Friedrich Gauss (1777-1855). This method requires gathering angular information over
+    closely spaced intervals of time and yields a preliminary orbit determination based on those initial observations.
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.9 *Angles-only preliminary orbit determination*
+        - Section 5.10 *Gauss method of preliminary orbit determination*
+    """
+    
+    # >>> Validation
+    
+    # * attractor
+    
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * latitude
+    
+    err_msg = sl_validator.validate_quantity_angle("latitude", latitude)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * local_sidereal_time_list
+    
+    err_msg = sl_validator.validate_quantity_vector("local_sidereal_time_list", local_sidereal_time_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * right_ascension_list
+    
+    err_msg = sl_validator.validate_quantity_vector("right_ascension_list", right_ascension_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * declination_list
+    
+    err_msg = sl_validator.validate_quantity_vector("declination_list", declination_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * observation_time_list
+    
+    err_msg = sl_validator.validate_quantity_vector("observation_time_list", observation_time_list, u.s, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * site_altitude
+    
+    err_msg = sl_validator.validate_quantity("site_altitude", site_altitude, u.km)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+    
+    alpha: np.ndarray = right_ascension_list.to_value(u.rad)
+    
+    delta: np.ndarray = declination_list.to_value(u.rad)
+    
+    t: np.ndarray = observation_time_list.to_value(u.s)
+    
+    # ? 0. Geocentric position vector of the site - Topocentric Horizon position vector
+    
+    R_1: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[0],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    R_2: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[1],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    R_3: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[2],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    rho_h_1: np.ndarray =\
+        np.array([ np.cos(delta[0]) * np.cos(alpha[0]), np.cos(delta[0]) * np.sin(alpha[0]), np.sin(delta[0]) ])
+        
+    rho_h_2: np.ndarray =\
+        np.array([ np.cos(delta[1]) * np.cos(alpha[1]), np.cos(delta[1]) * np.sin(alpha[1]), np.sin(delta[1]) ])
+        
+    rho_h_3: np.ndarray =\
+        np.array([ np.cos(delta[2]) * np.cos(alpha[2]), np.cos(delta[2]) * np.sin(alpha[2]), np.sin(delta[2]) ])
+    
+    # ? 1. Time intervals
+    
+    tau_1: float = t[0] - t[1]
+    tau_3: float = t[2] - t[1]
+    tau: float = tau_3 - tau_1
+    
+    # ? 2. Cross products
+    
+    p_1: np.ndarray = np.cross(rho_h_2, rho_h_3)
+    p_2: np.ndarray = np.cross(rho_h_1, rho_h_3)
+    p_3: np.ndarray = np.cross(rho_h_1, rho_h_2)
+    
+    # ? 3. D_0
+    
+    D_0: float = np.dot(rho_h_1, p_1)
+    
+    # ? 4. D matrix
+    
+    D: np.ndarray = np.array(
+        [
+            [ np.dot(R_1, p_1), np.dot(R_1, p_2), np.dot(R_1, p_3) ],
+            [ np.dot(R_2, p_1), np.dot(R_2, p_2), np.dot(R_2, p_3) ],
+            [ np.dot(R_3, p_1), np.dot(R_3, p_2), np.dot(R_3, p_3) ]
+        ]
+    )
+    
+    # ? 5. Calculate parameters A and B
+    
+    A: float = 1 / D_0 * (-D[0,1] * tau_3 / tau + D[1,1] + D[2,1] * tau_1 / tau)
+    
+    B: float = 1 / (6 * D_0) * (D[0,1] * (tau_3**2 - tau**2) * tau_3 / tau + D[2,1] * (tau**2 - tau_1**2) * tau_1 / tau)
+    
+    # ? 6. Calculate E
+    
+    E: float = np.dot(R_2, rho_h_2)
+    
+    # ? 7. Calculate a, b, and c
+    
+    a: float = - (A**2 + 2 * A * E + np.linalg.norm(R_2)**2)
+    
+    b: float = - 2 * mu * B * (A + E)
+    
+    c: float = - mu**2 * B**2
+    
+    # ? 8. Find r_2
+    
+    f: callable = lambda x: x**8 + a * x**6 + b * x**3 + c
+    
+    dfdt: callable = lambda x: 8 * x**7 + 6 * a * x**5 + 3 * b * x**2
+    
+    r_2_m: float = optimize.newton(f, x0=10000, fprime=dfdt, maxiter=100, tol=1e-8)
+    
+    # ? 9. Slant ranges
+    
+    rho_1: float = 1 / D_0 * \
+        ((6 * (D[2,0] * tau_1 / tau_3 + D[1,0] * tau / tau_3) * r_2_m**3 + \
+            mu * D[2,0] * (tau**2 - tau_1**2) * tau_1 / tau_3 ) /
+            (6 * r_2_m**3 + mu * (tau**2 - tau_3**2)) - D[0,0])
+    
+    rho_2: float = A + mu * B / r_2_m**3
+    
+    rho_3: float = 1 / D_0 * \
+        ((6 * (D[0,2] * tau_3 / tau_1 - D[1,2] * tau / tau_1) * r_2_m**3 + \
+            mu * D[0,2] * (tau**2 - tau_3**2) * tau_3 / tau_1 ) /
+            (6 * r_2_m**3 + mu * (tau**2 - tau_1**2)) - D[2,2])
+    
+    # ? 10. Geocentric position vector of the target
+    
+    r_1: np.ndarray = R_1 + rho_1 * rho_h_1
+    r_2: np.ndarray = R_2 + rho_2 * rho_h_2
+    r_3: np.ndarray = R_3 + rho_3 * rho_h_3
+    
+    # ? 11. Lagrange coefficients
+    
+    f_1: float = 1 - 1/2 * mu / r_2_m**3 * tau_1**2
+    f_3: float = 1 - 1/2 * mu / r_2_m**3 * tau_3**2
+    g_1: float = tau_1 - 1/6 * mu / r_2_m**3 * tau_1**3
+    g_3: float = tau_3 - 1/6 * mu / r_2_m**3 * tau_3**3
+    
+    # ? 12. Position and velocity vectors
+    
+    v_2: np.ndarray = 1 / (f_1 * g_3 - f_3 * g_1) * (-f_3 * r_1 + f_1 * r_3)
+    
+    return [r_2 * u.km, v_2 * u.km / u.s]
+
+def predict_from_gauss_method_extended( # NOSONAR python:S3776
+    attractor: sl_bodies.Attractor,
+    latitude: u.Quantity,
+    local_sidereal_time_list: u.Quantity,
+    right_ascension_list: u.Quantity,
+    declination_list: u.Quantity,
+    observation_time_list: u.Quantity,
+    site_altitude: u.Quantity = 0 * u.km) -> ty.Optional[ty.List[u.Quantity]]:
+    """
+    Predicts position and velocity with the extended Gauss method.
+
+    :param attractor: Main attractor
+    :type attractor: sl_bodies.Attractor
+    :param latitude: Latitude (phi)
+    :type latitude: u.Quantity
+    :param local_sidereal_time_list: Vector of 3 local sidereal times (theta)
+    :type local_sidereal_time_list: u.Quantity
+    :param right_ascension_list: Vector of 3 right ascensions (alpha)
+    :type right_ascension_list: u.Quantity
+    :param declination_list: Vector of 3 declinations (delta)
+    :type declination_list: u.Quantity
+    :param observation_time_list: Vector of 3 observation times
+    :type observation_time_list: u.Quantity
+    :param site_altitude: Ground station elevation above sea level, defaults to 0 * u.km
+    :type site_altitude: u.Quantity, optional
+    :return: [positon, velocity] at second point
+    :rtype: ty.Optional[ty.List[u.Quantity]]
+    
+    📌 **Notes**
+    
+    It improves the standard Gauss method by using the values of :math:`\\vec{r}_2` and :math:`\\vec{v}_2` obtained from
+    *predict_from_gauss_method* to compute the 'exact' values of the :math:`f` and :math:`g` functions from their
+    universal formulation.
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 5.9 *Angles-only preliminary orbit determination*
+        - Section 5.10 *Gauss method of preliminary orbit determination*
+    """
+    
+    # >>> Validation
+    
+    # * attractor
+    
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * latitude
+    
+    err_msg = sl_validator.validate_quantity_angle("latitude", latitude)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * local_sidereal_time_list
+    
+    err_msg = sl_validator.validate_quantity_vector("local_sidereal_time_list", local_sidereal_time_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * right_ascension_list
+    
+    err_msg = sl_validator.validate_quantity_vector("right_ascension_list", right_ascension_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * declination_list
+    
+    err_msg = sl_validator.validate_quantity_vector("declination_list", declination_list, u.deg, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * observation_time_list
+    
+    err_msg = sl_validator.validate_quantity_vector("observation_time_list", observation_time_list, u.s, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * site_altitude
+    
+    err_msg = sl_validator.validate_quantity("site_altitude", site_altitude, u.km)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    # ? 0. Gauss method
+    
+    r_2, v_2 = predict_from_gauss_method(
+        attractor=attractor,
+        latitude=latitude,
+        local_sidereal_time_list=local_sidereal_time_list,
+        right_ascension_list=right_ascension_list,
+        declination_list=declination_list,
+        observation_time_list=observation_time_list,
+        site_altitude=site_altitude)
+    
+    r_2: np.ndarray = r_2.to_value(u.km)
+    v_2: np.ndarray = v_2.to_value(u.km / u.s)
+    
+    R_1: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[0],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    R_2: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[1],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    R_3: np.ndarray = sl_frames.geocentric_equatorial_position_vector(
+        attractor=attractor,
+        local_sidereal_time=local_sidereal_time_list[2],
+        latitude=latitude,
+        site_altitude=site_altitude).to_value(u.km)
+    
+    alpha: np.ndarray = right_ascension_list.to_value(u.rad)
+    delta: np.ndarray = declination_list.to_value(u.rad)
+    
+    rho_h_1: np.ndarray =\
+        np.array([ np.cos(delta[0]) * np.cos(alpha[0]), np.cos(delta[0]) * np.sin(alpha[0]), np.sin(delta[0]) ])
+        
+    rho_h_2: np.ndarray =\
+        np.array([ np.cos(delta[1]) * np.cos(alpha[1]), np.cos(delta[1]) * np.sin(alpha[1]), np.sin(delta[1]) ])
+        
+    rho_h_3: np.ndarray =\
+        np.array([ np.cos(delta[2]) * np.cos(alpha[2]), np.cos(delta[2]) * np.sin(alpha[2]), np.sin(delta[2]) ])
+    
+    p_1: np.ndarray = np.cross(rho_h_2, rho_h_3)
+    p_2: np.ndarray = np.cross(rho_h_1, rho_h_3)
+    p_3: np.ndarray = np.cross(rho_h_1, rho_h_2)
+    
+    D_0: float = np.dot(rho_h_1, p_1)
+    
+    D: np.ndarray = np.array(
+        [
+            [ np.dot(R_1, p_1), np.dot(R_1, p_2), np.dot(R_1, p_3) ],
+            [ np.dot(R_2, p_1), np.dot(R_2, p_2), np.dot(R_2, p_3) ],
+            [ np.dot(R_3, p_1), np.dot(R_3, p_2), np.dot(R_3, p_3) ]
+        ]
+    )
+    
+    mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+    
+    f_1_prev: float = 0
+    f_3_prev: float = 0
+    g_1_prev: float = 0
+    g_3_prev: float = 0
+    
+    rho_1_prev: float = np.inf
+    rho_2_prev: float = np.inf
+    rho_3_prev: float = np.inf
+    
+    tol: float = 1e-6
+    
+    iteration: int = 1
+    
+    max_iteration: int = 100
+    
+    while True:
+        
+        # ? 1. Magnitudes
+        
         r_2_m: float = np.linalg.norm(r_2)
-        r_3_m: float = np.linalg.norm(r_3)
+        v_2_m: float = np.linalg.norm(v_2)
         
-        # >>> 2. Cross products
+        # ? 2. Alpha
         
-        C_12: float = np.cross(r_1, r_2)
-        C_23: float = np.cross(r_2, r_3)
-        C_31: float = np.cross(r_3, r_1)
+        Alpha: float = 2 / r_2_m - v_2_m**2 / mu # NOSONAR python:S117
         
-        # >>> 3. Verify
+        # ? 3. Radial velocity
         
-        u_r_1: np.ndarray = r_1 / r_1_m
+        v_r_2: float = np.dot(v_2, r_2) / r_2_m
         
-        if np.abs(np.dot(u_r_1, C_23 / np.linalg.norm(C_23))) > 0.0349: return sl_orbital_elements.OrbitalElements()
+        # ? 4. Universal variables
         
-        theta_12: float = np.arccos(np.dot(r_1, r_2) / (r_1_m * r_2_m))
+        chi_1: u.Quantity = sl_lagrange_coefficients.universal_kepler_solution(
+            attractor=attractor,
+            initial_position=r_2_m * u.km,
+            initial_radial_velocity=v_r_2 * u.km / u.s,
+            alpha=Alpha * 1 / u.km,
+            delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'))
         
-        theta_23: float = np.arccos(np.dot(r_2, r_3) / (r_2_m * r_3_m))
+        if chi_1 is None: return None
         
-        if theta_12 < np.deg2rad(1) or theta_23 < np.deg2rad(1): return sl_orbital_elements.OrbitalElements()
+        chi_3: u.Quantity = sl_lagrange_coefficients.universal_kepler_solution(
+            attractor=attractor,
+            initial_position=r_2_m * u.km,
+            initial_radial_velocity=v_r_2 * u.km / u.s,
+            alpha=Alpha * 1 / u.km,
+            delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'))
         
-        # >>> 4. Calculate N, D, and S auxiliary vectors
+        if chi_3 is None: return None
         
-        N: np.ndarray = r_1_m * C_23 + r_2_m * C_31 + r_3_m * C_12
+        # ? 5. Lagrange coefficients
         
-        n_m: float = np.linalg.norm(N) # ? N_m
+        result: ty.List[u.Quantity] = sl_lagrange_coefficients.lagrange_coefficients(
+            attractor=attractor,
+            initial_position=r_2_m * u.km,
+            alpha=Alpha * 1 / u.km,
+            delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'),
+            universal_anomaly=chi_1)
         
-        D: np.ndarray = C_12 + C_23 + C_31
+        if result is None: return None
         
-        d_m: float = np.linalg.norm(D) # ? D_m
+        f_1, g_1 = result
         
-        S: np.ndarray = r_1 * (r_2_m - r_3_m) + r_2 * (r_3_m - r_1_m) + r_3 * (r_1_m - r_2_m)
+        f_1 = float(f_1.to_value(u.one))
+        g_1 = float(g_1.to_value(u.s))
         
-        # >>> 5. Calculate velocity at 2
+        result = sl_lagrange_coefficients.lagrange_coefficients(
+            attractor=attractor,
+            initial_position=r_2_m * u.km,
+            alpha=Alpha * 1 / u.km,
+            delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'),
+            universal_anomaly=chi_3)
         
-        v_2: np.ndarray = np.sqrt(mu / (n_m * d_m)) * (np.cross(D, r_2) / r_2_m + S)
+        if result is None: return None
         
-        # >>> 6. Compute the orbital elements
+        f_3, g_3 = result
         
-        oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
-            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
+        f_3 = float(f_3.to_value(u.one))
+        g_3 = float(g_3.to_value(u.s))
         
-        return oe
+        # ? 6. Calculate parameters
+        
+        f_1 = (f_1 + f_1_prev) / 2 if f_1_prev != 0 else f_1
+        f_3 = (f_3 + f_3_prev) / 2 if f_3_prev != 0 else f_3
+        g_1 = (g_1 + g_1_prev) / 2 if g_1_prev != 0 else g_1
+        g_3 = (g_3 + g_3_prev) / 2 if g_3_prev != 0 else g_3
+        
+        c_1: float = g_3 / (f_1 * g_3 - f_3 * g_1)
+        c_3: float = -g_1 / (f_1 * g_3 - f_3 * g_1)
+        
+        f_1_prev = f_1
+        f_3_prev = f_3
+        g_1_prev = g_1
+        g_3_prev = g_3
+        
+        # ? 7. Updated slant ranges
+        
+        rho_1 = 1 / D_0 * (-D[0,0] + D[1,0] / c_1 - D[2,0] * c_3 / c_1)
+        rho_2 = 1 / D_0 * (-c_1 * D[0,1] + D[1,1] - c_3 * D[2,1])
+        rho_3 = 1 / D_0 * (-D[0,2] * c_1 / c_3 + D[1,2] / c_3 - D[2,2])
+        
+        # ? 8. Geocentric position vector of the target
     
-    @staticmethod
-    def lambert(attractor: bodies.Attractor,
-                departure_position: u.Quantity,
-                arrival_position: u.Quantity,
-                delta_time: time.TimeDelta,
-                direction: OrbitDirection = OrbitDirection.PROGRADE)\
-                    -> typing.Tuple[u.Quantity, u.Quantity, sl_orbital_elements.OrbitalElements, u.Quantity]:
-        """
-        Solve Lambert's problem.
-
-        Given two position vectors `departure_position` and `arrival_position` and a time-of-flight `delta_time`,
-        compute the velocity vectors that connect the two positions in the specified time under the gravitational
-        parameter of `attractor`.
-
-        The implementation uses the universal variable formulation and solves for the universal anomaly with Newton's
-        method.
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            departure_position (u.Quantity): Position vector at departure (km)
-            arrival_position (u.Quantity): Position vector at arrival (km)
-            delta_time (time.TimeDelta): Time of flight between `departure_position` and `arrival_position` (s)
-            direction (OrbitDirection, optional): Type of orbit direction. Defaults to OrbitDirection.PROGRADE.
-
-        Returns:
-            tuple: (`v_1`, `v_2`, `oe`, `theta_2`) where
-                - `v_1`, `v_2` (u.Quantity): velocity vectors at `departure_position` and `arrival_position` (km/s)
-                - `oe` (sl_orbital_elements.OrbitalElements): orbital elements for the resulting trajectory
-                - `theta_2` (u.Quantity): true anomaly at `arrival_position`
-        """
+        r_1 = R_1 + rho_1 * rho_h_1
+        r_2 = R_2 + rho_2 * rho_h_2
+        r_3 = R_3 + rho_3 * rho_h_3
         
-        r_1: np.ndarray = departure_position.to_value(u.km)
-        r_2: np.ndarray = arrival_position.to_value(u.km)
+        # ? 9. Velocity vector
         
-        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        v_2 = 1 / (f_1 * g_3 - f_3 * g_1) * (-f_3 * r_1 + f_1 * r_3)
         
-        common.check_attractor(attractor)
-        common.check_position_vector(r_1)
-        common.check_position_vector(r_2)
-        common.check_time_delta(delta_time)
-        
-        dt: float = delta_time.to_value(u.s)
-        
-        # >>> 1. Norm
-        
-        r_1_m : float = np.linalg.norm(r_1)
-        r_2_m: float = np.linalg.norm(r_2)
-        
-        # >>> 2. Delta theta
-        
-        delta_theta: float = 0.0
-        
-        temp: float = np.arccos((np.dot(r_1, r_2)) / (r_1_m * r_2_m))
-        
-        condition: float = np.cross(r_1, r_2)[2] # ? Z component
-        
-        if direction == OrbitDirection.PROGRADE:
+        if iteration > max_iteration:
             
-            delta_theta = temp if condition >= 0 else (2 * np.pi - temp)
+            sl_logger.logger.info(f"Maximum number of iterations reached [{max_iteration}]")
             
-        elif direction == OrbitDirection.RETROGRADE:
+            break
+        
+        if np.abs(rho_1 - rho_1_prev) <= tol and np.abs(rho_2 - rho_2_prev) <= tol and np.abs(rho_3 - rho_3_prev) <= tol:
             
-            delta_theta = temp if condition < 0 else (2 * np.pi - temp)
-            
-        # >>> 3. Parameter A
+            break
         
-        A: float = np.sin(delta_theta) * np.sqrt((r_1_m * r_2_m) / (1 - np.cos(delta_theta)))
+        rho_1_prev = rho_1
+        rho_2_prev = rho_2
+        rho_3_prev = rho_3
         
-        # >>> 4. Orbit type
-        
-        z_0: float = -4.0
-        
-        while OrbitDetermination._lambert_equation(z_0, mu, r_1_m, r_2_m, A, dt) < 0:
-            
-            z_0 = z_0 + 0.1
-        
-        z: float = 0.0
-            
-        failed_result: np.ndarray = [np.ones(r_1.shape) * 100.0 * u.km / u.s,
-                                     np.ones(r_2.shape) * 100.0 * u.km / u.s,
-                                     sl_orbital_elements.OrbitalElements(),
-                                     0.0 * u.deg]
-
-        try:
-            
-            z = optimize.newton(func=OrbitDetermination._lambert_equation,
-                                x0=z_0,
-                                fprime=OrbitDetermination._lambert_equation_first_derivative,
-                                args=(mu, r_1_m, r_2_m, A, dt))
-        
-        except Exception:
-            
-            return failed_result
-        
-        # >>> 5. Parameter y
-        
-        s_z: float = lc.LagrangeCoefficients.S(z)
-        c_z: float = lc.LagrangeCoefficients.C(z)
-        
-        y: float = r_1_m + r_2_m + A * (z * s_z - 1) / np.sqrt(c_z)
-        
-        # >>> 6. Lagrange functions
-        
-        f: float = 1 - y / r_1_m
-        
-        g: float = A * np.sqrt(y / mu)
-        
-        dg_dt: float = 1 - y / r_2_m
-        
-        # >>> 7. Velocities
-        
-        v_1: np.ndarray = 1 / g * (r_2 - f * r_1)
-        
-        v_2: np.ndarray = 1 / g * (dg_dt * r_2 - r_1)
-        
-        # >>> 8. Orbital elements
-        
-        oe_1: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
-            attractor=attractor, position=r_1 * u.km, velocity=v_1 * u.km / u.s)
-        
-        oe_2: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
-            attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
-        
-        return [v_1 * u.km / u.s, v_2 * u.km / u.s, oe_1, oe_2.true_anomaly]
+        iteration += 1
     
-    @staticmethod
-    def timestamp_2_julian_day(timestamp: time.Time) -> float:
-        """
-        Convert the given timestamp in Julian day
-
-        Args:
-            timestamp (time.Time): Timestamp
-
-        Returns:
-            float: Julian day number [numer of days]
-        """
-        
-        common.check_time(time_=timestamp)
-        
-        year: int = timestamp.ymdhms.year
-        month: int = timestamp.ymdhms.month
-        day: int = timestamp.ymdhms.day
-        hour: int = timestamp.ymdhms.hour
-        minute: int = timestamp.ymdhms.minute
-        second: int = timestamp.ymdhms.second
-        
-        # >>> 1. Checks
-        
-        if year < 1901 or year > 2099: raise ValueError("'year' must be in range 1901 - 2099")
-        
-        # >>> 2. Julian day at 0 h UT
-        
-        J0: float = 367 * year - int(7/4 * (year + int((month + 9) / 12))) + int(275/9 * month) + day + 1_721_013.5
-        
-        # >>> 3. Univeral Time
-        
-        UT: float = hour + minute / 60 + second / 3600
-        
-        # >>> 4. Julian day number
-        
-        return J0 + UT / 24
+    # ? 10. Position and velocity vectors
     
-    @staticmethod
-    def frac_day_2_hms(frac_day: float) -> typing.List[int]:
-        """
-        Split the fractional day in hour - minute - second
+    return [r_2 * u.km, v_2 * u.km / u.s]
 
-        Args:
-            frac_day (float): Fraction of day
+# * walter
 
-        Returns:
-            typing.List[int]: [hour, minute, second]
-        """
-        
-        temp: float = frac_day * 24.0
-        
-        hour: int = int(np.fix(temp))
-        
-        minute: int = int(np.fix((temp - hour) * 60))
-        
-        second: int = int((temp - hour - minute / 60) * 3600)
-        
-        return [hour, minute, second]
+def herrick_gibbs_method(
+    attractor: bodies.Attractor,
+    position_1 : u.Quantity,
+    time_1: u.Quantity,
+    position_2 : u.Quantity,
+    time_2: u.Quantity,
+    position_3 : u.Quantity,
+    time_3: u.Quantity) -> ty.Optional[sl_orbital_elements.OrbitalElements]:
+    """
+    Herrick-Gibbs method of orbit determination from tree position vectors with associated times.
+
+    :param attractor: Main attractor
+    :type attractor: bodies.Attractor
+    :param position_1: Position vector 1
+    :type position_1: u.Quantity
+    :param time_1: Time for position vector 1
+    :type time_1: u.Quantity
+    :param position_2: Position vector 2
+    :type position_2: u.Quantity
+    :param time_2: Time for position vector 2
+    :type time_2: u.Quantity
+    :param position_3: Position vector 3
+    :type position_3: u.Quantity
+    :param time_3: Time for position vector 3
+    :type time_3: u.Quantity
+    :return: Orbital elements
+    :rtype: ty.Optional[sl_orbital_elements.OrbitalElements]
     
-    @staticmethod
-    def julian_day_2_timestamp(julian_day: float) -> time.Time:
-        """
-        Convert the Julian day in timestamp (Fliegel-Van Flandern algorithm)
-
-        Args:
-            julian_day (float): Julian Day
-
-        Returns:
-            time.Time: Timestamp
-        """
-        
-        # >>> 1. Shift the Julian Day and extract the integer part
-        
-        # ? 0.5 shifts the start of the day from noon (JD convention) to midnight
-        # ? 32044 converts from Julian calendar to the proleptic Gregorian calendar epoch
-        
-        j: int = np.floor(julian_day + 0.5) + 32_044
-        
-        # >>> 2. Break the integer day into Gregorian cycles
-        
-        # ? Decompose the integer day into cycles of:
-        # ? - 400‑year Gregorian cycles (except every 400 years → leap again)
-        # ? - 100‑year subcycles (except every 100 years → not leap)
-        # ? - 4‑year subcycles (every 4 years → leap year)
-        # ? - 1‑year subcycles
-        
-        g: int = np.floor(j / 146_097) # ? Number of 400-year cycles
-        
-        dg: int = np.mod(j, 146_097)
-        
-        c: int = np.floor((np.floor(dg / 36_524) + 1) * 3/4)
-        
-        dc: int = dg - c * 36_524
-        
-        b: int = np.floor(dc / 1_461) # ? Number of 4-year cycles
-        
-        db: int = np.mod(dc, 1_461)
-        
-        a: int = np.floor((np.floor(db / 365) + 1) * 3/4)
-        
-        da: int = db - a * 365
-        
-        # >>> 3. Convert the year offset, month index, and day index in year, mont and day (Gregorian date)
-        
-        y: int = g * 400 + c * 100 + b * 4 + a
-        
-        m: int = np.floor((da * 5 + 308) / 153) - 2
-        
-        d: int = da - np.floor((m + 4) * 153/5) + 122
-        
-        year: int = int(y - 4800 + np.floor((m + 2) / 12))
-        
-        month: int = int(np.mod((m + 2), 12) + 1)
-        
-        day: int = int(np.floor(d + 1))
-        
-        # >>> 4. Extract the fractional day → hour, minute, second
-        
-        hour, minute, second = OrbitDetermination.frac_day_2_hms(np.mod(julian_day + 0.5, np.floor(julian_day + 0.5)))
-        
-        # >>> 5. Create the timestamp
-        
-        timestamp: time.Time = time.Time(
-            {
-                'year': year,
-                'month': month,
-                'day': day,
-                'hour': hour,
-                'minute': minute,
-                'second': second
-            })
-        
-        return timestamp
+    📌 **Notes**
     
-    @staticmethod
-    def modified_julian_day(julian_day: float) -> float:
-        """
-        Convert the Julian day (JD) in Modified Julian day (MJD)
-
-        Args:
-            julian_day (float): _description_
-
-        Returns:
-            float: _description_
-        """
-        
-        return julian_day - 2_400_000.5
+    The three vectors must lie in the same plane and not too close to each other.
     
-    @staticmethod
-    def local_sidereal_time(timestamp: time.Time, longitude: u.Quantity) -> u.Quantity:
-        """
-        Calculate the local sidereal time from given timestamp and longitude (Astronomical Almanac)
-
-        Args:
-            timestamp (time.Time): Timestamp
-            longitude (u.Quantity): East longitude
-
-        Returns:
-            u.Quantity: Local sidereal time [deg]
-        """
-        
-        common.check_time(time_=timestamp)
-        common.check_angle(longitude.to_value(u.deg))
-        
-        year: int = timestamp.ymdhms.year
-        month: int = timestamp.ymdhms.month
-        day: int = timestamp.ymdhms.day
-        hour: int = timestamp.ymdhms.hour
-        minute: int = timestamp.ymdhms.minute
-        second: int = timestamp.ymdhms.second
-        
-        # >>> 0. Checks
-        
-        if year < 1901 or year > 2099: raise ValueError("'year' must be in range 1901 - 2099")
-        
-        UT: float = hour + minute / 60 + second / 3600 # ? Univeral Time
-        
-        # >>> 1. Julian day at 0 h UT
-        
-        J0: float = 367 * year - int(7/4 * (year + int((month + 9) / 12 ))) + int(275/9 * month) + day + 1_721_013.5
-        
-        # >>> 2. Time between J0 and J2000
-        
-        T0: float = (J0 - OrbitDetermination.J2000) / 36_525
-        
-        # >>> 3. Greenwich sideral time at 0 h UT [deg] (Greenwich Mean Sidereal Time - GMST)
-        
-        theta_g0: float = 100.4606184 + 36000.77004 * T0 + 0.000387933 * T0**2 - 2.583e-8 * T0**3 # ? theta_G0
-        
-        theta_g0 = common.wrap_angle(theta_g0)
-        
-        # >>> 4. Greenwich sideral time [deg]
-        
-        theta_g: float = theta_g0 + 360.98564724 * UT / 24 # ? theta_G
-        
-        # >>> 5. Local sidereal time
-        
-        theta: float = theta_g + longitude.to_value(u.deg)
-        
-        theta = common.wrap_angle(theta)
-        
-        return theta * u.deg
+    This method is useful when the geocentric angles of the three subsequent measurements are more apart than 15° for
+    LEO and 6° for GSO.
     
-    @staticmethod
-    def geocentric_equatorial_position_vector(attractor: bodies.Attractor,
-                                              local_sidereal_time: u.Quantity,
-                                              latitude: u.Quantity,
-                                              site_altitude: u.Quantity = 0 * u.km) -> u.Quantity:
-        """
-        Geocentric Equatorial Frame position vector of the observer
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            local_sidereal_time (u.Quantity): Local sidereal time (theta)
-            latitude (u.Quantity): Latitude (phi)
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0 km.
-
-        Returns:
-            u.Quantity: Position vector of the site
-        """
-        
-        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
-        
-        f: float = bodies.BODIES[attractor].f.to_value(u.one) if bodies.BODIES[attractor].f != None else 0
-        
-        theta: float = local_sidereal_time.to_value(u.rad)
-        
-        phi: float = latitude.to_value(u.rad)
-        
-        H: float = site_altitude.to_value(u.km)
-        
-        common.check_attractor(attractor)
-        common.check_angle(theta)
-        common.check_angle(phi)
-        
-        if H < 0: raise ValueError("'H' must be >= 0")
-        
-        A = (R_E / np.sqrt(1 - (2 * f - f**2) * np.sin(phi)**2) + H) * np.cos(phi)
-        
-        B = (R_E * (1 - f)**2 / np.sqrt(1 - (2 * f - f**2) * np.sin(phi)**2) + H) * np.sin(phi)
-        
-        R: u.Quantity = np.array([A * np.cos(theta), A * np.sin(theta), B]) * u.km
-        
-        return R
+    📖 **References**
     
-    @staticmethod
-    def topocentric_equatorial_position_vector(attractor: bodies.Attractor,
-                                               position: u.Quantity,
-                                               local_sidereal_time: u.Quantity,
-                                               latitude: u.Quantity,
-                                               site_altitude: u.Quantity = 0 * u.km) -> u.Quantity:
-        """
-        Geocentric Equatorial Frame --> Topocentric Equatorial Frame
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            position (u.Quantity): Geocentric equatorial position vector of the target
-            local_sidereal_time (u.Quantity): Local sidereal time (theta)
-            latitude (u.Quantity): Latitude (phi)
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0.
-
-        Returns:
-            u.Quantity: Position vector
-        """
-        
-        r: np.ndarray = position.to_value(u.km)
-        
-        common.check_position_vector(r)
-        
-        # >>> 1. Geocentric position vector of the site
-        
-        R: u.Quantity = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                 local_sidereal_time=local_sidereal_time,
-                                                                                 latitude=latitude,
-                                                                                 site_altitude=site_altitude)
-        
-        # >>> 2. Topocentric equatorial position vector
-        
-        rho: u.Quantity = position - R
-        
-        return rho
+    - :cite:`walter`
+        - Section 14.2 *Orbit Determination*
+        - Section 14.2.4 *Simple Orbit Estimation*
+    """
     
-    @staticmethod
-    def topocentric_horizon_position_vector(attractor: bodies.Attractor,
-                                            position: u.Quantity,
-                                            local_sidereal_time: u.Quantity,
-                                            latitude: u.Quantity,
-                                            site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
-        """
-        Geocentric Equatorial Frame --> Topocentric Horizon Frame
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            position (u.Quantity): Geocentric equatorial position vector of the target
-            local_sidereal_time (u.Quantity): Local sidereal time (theta)
-            latitude (u.Quantity): Latitude (phi)
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0.
-
-        Returns:
-            typing.List[u.Quantity]: [Position vector rho, Azimuth A, Elevation a]
-        """
-        
-        # >>> 1. Topocentric equatorial position vector
-        
-        rho: u.Quantity = OrbitDetermination.topocentric_equatorial_position_vector(attractor=attractor,
-                                                                                    position=position,
-                                                                                    local_sidereal_time=local_sidereal_time,
-                                                                                    latitude=latitude,
-                                                                                    site_altitude=site_altitude)
-        
-        # >>> 2. Topocentric horizon position vector
-        
-        theta: float = local_sidereal_time.to_value(u.rad)
-        
-        phi: float = latitude.to_value(u.rad)
-        
-        # * Matrix of transformation Q_Xx
-        
-        dcm_ge_th: np.ndarray = np.array( # ? dcm_GE_TH
-            [
-                [ -np.sin(theta)               , np.cos(theta)                , 0           ],
-                [ -np.sin(phi) * np.cos(theta) , -np.sin(phi) * np.sin(theta) , np.cos(phi) ],
-                [ np.cos(phi) * np.cos(theta)  , np.cos(phi) * np.sin(theta)  , np.sin(phi) ]
-            ])
-        
-        rho: np.ndarray = np.matmul(dcm_ge_th, rho.to_value(u.km))
-        
-        # >>> 3. Azimuth and Elevation
-        
-        rho_h: np.ndarray = rho / np.linalg.norm(rho)
-        
-        a: float = np.arcsin(rho_h[2]) # ? Elevation
-        
-        A: float = np.arctan2(rho_h[0] / np.cos(a), rho_h[1] / np.cos(a)) # ? Azimuth
-        
-        return [rho * u.km, (A * u.rad).to(u.deg), (a * u.rad).to(u.deg)]
+    # >>> Validation
     
-    @staticmethod
-    def topocentric_equatorial_right_ascension_declination(attractor: bodies.Attractor,
-                                                           local_sidereal_time: u.Quantity,
-                                                           latitude: u.Quantity,
-                                                           azimuth: u.Quantity,
-                                                           elevation: u.Quantity) -> typing.List[u.Quantity]:
-        """Topocentric Horizone Frame --> Topocentric Equatorial Frame
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            local_sidereal_time (u.Quantity): Local sidereal time (theta)
-            latitude (u.Quantity): Latitude (phi)
-            azimuth (u.Quantity): Azimuth (A, beta)
-            elevation (u.Quantity): Elevation (a, sigma)
-
-        Returns:
-            typing.List[u.Quantity]: [Position vector rho, Right ascension alpha, Declination delta]
-        """
-        
-        theta: float = local_sidereal_time.to_value(u.rad)
-        
-        phi: float = latitude.to_value(u.rad)
-        
-        A: float = azimuth.to_value(u.rad)
-        
-        a: float = elevation.to_value(u.rad)
-        
-        common.check_attractor(attractor)
-        common.check_angle(theta)
-        common.check_angle(phi)
-        common.check_angle(A)
-        common.check_angle(a)
-        
-        # >>> 1. Topocentric horizon position vector
-        
-        # * Matrix of transformation Q_xX
-        
-        dcm_th_ge: np.ndarray = np.array( # ? dcm_TH_GE
-            [
-                [ -np.sin(theta) , -np.sin(phi) * np.cos(theta) , np.cos(phi) * np.cos(theta) ],
-                [ np.cos(theta)  , -np.sin(phi) * np.sin(theta) , np.cos(phi) * np.sin(theta) ],
-                [ 0              , np.cos(phi)                  , np.sin(phi)                 ]
-            ])
-        
-        rho_h: np.ndarray = np.array([np.cos(a) * np.sin(A), np.cos(a) * np.cos(A), np.sin(a)])
-        
-        # >>> 2. Topocentric equatorial position vector
-        
-        rho: np.ndarray = np.matmul(dcm_th_ge, rho_h)
-        
-        # >>> 3. Right Ascension and Declination
-        
-        alpha, delta = sl_representation.right_ascension_declination(position=rho * u.km)
-        
-        return [rho * u.one, alpha, delta]
+    # * attractor
     
-    @staticmethod
-    def predict_from_angle_range(attractor: bodies.Attractor,
-                                 slant_range: u.Quantity,
-                                 azimuth: u.Quantity,
-                                 elevation: u.Quantity,
-                                 range_rate: u.Quantity,
-                                 azimuth_rate: u.Quantity,
-                                 elevation_rate: u.Quantity,
-                                 local_sidereal_time: u.Quantity,
-                                 latitude: u.Quantity,
-                                 site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
-        """
-        Predict the geocentric position and velocity vectors from angle and range measurements
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            slant_range (u.Quantity): Slant range
-            azimuth (u.Quantity): Azimuth (A, beta)
-            elevation (u.Quantity): Elevation (a, sigma)
-            range_rate (u.Quantity): Range rate
-            azimuth_rate (u.Quantity): Azimuth rate
-            elevation_rate (u.Quantity): Elevation rate
-            local_sidereal_time (u.Quantity): Local sidereal time (theta)
-            latitude (u.Quantity): Latitude (phi)
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0.
-
-        Returns:
-            typing.List[u.Quantity]: [r, v]
-        """
-        
-        # >>> 1. Geocentric position vector of the site
-        
-        R: u.Quantity = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                 local_sidereal_time=local_sidereal_time,
-                                                                                 latitude=latitude,
-                                                                                 site_altitude=site_altitude)
-        
-        rho: float = slant_range.to_value(u.km)
-        
-        A: float = azimuth.to_value(u.rad)
-        
-        a: float = elevation.to_value(u.rad)
-        
-        drho_dt: float = range_rate.to_value(u.km / u.s)
-        
-        dA_dt: float = azimuth_rate.to_value(u.rad / u.s)
-        
-        da_dt: float = elevation_rate.to_value(u.rad / u.s)
-        
-        omega: float = bodies.BODIES[attractor].omega.to_value(u.rad / u.s)
-        
-        theta: float = local_sidereal_time.to_value(u.rad)
-        
-        phi: float = latitude.to_value(u.rad)
-        
-        common.check_angle(np.rad2deg(theta))
-        common.check_angle(np.rad2deg(phi))
-        common.check_angle(np.rad2deg(A))
-        common.check_angle(np.rad2deg(a))
-        
-        # >>> 2. Topocentric declination
-        
-        delta: float = np.arcsin(np.cos(phi) * np.cos(A) * np.cos(a) + np.sin(phi) * np.sin(a))
-        
-        # >>> 3. Topocentric right ascension
-        
-        h: float = 0.0 # ? Hour Angle
-        
-        if A > 0 and A < np.pi:
-            
-            h = 2* np.pi - np.arccos((np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a)) / np.cos(delta))
-            
-        else:
-            
-            h = np.arccos((np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a)) / np.cos(delta))
-        
-        alpha: float = theta - h
-        
-        # >>> 4. Direction cosine unit vector
-        
-        rho_h: np.ndarray = np.array([np.cos(delta) * np.cos(alpha), np.cos(delta) * np.sin(alpha), np.sin(delta)])
-        
-        # >>> 5. Geocentric position vector
-        
-        r: np.ndarray = R.to_value(u.km) + rho * rho_h
-        
-        # >>> 6. Inertial velocity of the site
-        
-        dR_dt: np.ndarray = np.cross(np.array([0, 0, omega]), R.to_value(u.km))
-        
-        # >>> 7. Declination rate
-        
-        ddelta_dt: float = 1 / np.cos(delta) * (-dA_dt * np.cos(phi) * np.sin(A) * np.cos(a) + \
-            da_dt * (np.sin(phi) * np.cos(a) - np.cos(phi) * np.cos(A) * np.sin(a)))
-        
-        # >>> 8. Right ascension rate
-        
-        dalpha_dt: float = omega + (dA_dt * np.cos(A) * np.cos(a) - da_dt * np.sin(A) * np.sin(a) + \
-            ddelta_dt * np.sin(A) * np.cos(a) * np.tan(delta)) / \
-                (np.cos(phi) * np.sin(a) - np.sin(phi) * np.cos(A) * np.cos(a))
-        
-        # >>> 9. Direction cosine rate unit vector
-        
-        drho_h_dt: np.ndarray = np.array([
-            -dalpha_dt * np.sin(alpha) * np.cos(delta) - ddelta_dt * np.cos(alpha) * np.sin(delta),
-            dalpha_dt * np.cos(alpha) * np.cos(delta) - ddelta_dt * np.sin(alpha) * np.sin(delta),
-            ddelta_dt * np.cos(delta)])
-        
-        # >>> 10 Geocentric velocity vector
-        
-        v = dR_dt + drho_dt * rho_h + rho * drho_h_dt
-        
-        return [r * u.km, v * u.km / u.s]
+    err_msg: str | None = sl_validator.validate_attractor(attractor)
     
-    @staticmethod
-    def predict_from_gauss_method(attractor: bodies.Attractor,
-                                  latitude: u.Quantity,
-                                  local_sidereal_time_list: u.Quantity,
-                                  right_ascension_list: u.Quantity,
-                                  declination_list: u.Quantity,
-                                  observation_time_list: u.Quantity,
-                                  site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
-        """
-        Predict position and velocity with the Gauss method
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            latitude (u.Quantity): Latitude (phi)
-            local_sidereal_time_list (u.Quantity): List of 3 local sidereal times (theta)
-            right_ascension_list (u.Quantity): List of 3 right ascensions (alpha)
-            declination_list (u.Quantity): List of 3 declinations (delta)
-            observation_time_list (u.Quantity): List of 3 observation times
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0.
-
-        Returns:
-            typing.List[u.Quantity]: Parameters
-        """
-        
-        if local_sidereal_time_list.shape != (3,): raise ValueError("'local_sidereal_time_list' must have shape = (3,)")
-        
-        if right_ascension_list.shape != (3,): raise ValueError("'right_ascension_list' must have shape = (3,)")
-        
-        if declination_list.shape != (3,): raise ValueError("'declination_list' must have shape = (3,)")
-        
-        if observation_time_list.shape != (3,): raise ValueError("'observation_time_list' must have shape = (3,)")
-        
-        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        common.check_attractor(attractor)
-        
-        alpha: np.ndarray = right_ascension_list.to_value(u.rad)
-        
-        delta: np.ndarray = declination_list.to_value(u.rad)
-        
-        t: np.ndarray = observation_time_list.to_value(u.s)
-        
-        # >>> 0. Geocentric position vector of the site - Topocentric Horizon position vector
-        
-        R_1: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[0],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        R_2: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[1],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        R_3: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[2],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        rho_h_1: np.ndarray = np.array([ np.cos(delta[0]) * np.cos(alpha[0]), np.cos(delta[0]) * np.sin(alpha[0]), np.sin(delta[0]) ])
-        rho_h_2: np.ndarray = np.array([ np.cos(delta[1]) * np.cos(alpha[1]), np.cos(delta[1]) * np.sin(alpha[1]), np.sin(delta[1]) ])
-        rho_h_3: np.ndarray = np.array([ np.cos(delta[2]) * np.cos(alpha[2]), np.cos(delta[2]) * np.sin(alpha[2]), np.sin(delta[2]) ])
-        
-        # >>> 1. Time intervals
-        
-        tau_1: float = t[0] - t[1]
-        tau_3: float = t[2] - t[1]
-        tau: float = tau_3 - tau_1
-        
-        # >>> 2. Cross products
-        
-        p_1: np.ndarray = np.cross(rho_h_2, rho_h_3)
-        p_2: np.ndarray = np.cross(rho_h_1, rho_h_3)
-        p_3: np.ndarray = np.cross(rho_h_1, rho_h_2)
-        
-        # >>> 3. D_0
-        
-        D_0: float = np.dot(rho_h_1, p_1)
-        
-        # >>> 4. D matrix
-        
-        D: np.ndarray = np.array(
-            [
-                [ np.dot(R_1, p_1), np.dot(R_1, p_2), np.dot(R_1, p_3) ],
-                [ np.dot(R_2, p_1), np.dot(R_2, p_2), np.dot(R_2, p_3) ],
-                [ np.dot(R_3, p_1), np.dot(R_3, p_2), np.dot(R_3, p_3) ]
-            ]
-        )
-        
-        # >>> 5. Calculate parameters A and B
-        
-        A: float = 1 / D_0 * (-D[0,1] * tau_3 / tau + D[1,1] + D[2,1] * tau_1 / tau)
-        
-        B: float = 1 / (6 * D_0) * (D[0,1] * (tau_3**2 - tau**2) * tau_3 / tau + D[2,1] * (tau**2 - tau_1**2) * tau_1 / tau)
-        
-        # >>> 6. Calculate E
-        
-        E: float = np.dot(R_2, rho_h_2)
-        
-        # >>> 7. Calculate a, b, and c
-        
-        a: float = - (A**2 + 2 * A * E + np.linalg.norm(R_2)**2)
-        
-        b: float = - 2 * mu * B * (A + E)
-        
-        c: float = - mu**2 * B**2
-        
-        # >>> 8. Find r_2
-        
-        f: callable = lambda x: x**8 + a * x**6 + b * x**3 + c
-        
-        dfdt: callable = lambda x: 8 * x**7 + 6 * a * x**5 + 3 * b * x**2
-        
-        r_2_m: float = optimize.newton(f, x0=10000, fprime=dfdt, maxiter=100, tol=1e-8)
-        
-        # >>> 9. Slant ranges
-        
-        rho_1: float = 1 / D_0 * \
-            ((6 * (D[2,0] * tau_1 / tau_3 + D[1,0] * tau / tau_3) * r_2_m**3 + \
-                mu * D[2,0] * (tau**2 - tau_1**2) * tau_1 / tau_3 ) /
-             (6 * r_2_m**3 + mu * (tau**2 - tau_3**2)) - D[0,0])
-        
-        rho_2: float = A + mu * B / r_2_m**3
-        
-        rho_3: float = 1 / D_0 * \
-            ((6 * (D[0,2] * tau_3 / tau_1 - D[1,2] * tau / tau_1) * r_2_m**3 + \
-                mu * D[0,2] * (tau**2 - tau_3**2) * tau_3 / tau_1 ) /
-             (6 * r_2_m**3 + mu * (tau**2 - tau_1**2)) - D[2,2])
-        
-        # >>> 10. Geocentric position vector of the target
-        
-        r_1: np.ndarray = R_1 + rho_1 * rho_h_1
-        r_2: np.ndarray = R_2 + rho_2 * rho_h_2
-        r_3: np.ndarray = R_3 + rho_3 * rho_h_3
-        
-        # >>> 11. Lagrange coefficients
-        
-        f_1: float = 1 - 1/2 * mu / r_2_m**3 * tau_1**2
-        f_3: float = 1 - 1/2 * mu / r_2_m**3 * tau_3**2
-        g_1: float = tau_1 - 1/6 * mu / r_2_m**3 * tau_1**3
-        g_3: float = tau_3 - 1/6 * mu / r_2_m**3 * tau_3**3
-        
-        # >>> 12. Position and velocity vectors
-        
-        v_2: np.ndarray = 1 / (f_1 * g_3 - f_3 * g_1) * (-f_3 * r_1 + f_1 * r_3)
-        
-        return [r_2 * u.km, v_2 * u.km / u.s]
+    if err_msg: sl_logger.logger.warning(err_msg); return None
     
-    @staticmethod
-    def predict_from_gauss_method_extended(attractor: bodies.Attractor,
-                                           latitude: u.Quantity,
-                                           local_sidereal_time_list: u.Quantity,
-                                           right_ascension_list: u.Quantity,
-                                           declination_list: u.Quantity,
-                                           observation_time_list: u.Quantity,
-                                           site_altitude: u.Quantity = 0 * u.km) -> typing.List[u.Quantity]:
-        """
-        Predict position and velocity with the extended Gauss method
-
-        Args:
-            attractor (bodies.Attractor): Main attractor
-            latitude (u.Quantity): Latitude (phi)
-            local_sidereal_time_list (u.Quantity): List of 3 local sidereal times (theta)
-            right_ascension_list (u.Quantity): List of 3 right ascensions (alpha)
-            declination_list (u.Quantity): List of 3 declinations (delta)
-            observation_time_list (u.Quantity): List of 3 observation times
-            site_altitude (u.Quantity, optional): Ground station elevation above sea level. Defaults to 0.
-
-        Returns:
-            typing.List[u.Quantity]: [Position, Velocity]
-        """
-        
-        # >>> 0. Gauss method
-        
-        r_2, v_2 = OrbitDetermination.predict_from_gauss_method(attractor=attractor,
-                                                                latitude=latitude,
-                                                                local_sidereal_time_list=local_sidereal_time_list,
-                                                                right_ascension_list=right_ascension_list,
-                                                                declination_list=declination_list,
-                                                                observation_time_list=observation_time_list,
-                                                                site_altitude=site_altitude)
-        
-        r_2: np.ndarray = r_2.to_value(u.km)
-        v_2: np.ndarray = v_2.to_value(u.km / u.s)
-        
-        R_1: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[0],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        R_2: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[1],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        R_3: np.ndarray = OrbitDetermination.geocentric_equatorial_position_vector(attractor=attractor,
-                                                                                   local_sidereal_time=local_sidereal_time_list[2],
-                                                                                   latitude=latitude,
-                                                                                   site_altitude=site_altitude).to_value(u.km)
-        
-        alpha: np.ndarray = right_ascension_list.to_value(u.rad)
-        delta: np.ndarray = declination_list.to_value(u.rad)
-        
-        rho_h_1: np.ndarray = np.array([ np.cos(delta[0]) * np.cos(alpha[0]), np.cos(delta[0]) * np.sin(alpha[0]), np.sin(delta[0]) ])
-        rho_h_2: np.ndarray = np.array([ np.cos(delta[1]) * np.cos(alpha[1]), np.cos(delta[1]) * np.sin(alpha[1]), np.sin(delta[1]) ])
-        rho_h_3: np.ndarray = np.array([ np.cos(delta[2]) * np.cos(alpha[2]), np.cos(delta[2]) * np.sin(alpha[2]), np.sin(delta[2]) ])
-        
-        p_1: np.ndarray = np.cross(rho_h_2, rho_h_3)
-        p_2: np.ndarray = np.cross(rho_h_1, rho_h_3)
-        p_3: np.ndarray = np.cross(rho_h_1, rho_h_2)
-        
-        D_0: float = np.dot(rho_h_1, p_1)
-        
-        D: np.ndarray = np.array(
-            [
-                [ np.dot(R_1, p_1), np.dot(R_1, p_2), np.dot(R_1, p_3) ],
-                [ np.dot(R_2, p_1), np.dot(R_2, p_2), np.dot(R_2, p_3) ],
-                [ np.dot(R_3, p_1), np.dot(R_3, p_2), np.dot(R_3, p_3) ]
-            ]
-        )
-        
-        mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
-        
-        f_1_prev: float = 0
-        f_3_prev: float = 0
-        g_1_prev: float = 0
-        g_3_prev: float = 0
-        
-        rho_1_prev: float = np.inf
-        rho_2_prev: float = np.inf
-        rho_3_prev: float = np.inf
-        
-        tol: float = 1e-6
-        
-        iteration: int = 1
-        
-        max_iteration: int = 100
-        
-        while True:
-            
-            # >>> 1. Magnitudes
-            
-            r_2_m: float = np.linalg.norm(r_2)
-            v_2_m: float = np.linalg.norm(v_2)
-            
-            # >>> 2. Alpha
-            
-            Alpha: float = 2 / r_2_m - v_2_m**2 / mu
-            
-            # >>> 3. Radial velocity
-            
-            v_r_2: float = np.dot(v_2, r_2) / r_2_m
-            
-            # >>> 4. Universal variables
-            
-            chi_1: u.Quantity = lc.LagrangeCoefficients.universal_kepler_solution(attractor=attractor,
-                                                                                  initial_position=r_2_m * u.km,
-                                                                                  initial_radial_velocity=v_r_2 * u.km / u.s,
-                                                                                  alpha=Alpha * 1 / u.km,
-                                                                                  delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'))
-            
-            chi_3: u.Quantity = lc.LagrangeCoefficients.universal_kepler_solution(attractor=attractor,
-                                                                                  initial_position=r_2_m * u.km,
-                                                                                  initial_radial_velocity=v_r_2 * u.km / u.s,
-                                                                                  alpha=Alpha * 1 / u.km,
-                                                                                  delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'))
-            
-            # >>> 5. Lagrange coefficients
-            
-            f_1, g_1 = lc.LagrangeCoefficients.lagrange_coefficients(attractor=attractor,
-                                                                     initial_position=r_2_m * u.km,
-                                                                     alpha=Alpha * 1 / u.km,
-                                                                     delta_time=time.TimeDelta(observation_time_list[0] - observation_time_list[1], format='sec'),
-                                                                     universal_anomaly=chi_1)
-            
-            f_1 = float(f_1.to_value(u.dimensionless_unscaled))
-            g_1 = float(g_1.to_value(u.s))
-            
-            f_3, g_3 = lc.LagrangeCoefficients.lagrange_coefficients(attractor=attractor,
-                                                                     initial_position=r_2_m * u.km,
-                                                                     alpha=Alpha * 1 / u.km,
-                                                                     delta_time=time.TimeDelta(observation_time_list[2] - observation_time_list[1], format='sec'),
-                                                                     universal_anomaly=chi_3)
-            
-            f_3 = float(f_3.to_value(u.dimensionless_unscaled))
-            g_3 = float(g_3.to_value(u.s))
-            
-            # >>> 6. Calculate parameters
-            
-            f_1 = (f_1 + f_1_prev) / 2 if f_1_prev != 0 else f_1
-            f_3 = (f_3 + f_3_prev) / 2 if f_3_prev != 0 else f_3
-            g_1 = (g_1 + g_1_prev) / 2 if g_1_prev != 0 else g_1
-            g_3 = (g_3 + g_3_prev) / 2 if g_3_prev != 0 else g_3
-            
-            c_1: float = g_3 / (f_1 * g_3 - f_3 * g_1)
-            c_3: float = -g_1 / (f_1 * g_3 - f_3 * g_1)
-            
-            f_1_prev = f_1
-            f_3_prev = f_3
-            g_1_prev = g_1
-            g_3_prev = g_3
-            
-            # >>> 7. Updated slant ranges
-            
-            rho_1 = 1 / D_0 * (-D[0,0] + D[1,0] / c_1 - D[2,0] * c_3 / c_1)
-            rho_2 = 1 / D_0 * (-c_1 * D[0,1] + D[1,1] - c_3 * D[2,1])
-            rho_3 = 1 / D_0 * (-D[0,2] * c_1 / c_3 + D[1,2] / c_3 - D[2,2])
-            
-            # >>> 8. Geocentric position vector of the target
-        
-            r_1 = R_1 + rho_1 * rho_h_1
-            r_2 = R_2 + rho_2 * rho_h_2
-            r_3 = R_3 + rho_3 * rho_h_3
-            
-            # >>> 9. Velocity vector
-            
-            v_2 = 1 / (f_1 * g_3 - f_3 * g_1) * (-f_3 * r_1 + f_1 * r_3)
-            
-            if iteration > max_iteration:
-                
-                break
-            
-            if np.abs(rho_1 - rho_1_prev) <= tol and np.abs(rho_2 - rho_2_prev) <= tol and np.abs(rho_3 - rho_3_prev) <= tol:
-                
-                break
-            
-            rho_1_prev = rho_1
-            rho_2_prev = rho_2
-            rho_3_prev = rho_3
-            
-            iteration += 1
-        
-        # >>> 10. Position and velocity vectors
-        
-        return [r_2 * u.km, v_2 * u.km / u.s]
+    # * position_1
     
-    # --- PRIVATE ---
+    err_msg = sl_validator.validate_quantity_vector("position_1", position_1, u.km, 3)
     
-    @staticmethod
-    def _lambert_equation(z: float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
-        """
-        Lambert equation
-
-        Args:
-            z (float): Variable
-            mu (float): Gravitational constant [km^3 / s^2]
-            r_1 (float): Position 1
-            r_2 (float): Position 2
-            A (float): Parameter A
-            dt (float): Delta time
-
-        Returns:
-            float: Result
-        """
-        
-        s_z: float = lc.LagrangeCoefficients.S(z)
-        c_z: float = lc.LagrangeCoefficients.C(z)
-        
-        y: float = max(r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z), 0)
-        
-        return (y / c_z)**(3/2) * s_z + A * np.sqrt(y) - np.sqrt(mu) * dt
+    if err_msg: sl_logger.logger.warning(err_msg); return None
     
-    @staticmethod
-    def _lambert_equation_first_derivative(z : float, mu: float, r_1 : float, r_2 : float, A : float, dt : float) -> float:
-        """Lambert equation first derivative
+    # * time_1
+    
+    err_msg = sl_validator.validate_quantity("time_1", time_1, u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * position_2
+    
+    err_msg = sl_validator.validate_quantity_vector("position_2", position_2, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * time_2
+    
+    err_msg = sl_validator.validate_quantity("time_2", time_2, u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * position_3
+    
+    err_msg = sl_validator.validate_quantity_vector("position_3", position_3, u.km, 3)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * time_3
+    
+    err_msg = sl_validator.validate_quantity("time_3", time_3, u.s)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    r_1: np.ndarray = position_1.to_value(u.km)
+    r_2: np.ndarray = position_2.to_value(u.km)
+    r_3: np.ndarray = position_3.to_value(u.km)
+    
+    t_1: np.ndarray = time_1.to_value(u.s)
+    t_2: np.ndarray = time_2.to_value(u.s)
+    t_3: np.ndarray = time_3.to_value(u.s)
+    
+    mu: float = bodies.BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+    
+    r_1_m: float = np.linalg.vector_norm(r_1)
+    r_2_m: float = np.linalg.vector_norm(r_2)
+    r_3_m: float = np.linalg.vector_norm(r_3)
+    
+    dt_21: float = t_2 - t_1
+    dt_32: float = t_3 - t_2
+    dt_31: float = t_3 - t_1
+    
+    v_2: np.ndarray =\
+                    dt_32 * (mu / (12 * r_1_m**3) - 1 / (dt_21 * dt_31)) * r_1 +\
+        (dt_32 - dt_21) * (mu / (12 * r_2_m**3) + 1 / (dt_21 * dt_32)) * r_2 +\
+                    dt_21 * (mu / (12 * r_3_m**3) + 1 / (dt_31 * dt_32)) * r_3
+    
+    oe: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
+        attractor=attractor, position=r_2 * u.km, velocity=v_2 * u.km / u.s)
 
-        Args:
-            z (float): Variable
-            mu (float): Gravitational constant [km^3 / s^2]
-            r_1 (float): Position 1
-            r_2 (float): Position 2
-            A (float): Parameter A
-            dt (float): Delta time
-
-        Returns:
-            float: Result
-        """
-        
-        s_0: float = lc.LagrangeCoefficients.S(0)
-        c_0: float = lc.LagrangeCoefficients.C(0)
-        s_z: float = lc.LagrangeCoefficients.S(z)
-        c_z: float = lc.LagrangeCoefficients.C(z)
-        
-        y_0: float = r_1 + r_2 + A * (0 * s_0 - 1) / np.sqrt(c_0)
-        
-        y: float = r_1 + r_2 + A * (z * s_z - 1) / np.sqrt(c_z)
-        
-        if z == 0:
-            
-            return np.sqrt(2) / 40 * y_0**(3/2) + A / 8 * (np.sqrt(y_0) + A * 1 / np.sqrt(2 * y_0))
-        
-        else:
-            
-            return (y / c_z)**(3/2) * (1 / (2 * z) * (c_z - 3/2 * s_z / c_z) + 3/4 * s_z**2 / c_z) +\
-                A / 8 * (3 * s_z / c_z * np.sqrt(y) + A * np.sqrt(c_z / y))
+    return oe

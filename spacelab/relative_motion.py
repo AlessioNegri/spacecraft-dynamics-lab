@@ -26,7 +26,8 @@ import spacelab.orbit.representation as o3d
 import spacelab.orbit.representation as sl_representation
 import spacelab.orbit.position as op
 import spacelab.n_body_models.lagrange_coefficients as lc
-import spacelab.orbit_determination as od
+import spacelab.orbit.determination as od
+import spacelab.orbit.time as sl_time
 
 from spacelab.enums import ClosingApproachStrategy, ClosingApproachTrajectory
 from spacelab.models.results import ResultRM
@@ -290,12 +291,12 @@ class RelativeMotion():
             
             # >>> b. Update Target-Chaser vectors
             
-            r_target, v_target = lc.LagrangeCoefficients.propagate_position_velocity(attractor=attractor,
+            r_target, v_target = lc.propagate_position_velocity(attractor=attractor,
                                                                                      initial_position=r_target,
                                                                                      initial_velocity=v_target,
                                                                                      delta_time=time.TimeDelta(dt * u.s))
             
-            r_chaser, v_chaser = lc.LagrangeCoefficients.propagate_position_velocity(attractor=attractor,
+            r_chaser, v_chaser = lc.propagate_position_velocity(attractor=attractor,
                                                                                      initial_position=r_chaser,
                                                                                      initial_velocity=v_chaser,
                                                                                      delta_time=time.TimeDelta(dt * u.s))
@@ -565,7 +566,7 @@ class RelativeMotion():
         
         omega: float = bodies.BODIES[bodies.Attractor.EARTH].omega.to_value(u.rad / u.s) # ? Earth’s sidereal rotation rate
         
-        theta: float = od.OrbitDetermination.local_sidereal_time(timestamp=timestamp, longitude=lambda_ * u.rad).to_value(u.rad)
+        theta: float = sl_time.local_sidereal_time(timestamp=timestamp, longitude=lambda_ * u.rad).to_value(u.rad)
         
         # ! θ = θ_G_MST_0 + λ
         
