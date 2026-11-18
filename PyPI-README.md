@@ -126,6 +126,38 @@ if result.success:
   print(result.position_x[-1], result.position_y[-1], result.position_z[-1])
 ```
 
+## Orbit
+
+The `spacelab.orbit` package provides coordinate, time, frame, representation, position, and preliminary orbit-determination utilities:
+
+- Convert between Cartesian, Keplerian, equinoctial, perifocal, and geocentric equatorial representations
+- Convert timestamps to Julian and Modified Julian dates and calculate local sidereal time
+- Calculate circular, elliptical, parabolic, and hyperbolic anomaly/time relationships
+- Transform geocentric equatorial, topocentric equatorial, and topocentric horizon coordinates
+- Estimate orbits with Gibbs, Lambert, Gauss, extended Gauss, and Herrick-Gibbs methods
+- Calculate ground tracks, horizon footprints, eclipses, right ascension, declination, latitude, and longitude
+
+For example, convert a Cartesian Earth-state vector to classical Keplerian elements:
+
+```python
+import numpy as np
+from astropy import units as u
+from spacelab.bodies import Attractor
+from spacelab.orbit.representation import cartesian_to_keplerian
+
+position = np.array([7000, 0, 0]) * u.km
+velocity = np.array([0, 7.5, 0]) * u.km / u.s
+
+elements = cartesian_to_keplerian(
+  attractor=Attractor.EARTH,
+  position=position,
+  velocity=velocity,
+)
+
+print(elements.semimajor_axis)
+print(elements.eccentricity)
+```
+
 ## Installation
 
 ```bash
