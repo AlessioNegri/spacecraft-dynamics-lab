@@ -18,7 +18,7 @@ Main features
 
 Example
 -------
->>> from spacelab.orbital_maneuvers import OrbitalManeuvers
+>>> from spacelab.maneuvers.impulsive import hohmann_transfer
 
 Author
 ------

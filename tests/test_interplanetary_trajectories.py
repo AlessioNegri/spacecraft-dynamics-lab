@@ -4,7 +4,7 @@ import numpy as np
 
 import spacelab.bodies as bd
 import spacelab.interplanetary_trajectories as it
-import spacelab.orbital_maneuvers as om
+import spacelab.maneuvers.impulsive as om
 
 def test_synodic_period_1():
     """EXAMPLE 8.1"""

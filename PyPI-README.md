@@ -158,6 +158,47 @@ print(elements.semimajor_axis)
 print(elements.eccentricity)
 ```
 
+## Maneuvers
+
+The `spacelab.maneuvers` package provides impulsive and continuous-thrust orbital maneuver calculations:
+
+- Hohmann and bi-elliptic Hohmann transfers
+- Phasing, rendezvous, apse-line rotation, and plane-change maneuvers
+- One-impulse and RAAN-change maneuvers
+- Super-synchronous, non-Hohmann, and circular-orbit transfers
+- Constant-tangential-thrust spiral transfers and inclination changes
+- Lambert targeting and transfer solutions
+- Propellant mass and spacecraft mass calculations
+
+For example, calculate a constant-tangential-thrust spiral from a given burn time:
+
+```python
+import astropy.units as u
+import copy
+
+from spacelab.bodies import Attractor
+from spacelab.enums import SpiralDirection
+from spacelab.maneuvers.continuous_thrust import constant_tangential_thrust_transfer_from_time
+from spacelab.models.rocket_motor import RocketMotor
+
+motor = RocketMotor(
+  specific_impulse=10000 * u.s,
+  thrust=2500e-6 * u.kN,
+  spacecraft_mass=1000 * u.kg,
+)
+
+final_radius, propellant_mass = constant_tangential_thrust_transfer_from_time(
+  attractor=Attractor.EARTH,
+  rocket_motor=copy.deepcopy(motor),
+  initial_radius=6678 * u.km,
+  time_of_flight=21.03 * u.day,
+  direction=SpiralDirection.OUTWARD,
+)
+
+print(final_radius)
+print(propellant_mass)
+```
+
 ## Installation
 
 ```bash
@@ -167,7 +208,7 @@ pip install space-laboratory
 ## Quick Start
 
 ```python
-from spacelab.orbital_maneuvers import OrbitalManeuvers
+from spacelab.maneuvers.impulsive import hohmann_transfer
 ```
 
 ## Documentation

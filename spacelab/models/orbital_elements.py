@@ -1,6 +1,7 @@
 import astropy.units as u
 import dataclasses as dc
 import numpy as np
+import typing as ty
 
 from spacelab.bodies import Attractor, BODIES
 from spacelab.utils.logger import logger
@@ -187,6 +188,10 @@ class OrbitalElements:
         
         # >>> Algorithm
         
+        if self.specific_angular_momentum != 0 * u.km**2 / u.s:
+            
+            return self.specific_angular_momentum
+        
         if self.eccentricity < 1 and self.semimajor_axis != 0 * u.km:
             
             r_p: u.Quantity = self.calc_periapsis_radius()
@@ -355,7 +360,7 @@ class OrbitalElements:
         """
         
         # >>> Validation
-                
+        
         # * attractor
         
         error_msg = validate_attractor(attractor)
@@ -370,7 +375,11 @@ class OrbitalElements:
         
         h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
         
-        if h == 0: logger.warning("Specific angular momentum is zero"); return 0 * u.km / u.s
+        if h == 0:
+            
+            logger.warning("Specific angular momentum is zero")
+            
+            return 0 * u.km / u.s
         
         theta: float = self.true_anomaly.to_value(u.rad)
         
@@ -383,6 +392,158 @@ class OrbitalElements:
         v: float = np.sqrt(v_r**2 + v_t**2)
         
         return v * u.km / u.s
+    
+    def calc_position(self, attractor: Attractor = Attractor.EARTH) -> ty.Optional[u.Quantity]:
+        """
+        Calculates the **position** on the orbit.
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor
+        :return: Orbital velocity
+        :rtype: ty.Optional[u.Quantity]
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.4 *Angular momentum and the orbit formulas*
+        - :cite:`kluever`
+            - Section 2.5.2 *Flight-Path Angle and Velocity Components*
+        - :cite:`walter`
+            - Section 7.3.3 *Orbital Velocity*
+        """
+        
+        # >>> Validation
+        
+        # * attractor
+        
+        error_msg = validate_attractor(attractor)
+        
+        if error_msg: logger.warning(error_msg); return None
+        
+        mu: float = BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        # >>> Algorithm
+        
+        e: float = self.eccentricity.to_value(u.one)
+        
+        h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        if h == 0:
+            
+            logger.warning("Specific angular momentum is zero")
+            
+            return None
+        
+        theta: float = self.true_anomaly.to_value(u.rad)
+        
+        r: float = h**2 / mu * 1 / (1 + e * np.cos(theta))
+        
+        return r * u.km
+    
+    def calc_flight_path_angle(self, attractor: Attractor = Attractor.EARTH) -> ty.Optional[u.Quantity]:
+        """
+        Calculates the **flight path angle** of the orbit.
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor
+        :return: Orbital velocity
+        :rtype: ty.Optional[u.Quantity]
+        
+        📖 **References**
+        
+        - :cite:`curtis`
+            - Section 2.4 *Angular momentum and the orbit formulas*
+        - :cite:`kluever`
+            - Section 2.5.2 *Flight-Path Angle and Velocity Components*
+        - :cite:`walter`
+            - Section 7.3.3 *Orbital Velocity*
+        """
+        
+        # >>> Validation
+        
+        # * attractor
+        
+        error_msg = validate_attractor(attractor)
+        
+        if error_msg: logger.warning(error_msg); return None
+        
+        mu: float = BODIES[attractor].mu.to_value(u.km**3 / u.s**2)
+        
+        # >>> Algorithm
+        
+        e: float = self.eccentricity.to_value(u.one)
+        
+        h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        if h == 0:
+            
+            logger.warning("Specific angular momentum is zero")
+            
+            return None
+        
+        theta: float = self.true_anomaly.to_value(u.rad)
+        
+        r: float = h**2 / mu * 1 / (1 + e * np.cos(theta)) # * Radius
+        
+        v_t: float = h / r # * Transversal velocity
+        
+        v_r: float = mu / h * e * np.sin(theta) # * Radial velocity
+        
+        fpa: float = np.arctan(v_r / v_t)
+        
+        return fpa * u.rad
+    
+    def calc_periapsis_velocity(self, attractor: Attractor = Attractor.EARTH) -> ty.Optional[u.Quantity]:
+        """
+        Calculates the **periapsis orbital velocity** of the orbit.
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor, optional
+        :return: Periapsis orbital velocity
+        :rtype: ty.Optional[u.Quantity]
+        """
+        
+        # >>> Validation
+        
+        # * attractor
+        
+        error_msg = validate_attractor(attractor)
+        
+        if error_msg: logger.warning(error_msg); return None
+        
+        # >>> Algorithm
+        
+        r_p: float = self.calc_periapsis_radius().to_value(u.km)
+        
+        h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        return h / r_p * u.km / u.s
+
+    def calc_apoapsis_velocity(self, attractor: Attractor = Attractor.EARTH) -> ty.Optional[u.Quantity]:
+        """
+        Calculates the **apoapsis orbital velocity** of the orbit.
+
+        :param attractor: Main attractor, defaults to Attractor.EARTH
+        :type attractor: Attractor, optional
+        :return: Apoapsis orbital velocity
+        :rtype: ty.Optional[u.Quantity]
+        """
+        
+        # >>> Validation
+        
+        # * attractor
+        
+        error_msg = validate_attractor(attractor)
+        
+        if error_msg: logger.warning(error_msg); return None
+        
+        # >>> Algorithm
+        
+        r_a: float = self.calc_apoapsis_radius().to_value(u.km)
+        
+        h: float = self.calc_specific_angular_momentum(attractor=attractor).to_value(u.km**2 / u.s)
+        
+        return h / r_a * u.km / u.s
 
 @dc.dataclass
 class EquinoctialOrbitalElements:

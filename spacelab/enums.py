@@ -9,8 +9,8 @@ import typing
 class OrbitDirection(enum.IntEnum):
     """Orbit direction type"""
     
-    PROGRADE    = 0
-    RETROGRADE  = 1
+    PROGRADE = 0
+    RETROGRADE = 1
 
 class HohmannDirection(enum.IntEnum):
     """List of Hohmann transfer directions"""
@@ -111,3 +111,9 @@ class AngleType(enum.Enum):
     
     TRUE_ANOMALY = 0
     ECCENTRIC_ANOMALY = 1
+
+class LaunchPass(enum.IntEnum):
+    """Direction of the launch pass"""
+    
+    ASCENDING = 0
+    DESCENDING = 1

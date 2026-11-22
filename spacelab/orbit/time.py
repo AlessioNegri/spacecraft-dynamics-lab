@@ -16,6 +16,7 @@ not have to deal with a change of date during their watch.
 - :cite:`kluever`
     - Chapter 10 *Interplanetary Trajectories*
 - :cite:`walter`
+    - Chapter 8 *Orbital Maneuvering*
     - Chapter 13 *Reference Frames*
 """
 
@@ -53,6 +54,8 @@ def timestamp_2_julian_day(timestamp: time.Time) -> ty.Optional[float]:
         - Section 10.5 *Interplanetary Trajectories*
         - Section 10.5.2 *Julian Date*
     - :cite:`walter`
+        - Section 8.6 *Orbital Rendezvous*
+        - Section 8.6.1 *Launch Phase*
         - Section 13.2 *Time Frames*
     """
     

@@ -1,8 +1,11 @@
 import astropy.time as time
 import astropy.units as u
 import numpy as np
+import pytest
 
 import spacelab.orbit.time as sl_time
+
+# ! The 1957 pre-UTC-leap-second date is outside ERFA’s fully supported UTC range
 
 def test_timestamp_2_julian_day_1():
     """:cite:`curtis` EXAMPLE 5.4"""
@@ -14,6 +17,7 @@ def test_timestamp_2_julian_day_1():
     assert np.isclose(jd, 2_453_138.115, 1e-3)
     assert np.isclose(timestamp.to_value("jd"), 2_453_138.115, 1e-3)
 
+@pytest.mark.filterwarnings("ignore::erfa.core.ErfaWarning")
 def test_timestamp_2_julian_day_2():
     """:cite:`curtis` EXAMPLE 5.5"""
     
@@ -110,7 +114,7 @@ def test_julian_day_and_timestamp_round_trip():
     assert restored.ymdhms.minute == 0
     assert restored.ymdhms.second == 0
 
-
+@pytest.mark.filterwarnings("ignore::erfa.core.ErfaWarning")
 def test_timestamp_converters_reject_year_outside_supported_range():
     timestamp = time.Time("2100-01-01 00:00:00", scale="utc")
 

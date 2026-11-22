@@ -9,6 +9,7 @@ References:
 
 - Craig A. Kluever, "Space Flight Dynamics"
     - Chapter 5: Non-Keplerian Motion
+    - Chapter 9 *Low-Thrust Transfers*
     
 - Ulrich Walter, "Astronautics - The Physics of Space Flight"
     - Chapter 12: Orbit Perturbations
@@ -167,6 +168,44 @@ class OrbitalPerturbations():
         # >>> 4. Shadow condition
         
         return 0 if theta_1 + theta_2 <= theta else 1
+    
+    @staticmethod
+    def earth_shadow_percentage(attractor: bodies.Attractor, radius: u.Quantity) -> u.Quantity:
+        """
+        Compute the percentage of time the spacecraft spends in sunlight over one orbital revolution
+
+        Args:
+            attractor (bodies.Attractor): Main attractor
+            radius (u.Quantity): Circular orbit radius
+
+        Returns:
+            u.Quantity: Percentage of sunlight
+        
+        📌 **Notes**
+        
+        Simple Earth-shadow model where the circular orbit (radius :math:`r = a`) is assumed to be in the ecliptic plane.
+        Actual shadow conditions for a circular orbit will depend on the calendar date, inclination , and longitude of
+        the ascending node.
+        
+        📖 **References**
+            
+        - :cite:`kluever`
+            - Section 9.4 *Coplanar Transfer with Earth-Shadow Effects*
+        """
+        
+        R_E: float = bodies.BODIES[attractor].R_E.to_value(u.km)
+        
+        r: float = radius.to_value(u.km)
+        
+        # >>> 1. Earth-shadow angle
+        
+        phi: float = 2 * np.arcsin(R_E / r)
+        
+        # >>> 2. Sunlight weighting function
+        
+        w: float = 1 - phi / (2 * np.pi)
+        
+        return w * u.one
     
     @staticmethod
     def moon_position(timestamp: time.Time) -> u.Quantity:

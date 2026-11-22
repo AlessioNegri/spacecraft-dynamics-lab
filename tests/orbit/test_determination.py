@@ -3,12 +3,32 @@ import astropy.units as u
 import numpy as np
 
 import spacelab.bodies as sl_bodies
+import spacelab.enums as sl_enums
 import spacelab.models.orbit_parameters as sl_orbit_parameters
 import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.n_body_models.conversions as sl_conversions
 import spacelab.orbit.determination as sl_determination
 import spacelab.orbit.position as sl_position
 import spacelab.orbit.representation as sl_representation
+
+def test_launch_azimuth_1():
+    """:cite:`curtis` EXAMPLE 6.10"""
+    
+    launch_azimuth: u.Quantity = sl_determination.launch_azimuth(
+        launch_site_latitude=34.5 * u.deg,
+        target_inclination=98.43 * u.deg)
+    
+    assert np.isclose(launch_azimuth.to_value(u.deg), 349.8, atol=1e-1)
+
+def test_launch_azimuth_2():
+    """:cite:`kluever` EXAMPLE 3.3"""
+    
+    launch_azimuth: u.Quantity = sl_determination.launch_azimuth(
+        launch_site_latitude=28.5 * u.deg,
+        target_inclination=51.65 * u.deg,
+        direction=sl_enums.LaunchPass.DESCENDING)
+    
+    assert np.isclose(launch_azimuth.to_value(u.deg), 135.088, atol=1e-3)
 
 def test_gibbs_method_1():
     """:cite:`curtis` EXAMPLE 5.1"""

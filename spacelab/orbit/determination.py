@@ -7,6 +7,7 @@ considered preliminary **orbit determination** techniques.
 
 - :cite:`curtis`
     - Chapter 5 *Preliminary Orbit Determination*
+    - Chapter 6 *Orbital Maneuvers*
 - :cite:`kluever`
     - Chapter 3 *Orbit Determination*
 - :cite:`walter`
@@ -31,6 +32,78 @@ import spacelab.utils.logger as sl_logger
 import spacelab.utils.validator as sl_validator
 
 # * curtis
+
+def launch_azimuth(
+    launch_site_latitude: u.Quantity,
+    target_inclination: u.Quantity,
+    direction: sl_enums.LaunchPass = sl_enums.LaunchPass.ASCENDING) -> ty.Optional[u.Quantity]:
+    """
+    Launch azimuth calculation for a given target inclination and launch site latitude.
+
+    :param launch_site_latitude: Launch site latitude
+    :type launch_site_latitude: u.Quantity
+    :param target_inclination: Target inclination
+    :type target_inclination: u.Quantity
+    :param direction: Launch pass direction, defaults to sl_enums.LaunchPass.ASCENDING
+    :type direction: sl_enums.LaunchPass, optional
+    :return: Launch azimuth
+    :rtype: ty.Optional[u.Quantity]
+    
+    📌 **Notes**
+    
+    The choice of launch azimuth has an effect on the orbit. It does not change the fact that the orbit is retrograde;
+    it simply determines whether the ascending node will be in the same hemisphere as the launch site or on the opposite
+    side of the earth.
+    
+    📖 **References**
+    
+    - :cite:`curtis`
+        - Section 6.9 *Plane change maneuvers*
+    - :cite:`kluever`
+        - Section 3.6 *Ground Tracks*
+    - :cite:`walter`
+        - Section 8.6 *Orbital Rendezvous*
+        - Section 8.6.1 *Launch Phase*
+    """
+    
+    # >>> Validation
+    
+    # * launch_site_latitude
+    
+    err_msg: str | None = sl_validator.validate_quantity_angle("launch_site_latitude", launch_site_latitude)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # * target_inclination
+    
+    err_msg = sl_validator.validate_quantity_angle("target_inclination", target_inclination)
+    
+    if err_msg: sl_logger.logger.warning(err_msg); return None
+    
+    # >>> Algorithm
+    
+    phi: float = launch_site_latitude.to_value(u.rad)
+    inc: float = target_inclination.to_value(u.rad)
+    
+    if inc < abs(phi):
+        
+        sl_logger.logger.warning(
+            "Target inclination must be greater than or equal to the absolute value of the launch site latitude")
+        
+        return None
+    
+    if inc > (np.pi - abs(phi)):
+        
+        sl_logger.logger.warning(
+            "Target inclination must be less than or equal to 180° - absolute value of the launch site latitude")
+        
+        return None
+    
+    azimuth: float = np.arcsin(np.cos(inc) / np.cos(phi))
+    
+    azimuth = azimuth % (2 * np.pi)
+    
+    return (azimuth if direction == sl_enums.LaunchPass.ASCENDING else (np.pi - azimuth)) * u.rad
 
 def gibbs_method(
     attractor: bodies.Attractor,
@@ -241,9 +314,9 @@ def lambert(
 
     :param attractor: Main attractor
     :type attractor: bodies.Attractor
-    :param departure_position: Position vector at departure (km)
+    :param departure_position: Position vector at departure
     :type departure_position: u.Quantity
-    :param arrival_position: Position vector at arrival (km)
+    :param arrival_position: Position vector at arrival
     :type arrival_position: u.Quantity
     :param delta_time: Time of flight between `departure_position` and `arrival_position`
     :type delta_time: time.TimeDelta

@@ -12,17 +12,19 @@ import routers.utility as utility
 import spacelab.bodies as bodies
 import spacelab.physical_constants as constants
 import spacelab.enums as ae
-import spacelab.orbit.representation as o3d
+import spacelab.enums as sl_enums
 import spacelab.models.orbital_elements as sl_orbital_elements
 import spacelab.orbit.representation as sl_representation
-import spacelab.orbital_maneuvers as om
+import spacelab.maneuvers.continuous_thrust as sl_continuous_thrust
+import spacelab.maneuvers.impulsive as sl_impulsive
 import spacelab.n_body_models.two_body_problem as tbp
 import spacelab.orbit.position as op
 import spacelab.models.results as sl_results
+import spacelab.models.rocket_motor as sl_rocket_motor
 
 # --- UTILITY ---
 
-def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> om.RocketMotor:
+def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> sl_rocket_motor.RocketMotor:
     """
     Fill the rocket motor from schema values
 
@@ -30,10 +32,10 @@ def fill_rocket_motor(spacecraft_schema: schema.Spacecraft) -> om.RocketMotor:
         spacecraft_schema (schema.Spacecraft): Pydantic schema spacecraft
 
     Returns:
-        om.RocketMotor: Rocket motor
+        sl_rocket_motor.RocketMotor: Rocket motor
     """
     
-    rocket_motor = om.RocketMotor(    
+    rocket_motor = sl_rocket_motor.RocketMotor(    
         specific_impulse=spacecraft_schema.specificImpulse * u.s,
         thrust=spacecraft_schema.thrust * u.N,
         spacecraft_mass=spacecraft_schema.mass * u.kg,
@@ -160,17 +162,17 @@ def calculate_simulation_time(attractor: bodies.Attractor,
     return t_sim
 
 def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
-                                            rocket_motor: om.RocketMotor,
+                                            rocket_motor: sl_rocket_motor.RocketMotor,
                                             orbital_elements: sl_orbital_elements.OrbitalElements,
                                             target_semi_major_axis: u.Quantity,
                                             time_step: u.Quantity = 10 * u.s)\
-                                                -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
+                                                -> typing.Tuple[sl_results.NonImpulsiveManeuverResult, sl_results.Result]:
     """
     Compute a low-thrust coplanar circle-to-circle transfer
 
     Args:
         attractor (bodies.Attractor): Main attractor
-        rocket_motor (om.RocketMotor): Rocket motor
+        rocket_motor (sl_rocket_motor.RocketMotor): Rocket motor
         orbital_elements (sl_orbital_elements.OrbitalElements): Orbital elements
         target_semi_major_axis (u.Quantity): Target value for the semimajor axis
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
@@ -183,7 +185,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
         
         print('The initial orbit must be circular for this maneuver.')
         
-        return om.NonImpulsiveManeuverResult(), sl_results.Result()
+        return sl_results.NonImpulsiveManeuverResult(), sl_results.Result()
 
     # * Estimation of the time of flight for the integration
 
@@ -191,7 +193,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
     
     final_radius: u.Quantity = target_semi_major_axis
 
-    tof, _, _ = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(
+    tof, _, _ = sl_continuous_thrust.constant_tangential_thrust_transfer_from_radius(
         attractor=attractor,
         rocket_motor=rocket_motor,
         initial_radius=initial_radius,
@@ -200,7 +202,7 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
 
     r_0, v_0 = sl_representation.keplerian_to_cartesian(attractor=attractor, orbital_elements=orbital_elements)
     
-    return om.OrbitalManeuvers.non_impulsive_maneuver(
+    return sl_continuous_thrust.non_impulsive_maneuver(
         attractor=attractor,
         rocket_motor=rocket_motor,
         initial_position=r_0,
@@ -214,17 +216,17 @@ def compute_coplanar_circle_circle_maneuver(attractor: bodies.Attractor,
     )
 
 def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attractor,
-                                                     rocket_motor: om.RocketMotor,
+                                                     rocket_motor: sl_rocket_motor.RocketMotor,
                                                      orbital_elements: sl_orbital_elements.OrbitalElements,
                                                      target_inclination: u.Quantity,
                                                      time_step: u.Quantity = 10 * u.s)\
-                                                         -> typing.Tuple[om.NonImpulsiveManeuverResult, sl_results.Result]:
+                                                         -> typing.Tuple[sl_results.NonImpulsiveManeuverResult, sl_results.Result]:
     """
     Compute a low-thrust coplanar circle-to-circle transfer
 
     Args:
         attractor (bodies.Attractor): Main attractor
-        rocket_motor (om.RocketMotor): Rocket motor
+        rocket_motor (sl_rocket_motor.RocketMotor): Rocket motor
         orbital_elements (sl_orbital_elements.OrbitalElements): Orbital elements
         target_inclination (u.Quantity): Target value for the inclination
         time_step (u.Quantity, optional): Time step for integration. Defaults to 10*u.s.
@@ -237,11 +239,11 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
         
         print('The initial orbit must be circular for this maneuver.')
         
-        return om.NonImpulsiveManeuverResult(), sl_results.Result()
+        return sl_results.NonImpulsiveManeuverResult(), sl_results.Result()
 
     # * Estimation of the time of flight for the integration
     
-    tof, _, _ = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(
+    tof, _, _ = sl_continuous_thrust.inclination_change_maneuver(
         attractor=attractor,
         rocket_motor=rocket_motor,
         radius=orbital_elements.semimajor_axis,
@@ -255,7 +257,7 @@ def compute_inclination_change_non_impulsive_maneuver(attractor: bodies.Attracto
     
     orbit.from_cartesian(attractor=attractor, position=r_0, velocity=v_0)
     
-    return om.OrbitalManeuvers.non_impulsive_maneuver(
+    return sl_continuous_thrust.non_impulsive_maneuver(
         attractor=attractor,
         rocket_motor=rocket_motor,
         initial_position=r_0,
@@ -293,7 +295,7 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
@@ -306,21 +308,22 @@ async def put_hohmann(data: schema.HohmannInModelInfo) -> fastapi.responses.JSON
 
     if data.maneuver.data.direction == 0:
         
-        direction = om.HohmannDirection.PERICENTER_APOCENTER
+        direction = sl_enums.HohmannDirection.PERICENTER_APOCENTER
         
         oe_2.true_anomaly = 180.0 * u.deg
         
     else:
         
-        direction = om.HohmannDirection.APOCENTER_PERICENTER
+        direction = sl_enums.HohmannDirection.APOCENTER_PERICENTER
         
         oe_2.true_anomaly = 0.0 * u.deg
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.hohmann_transfer(attractor=attractor,
-                                                                       rocket_motor=rocket_motor,
-                                                                       orbital_elements_1=oe_1,
-                                                                       orbital_elements_2=oe_2,
-                                                                       direction=direction)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.hohmann_transfer(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        orbital_elements_1=oe_1,
+        orbital_elements_2=oe_2,
+        direction=direction)
     
     # * Initial Orbit
     
@@ -391,7 +394,7 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
@@ -404,11 +407,12 @@ async def put_bi_elliptic_hohmann(data: schema.BiEllipticHohmannInModelInfo) -> 
 
     r_3: u.Quantity = data.maneuver.data.supportApocenterRadius * u.km
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.bi_elliptic_hohmann_transfer(attractor=attractor,
-                                                                                   rocket_motor=rocket_motor,
-                                                                                   orbital_elements_1=oe_1,
-                                                                                   orbital_elements_2=oe_2,
-                                                                                   apoapsis_radius=r_3)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.bi_elliptic_hohmann_transfer(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        orbital_elements_1=oe_1,
+        orbital_elements_2=oe_2,
+        apoapsis_radius=r_3)
     
     oe_2.true_anomaly = 0.0 * u.deg
     
@@ -485,7 +489,7 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
@@ -493,11 +497,12 @@ async def put_phasing(data: schema.PhasingInModelInfo) -> fastapi.responses.JSON
     
     num_revolutions: int = data.maneuver.data.numRevolutions
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.phasing_maneuver(attractor=attractor,
-                                                                       rocket_motor=rocket_motor,
-                                                                       orbital_elements=oe,
-                                                                       true_anomaly_target=nu_target,
-                                                                       num_revolutions=num_revolutions)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.phasing_maneuver(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        orbital_elements=oe,
+        true_anomaly_target=nu_target,
+        num_revolutions=num_revolutions)
     
     # * Initial Orbit
     
@@ -566,7 +571,7 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
@@ -578,10 +583,8 @@ async def put_non_hohmann(data: schema.NonHohmannInModelInfo) -> fastapi.respons
     
     oe_2.calc_specific_angular_momentum(attractor=attractor)
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.non_hohmann_transfer(attractor=attractor,
-                                                                           rocket_motor=rocket_motor,
-                                                                           orbital_elements_1=oe_1,
-                                                                           orbital_elements_2=oe_2)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.non_hohmann_transfer(
+        attractor=attractor, rocket_motor=rocket_motor, orbital_elements_1=oe_1, orbital_elements_2=oe_2)
     
     # * Initial Orbit
     
@@ -648,7 +651,7 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
@@ -660,12 +663,13 @@ async def put_apse_line_rotation(data: schema.ApseLineRotationInModelInfo) -> fa
 
     sip: bool = data.maneuver.data.intersectionPoint == 1
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.apse_line_rotation_from_eta(attractor=attractor,
-                                                                                  rocket_motor=rocket_motor,
-                                                                                  orbital_elements_1=oe_1,
-                                                                                  orbital_elements_2=oe_2,
-                                                                                  eta=oe_2.argument_of_periapsis - oe_1.argument_of_periapsis,
-                                                                                  second_intersection_point=sip)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.apse_line_rotation_from_eta(
+        attractor=attractor,
+        rocket_motor=rocket_motor,
+        orbital_elements_1=oe_1,
+        orbital_elements_2=oe_2,
+        apse_line_rotation_angle=oe_2.argument_of_periapsis - oe_1.argument_of_periapsis,
+        second_intersection_point=sip)
     
     oe_2.true_anomaly = maneuver.orbital_elements_list[0].true_anomaly
     
@@ -734,7 +738,7 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
@@ -742,11 +746,8 @@ async def put_chase(data: schema.ChaseInModelInfo) -> fastapi.responses.JSONResp
     
     dt: time.TimeDelta = time.TimeDelta(u.Quantity(data.maneuver.data.dt, u.hour))
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.chase_maneuver(attractor=attractor,
-                                                                     rocket_motor=rocket_motor,
-                                                                     orbital_elements=oe,
-                                                                     true_anomaly_target=nu_t,
-                                                                     delta_time=dt)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.chase_maneuver(
+        attractor=attractor, rocket_motor=rocket_motor, orbital_elements=oe, true_anomaly_target=nu_t, delta_time=dt)
     
     # * Initial Orbit
     
@@ -815,7 +816,7 @@ async def put_inclination_change(data: schema.InclinationChangeInModelInfo) -> f
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
@@ -825,10 +826,8 @@ async def put_inclination_change(data: schema.InclinationChangeInModelInfo) -> f
 
     oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
 
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.inclination_change_maneuver(attractor=attractor,
-                                                                                   rocket_motor=rocket_motor,
-                                                                                   orbital_elements_1=oe_1,
-                                                                                   orbital_elements_2=oe_2)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.inclination_change_maneuver(
+        attractor=attractor, rocket_motor=rocket_motor, orbital_elements_1=oe_1, orbital_elements_2=oe_2)
 
     oe_2.true_anomaly = maneuver.true_anomaly_list[0]
     
@@ -897,7 +896,7 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
     
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
     
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
     
@@ -908,10 +907,8 @@ async def put_plane_change(data: schema.PlaneChangeInModelInfo) -> fastapi.respo
     
     oe_2: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=oe_2_schema)
     
-    maneuver: om.ManeuverResult = om.OrbitalManeuvers.plane_change_maneuver_from_raan_and_inclination(attractor=attractor,
-                                                                                                      rocket_motor=rocket_motor,
-                                                                                                      orbital_elements_1=oe_1,
-                                                                                                      orbital_elements_2=oe_2)
+    maneuver: sl_results.ManeuverResult = sl_impulsive.plane_change_maneuver_from_raan_and_inclination(
+        attractor=attractor, rocket_motor=rocket_motor, orbital_elements_1=oe_1, orbital_elements_2=oe_2)
     
     # * Initial Orbit
     
@@ -973,7 +970,7 @@ async def put_coplanar_circle_circle(data: schema.CoplanarCircleCircleInModelInf
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
@@ -1055,7 +1052,7 @@ async def put_inclination_change_non_impulsive(data: schema.InclinationChangeNon
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
     oe_1: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor, orbital_elements_schema=data.orbitalElements)
 
@@ -1166,14 +1163,14 @@ async def put_tools_super_synchronous_transfer(data: schema.ToolsSSTOInModelInfo
             
             apoapsis_radius: float = ratio * constants.geocentric_equatorial_radius
             
-            ssto: om.OrbitalElements = om.OrbitalElements(inclination=inc_deg * u.deg)
+            ssto = sl_orbital_elements.OrbitalElements(inclination=inc_deg * u.deg)
             
             ssto.update_from_periapsis_apoapsis(periapsis_radius=data.sstoPeriapsisRadius * u.km,
                                             apoapsis_radius=apoapsis_radius * u.km)
 
             # ! Same inclination between SSTO and LEO
             
-            _, dv_2, dv_3 = om.OrbitalManeuvers.super_synchronous_transfer(attractor=bodies.Attractor.EARTH,
+            _, dv_2, dv_3 = sl_impulsive.super_synchronous_transfer(attractor=bodies.Attractor.EARTH,
                                                                           leo_inclination=inc_deg * u.deg,
                                                                           geo_inclination=0 * u.deg,
                                                                           ssto=ssto)
@@ -1205,9 +1202,9 @@ async def put_tools_coplanar_circle_circle(data: schema.ToolsCoplanarCircleCircl
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    tof, m_p, dv = om.OrbitalManeuvers.constant_tangential_thrust_transfer_from_radius(
+    tof, m_p, dv = sl_continuous_thrust.constant_tangential_thrust_transfer_from_radius(
         attractor=attractor,
         rocket_motor=rocket_motor,
         initial_radius=data.initialRadius * u.km,
@@ -1241,9 +1238,9 @@ async def put_tools_inclination_change(data: schema.ToolsInclinationChangeInMode
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclination_change_maneuver(
+    tof, m_p, dv = sl_continuous_thrust.inclination_change_maneuver(
         attractor=attractor,
         rocket_motor=rocket_motor,
         radius=data.radius * u.km,
@@ -1277,9 +1274,9 @@ async def put_tools_inclined_circular_orbits(data: schema.ToolsInclinedCircularO
 
     attractor: bodies.Attractor = bodies.Attractor(data.attractor.lower())
 
-    rocket_motor: om.RocketMotor = fill_rocket_motor(data.spacecraft)
+    rocket_motor: sl_rocket_motor.RocketMotor = fill_rocket_motor(data.spacecraft)
 
-    tof, m_p, dv = om.OrbitalManeuvers.non_impulsive_inclined_circular_orbits_transfer(
+    tof, m_p, dv = sl_continuous_thrust.inclined_circular_orbits_transfer(
         attractor=attractor,
         rocket_motor=rocket_motor,
         initial_radius=data.initialRadius * u.km,
