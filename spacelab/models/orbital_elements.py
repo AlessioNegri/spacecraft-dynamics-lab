@@ -116,6 +116,10 @@ class OrbitalElements:
         
         # >>> Algorithm
         
+        if self.specific_angular_momentum.to_value(u.km**2 / u.s) == 0:
+            
+            return self.semimajor_axis
+        
         self.semimajor_axis = self.specific_angular_momentum**2 / (BODIES[attractor].mu * (1 - self.eccentricity**2))
         
         return self.semimajor_axis

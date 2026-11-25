@@ -6,11 +6,14 @@ import typing
 
 import schemas.relative_motion_schema as schema
 
-import spacelab.relative_motion as rm
 import spacelab.bodies as bd
+import spacelab.enums as sl_enums
 import spacelab.models.orbital_elements as sl_orbital_elements
-import spacelab.orbit.representation as sl_representation
 import spacelab.models.results as sl_results
+import spacelab.orbit.representation as sl_representation
+import spacelab.proximity.kinematics as sl_kinematics
+import spacelab.proximity.rendezvous as sl_rendezvous
+import spacelab.proximity.relative_motion as sl_relative_motion
 
 # --- UTILITY ---
 
@@ -70,13 +73,12 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     oe_chaser: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsChaser)
     
-    r_rel_lvlh, v_rel_lvlh, _, omega_lvlh = rm.RelativeMotion.lvlh_kinematics(attractor=attractor,
-                                                                              orbital_elements_target=oe_target,
-                                                                              orbital_elements_chaser=oe_chaser)
+    r_rel_lvlh, v_rel_lvlh, _, omega_lvlh = sl_kinematics.local_vertical_local_horizontal_kinematics(
+        attractor=attractor, orbital_elements_target=oe_target, orbital_elements_chaser=oe_chaser)
     
     # * Linearized
     
-    relavive_motion: rm.RelativeMotion = rm.RelativeMotion()
+    relavive_motion = sl_relative_motion.RelativeMotion()
     
     relavive_motion.init(attractor=attractor,
                          position=r_target,
@@ -121,10 +123,8 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     
     for t in np.linspace(0, u.Quantity(data.integrationTime * u.hour).to_value(u.s), len(linearized_solution)):
             
-        dr, _ = rm.RelativeMotion.clohessy_wiltshire_equations(relative_position_0=r_rel_lvlh,
-                                                               relative_velocity_0=v_rel_lvlh,
-                                                               mean_motion=n,
-                                                               final_time=t * u.s)
+        dr, _ = sl_rendezvous.clohessy_wiltshire_equations(
+            relative_position_0=r_rel_lvlh, relative_velocity_0=v_rel_lvlh, mean_motion=n, final_time=t * u.s)
         
         clohessy_wiltshire_solution.append(schema.Vector3D(x=dr[0].to_value(u.km),
                                                            y=dr[1].to_value(u.km),
@@ -132,7 +132,7 @@ async def put_hohmann(data: schema.ComparisonInModelInfo) -> fastapi.responses.J
     
     # * 2-Impulsive Maneuver
     
-    dv_tot, dx, dy, dz = rm.RelativeMotion.two_impulsive_rendezvous_maneuver(attractor=attractor,
+    dv_tot, dx, dy, dz = sl_rendezvous.two_impulsive_rendezvous_maneuver(attractor=attractor,
                                                                              orbital_elements_target=oe_target,
                                                                              orbital_elements_chaser=oe_chaser,
                                                                              maneuver_time=data.maneuverTime * u.hour)
@@ -174,9 +174,8 @@ async def put_lvlh_kinematics(data: schema.LvlhKinematicsInModelInfo) -> fastapi
     oe_chaser: sl_orbital_elements.OrbitalElements = fill_orbital_elements(attractor=attractor,
                                                            orbital_elements_schema=data.orbitalElementsChaser)
     
-    kinematics = rm.RelativeMotion.lvlh_kinematics(attractor=attractor,
-                                                   orbital_elements_target=oe_target,
-                                                   orbital_elements_chaser=oe_chaser)
+    kinematics = sl_kinematics.local_vertical_local_horizontal_kinematics(
+        attractor=attractor, orbital_elements_target=oe_target, orbital_elements_chaser=oe_chaser)
     
     r: np.ndarray = kinematics[0].to_value(u.km)
     
@@ -186,9 +185,8 @@ async def put_lvlh_kinematics(data: schema.LvlhKinematicsInModelInfo) -> fastapi
     
     o: np.ndarray = kinematics[3].to_value(u.deg / u.s)
     
-    x, y, z = rm.RelativeMotion.simulate_lvlh_kinematics(attractor=attractor,
-                                                         orbital_elements_target=oe_target,
-                                                         orbital_elements_chaser=oe_chaser)
+    x, y, z = sl_kinematics.simulate_local_vertical_local_horizontal_kinematics(
+        attractor=attractor, orbital_elements_target=oe_target, orbital_elements_chaser=oe_chaser)
     
     result: schema.LvlhKinematicsOutModelInfo = schema.LvlhKinematicsOutModelInfo(
         position = schema.Vector3D(x=r[0], y=r[1], z=r[2]),
@@ -225,10 +223,8 @@ async def put_geocentric_equatorial_kinematics(data: schema.GeocentricEquatorial
     
     v_rel_lvlh: u.Quantity = np.array([data.lvlhVelocity.x, data.lvlhVelocity.y, data.lvlhVelocity.z]) * u.km / u.s
     
-    r_chaser, v_chaser = rm.RelativeMotion.geocentric_equatorial_kinematics(position_target=r_target,
-                                                                            velocity_target=v_target,
-                                                                            position_rel_lvlh=r_rel_lvlh,
-                                                                            velocity_rel_lvlh=v_rel_lvlh)
+    r_chaser, v_chaser = sl_kinematics.geocentric_equatorial_kinematics(
+        position_target=r_target, velocity_target=v_target, position_rel_lvlh=r_rel_lvlh, velocity_rel_lvlh=v_rel_lvlh)
     
     oe_chaser: sl_orbital_elements.OrbitalElements = sl_representation.cartesian_to_keplerian(
         attractor=attractor, position=r_chaser, velocity=v_chaser)
@@ -261,7 +257,7 @@ async def put_rendezvous_and_docking(data: schema.RendezvousAndDockingInModelInf
 
     timestamp: time.Time = time.Time(data.timestamp, scale="utc")
 
-    launch_phase_ascending, launch_phase_descending = rm.RelativeMotion.launch_phase(
+    launch_phase_ascending, launch_phase_descending = sl_rendezvous.launch_phase(
         timestamp=timestamp,
         launch_site_latitude=data.launchSiteLatitude * u.deg,
         launch_site_longitude=data.launchSiteLongitude * u.deg,
@@ -269,30 +265,30 @@ async def put_rendezvous_and_docking(data: schema.RendezvousAndDockingInModelInf
         target_right_ascension_ascending_node=data.targetRaan * u.deg
     )
 
-    phasing_angle, phasing_distance = rm.RelativeMotion.phasing(
+    phasing_angle, phasing_distance = sl_rendezvous.phasing(
         semimajor_axis_chaser=data.chaserSemimajorAxis * u.km,
         semimajor_axis_target=data.targetSemimajorAxis * u.km
     )
 
-    homing_angle, homing_delta_velocity = rm.RelativeMotion.homing_phase(
+    homing_angle, homing_delta_velocity = sl_rendezvous.homing_phase(
         semimajor_axis_chaser=data.chaserSemimajorAxis * u.km,
         semimajor_axis_target=data.targetSemimajorAxis * u.km
     )
 
-    closing_delta_velocity = rm.RelativeMotion.closing_phase(
+    closing_delta_velocity = sl_rendezvous.closing_phase(
         semimajor_axis_target=data.targetSemimajorAxis * u.km,
         distance=data.closingDistance * u.km,
-        strategy=rm.ClosingApproachStrategy[data.closingStrategy],
-        trajectory=rm.ClosingApproachTrajectory[data.closingTrajectory],
+        strategy=sl_enums.ClosingApproachStrategy[data.closingStrategy],
+        trajectory=sl_enums.ClosingApproachTrajectory[data.closingTrajectory],
         cycloidal_revolutions=data.cycloidalRevolutions,
         initial_velocity=data.closingInitialVelocity * u.km / u.s
     )
 
-    final_approach_delta_velocity = rm.RelativeMotion.final_approach(
+    final_approach_delta_velocity = sl_rendezvous.final_approach(
         semimajor_axis_target=data.targetSemimajorAxis * u.km,
         distance=data.finalApproachDistance * u.km,
         time=data.finalApproachTime * u.s,
-        strategy=rm.ClosingApproachStrategy[data.finalApproachStrategy]
+        strategy=sl_enums.ClosingApproachStrategy[data.finalApproachStrategy]
     )
 
     result: schema.RendezvousAndDockingOutModelInfo = schema.RendezvousAndDockingOutModelInfo(

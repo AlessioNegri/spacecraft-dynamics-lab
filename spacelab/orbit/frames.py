@@ -1,5 +1,5 @@
 """
-This modules vector representations on the major **coordinate systems** used in space.
+This modules contains the vector representations on the major **coordinate systems** used in space.
 
 📖 **References**
 
